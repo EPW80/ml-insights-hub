@@ -301,12 +301,12 @@ This project is licensed under the ISC License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 For support and questions:
-- 📧 Email: your.email@example.com
+- 📧 Email: erikpw009@gmail.com
 - 🐛 Issues: [GitHub Issues](https://github.com/yourusername/ml-insights-hub/issues)
 - 📖 Docs: [Project Wiki](https://github.com/yourusername/ml-insights-hub/wiki)
 
 ---
 
 <div align="center">
-  <strong>Built with ❤️ for the ML community</strong>
+  <strong>Built with 💀 for the ML community</strong>
 </div>
