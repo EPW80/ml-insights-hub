@@ -180,6 +180,31 @@ ml-insights-hub/
 
 ## 🔧 Configuration
 
+### 🔒 Security Setup (CRITICAL)
+
+**Before running in production, you MUST secure your application:**
+
+#### 1. Generate Secure JWT Secret
+```bash
+cd server
+npm run generate-jwt-secret
+# Or automatically update .env:
+npm run setup-production-env
+```
+
+#### 2. Check Security Status
+```bash
+npm run check-security
+```
+
+#### 3. Security Checklist
+- ✅ JWT secret is 256+ bits (64+ hex characters)
+- ✅ Rate limiting is enabled
+- ✅ Input validation is active
+- ✅ MongoDB injection protection enabled
+- ✅ Security headers configured
+- ✅ HTTPS enabled in production
+
 ### Environment Variables
 
 Create a `.env` file in the `server/` directory:
@@ -192,8 +217,9 @@ NODE_ENV=development
 # Database
 MONGODB_URI=mongodb://localhost:27017/ml-insights-hub
 
-# JWT
-JWT_SECRET=your-super-secret-jwt-key
+# JWT Authentication (CRITICAL - Generate secure secret!)
+# Use: npm run generate-jwt-secret
+JWT_SECRET=GENERATE_SECURE_SECRET_FOR_PRODUCTION_USE_CRYPTO_RANDOM_BYTES_64_HEX
 JWT_EXPIRE=7d
 
 # Python
