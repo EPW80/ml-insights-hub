@@ -1,36 +1,37 @@
-# 🧠 ML Insights Hub
+# 🏠 ML Insights Hub
 
-A full-stack machine learning application that combines modern web technologies with powerful ML capabilities for data analysis, model training, and intelligent insights.
+A comprehensive full-stack machine learning application for real estate price prediction and analysis. This application combines modern web technologies with powerful ML capabilities to provide intelligent insights into property markets.
 
 ## 🌟 Features
 
-- **🎯 Interactive ML Dashboard** - Real-time data visualization and model insights
-- **🤖 Multiple ML Algorithms** - Support for supervised, unsupervised, and uncertainty quantification
-- **📊 Data Management** - Upload, process, and analyze datasets
-- **🔮 Real-time Predictions** - Live model predictions with uncertainty estimates
-- **📈 Visualization Tools** - Interactive charts and graphs using Recharts
-- **🔄 WebSocket Integration** - Real-time updates and notifications
-- **🔐 User Authentication** - Secure user management and authorization
+- **📊 Interactive ML Dashboard** - Real-time analytics with comprehensive charts and metrics
+- **🎯 Property Price Predictions** - Multiple ML models for accurate price forecasting
+- **📈 Data Visualization** - Interactive charts including scatter plots, bar charts, and trend analysis
+- **� Data Upload Interface** - Drag-and-drop file upload with validation and progress tracking
+- **🤖 Multiple ML Algorithms** - Random Forest, Linear Regression, Neural Networks, and Gradient Boosting
+- **� Uncertainty Quantification** - Confidence intervals and prediction reliability metrics
+- **� Modern UI/UX** - Glass morphism design with responsive layout
+- **⚡ Real-time Updates** - Live predictions and dashboard updates
 
 ## 🏗️ Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   React App     │    │   Express API   │    │    MongoDB      │
-│  (Port 3000)    │◄──►│  (Port 5000)    │◄──►│  (Port 27017)   │
+│   React App     │    │   Express API   │    │    File System  │
+│  (Port 3000)    │◄──►│  (Port 5000)    │◄──►│  CSV/JSON Data  │
 │                 │    │                 │    │                 │
-│ • TypeScript    │    │ • REST APIs     │    │ • User Data     │
-│ • Tailwind CSS  │    │ • ML Services   │    │ • ML Models     │
-│ • React Query   │    │ • Python Bridge │    │ • Predictions   │
+│ • TypeScript    │    │ • REST APIs     │    │ • Property Data │
+│ • Modern CSS    │    │ • ML Services   │    │ • ML Models     │
+│ • Recharts      │    │ • Python Bridge │    │ • Datasets      │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                                 │
                                 ▼
                        ┌─────────────────┐
                        │ Python ML Env   │
                        │                 │
-                       │ • TensorFlow    │
                        │ • scikit-learn  │
                        │ • pandas/numpy  │
+                       │ • faker         │
                        └─────────────────┘
 ```
 
@@ -38,42 +39,37 @@ A full-stack machine learning application that combines modern web technologies 
 
 ### Frontend
 - **React 19** with TypeScript
-- **Tailwind CSS** for styling
-- **React Query** for data fetching
-- **React Router** for navigation
-- **Recharts** for data visualization
-- **Socket.io Client** for real-time communication
+- **Modern CSS** with glass morphism effects
+- **Recharts** for interactive data visualization
+- **React Router DOM** for navigation
+- **Axios** for API communication
 - **React Hook Form** for form management
-- **Lucide React** for icons
 
 ### Backend
 - **Node.js** with Express.js
-- **MongoDB** with Mongoose ODM
-- **Socket.io** for WebSocket connections
-- **JWT** for authentication
 - **Multer** for file uploads
 - **Python Bridge** for ML integration
+- **CORS** for cross-origin requests
+- **Express middleware** for request handling
 
 ### Machine Learning
-- **TensorFlow** for deep learning
-- **scikit-learn** for traditional ML
-- **XGBoost** for gradient boosting
+- **scikit-learn** for ML algorithms
 - **pandas & numpy** for data manipulation
-- **matplotlib & seaborn** for visualization
-- **SHAP** for model explainability
+- **faker** for synthetic data generation
+- **Random Forest, Linear Regression, Neural Networks** for predictions
+- **Uncertainty quantification** methods
 
 ## 📋 Prerequisites
 
 - **Node.js** (v16 or higher)
 - **Python** (v3.8 or higher)
-- **MongoDB** (v4.4 or higher)
 - **npm** or **yarn**
 
 ## 🚀 Quick Start
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/ml-insights-hub.git
+git clone https://github.com/EPW80/ml-insights-hub.git
 cd ml-insights-hub
 ```
 
@@ -95,10 +91,6 @@ cd server
 
 # Install Node.js dependencies
 npm install
-
-# Create environment file
-cp .env.example .env
-# Edit .env with your configuration
 ```
 
 ### 4. Setup Frontend
@@ -109,18 +101,31 @@ cd ../client
 npm install
 ```
 
-### 5. Start MongoDB
+### 5. Run the Application
+
+#### Option A: Run All Services (Recommended)
 ```bash
-# On Ubuntu/Debian
-sudo systemctl start mongod
-sudo systemctl enable mongod
-
-# On macOS with Homebrew
-brew services start mongodb-community
-
-# On Windows
-net start MongoDB
+# From project root
+./start.sh
 ```
+
+#### Option B: Run Services Separately
+```bash
+# Terminal 1: Start Frontend
+cd client
+npm start
+
+# Terminal 2: Start Backend
+cd server
+npm start
+
+# Make sure Python virtual environment is activated
+source venv/bin/activate
+```
+
+The application will be available at:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:5000
 
 ### 6. Run the Application
 
@@ -148,51 +153,88 @@ source venv/bin/activate
 
 ```
 ml-insights-hub/
-├── 📁 client/                    # React frontend
+├── 📁 client/                       # React frontend application
 │   ├── src/
-│   │   ├── components/           # React components
-│   │   ├── hooks/               # Custom React hooks
-│   │   ├── services/            # API services
-│   │   └── utils/               # Utility functions
-│   ├── public/                  # Static assets
-│   └── package.json             # Frontend dependencies
-├── 📁 server/                    # Node.js backend
-│   ├── config/                  # Server configuration
-│   ├── middleware/              # Express middleware
-│   ├── ml-services/             # ML service modules
-│   │   ├── supervised/          # Supervised learning
-│   │   ├── uncertainty/         # Uncertainty quantification
-│   │   └── unsupervised/        # Unsupervised learning
-│   ├── models/                  # Database schemas
-│   ├── python-scripts/          # Python ML scripts
-│   ├── routes/                  # API routes
-│   ├── uploads/                 # File upload storage
-│   ├── utils/                   # Backend utilities
-│   ├── websocket/               # WebSocket handlers
-│   └── requirements.txt         # Python dependencies
-├── 📁 datasets/                  # ML datasets storage
-├── 📁 models/                    # Trained ML models
-├── 📁 venv/                      # Python virtual environment
-├── .gitignore                   # Git ignore rules
-├── start.sh                     # Startup script
-└── README.md                    # This file
+│   │   ├── components/              # React UI components
+│   │   │   ├── MLPredictionForm.tsx           # Property prediction interface
+│   │   │   ├── PropertyDataVisualization.tsx # Interactive charts and graphs
+│   │   │   ├── DataUploadInterface.tsx       # File upload with validation
+│   │   │   ├── ResultsDashboard.tsx          # Analytics dashboard
+│   │   │   └── *.css                         # Component styling
+│   │   ├── hooks/                   # Custom React hooks
+│   │   │   └── usePrediction.ts              # Prediction state management
+│   │   ├── services/                # API communication layer
+│   │   │   └── api.ts                        # REST API service
+│   │   ├── utils/                   # Utility functions
+│   │   └── App.tsx                  # Main application component
+│   ├── public/                      # Static assets
+│   └── package.json                 # Frontend dependencies
+├── 📁 server/                       # Node.js backend
+│   ├── config/                      # Server configuration
+│   ├── middleware/                  # Express middleware
+│   ├── ml-services/                 # ML service modules
+│   │   ├── supervised/              # Supervised learning algorithms
+│   │   ├── uncertainty/             # Uncertainty quantification
+│   │   └── unsupervised/            # Unsupervised learning
+│   ├── models/                      # Data models and schemas
+│   ├── python-scripts/              # Python ML scripts
+│   ├── routes/                      # API endpoint definitions
+│   │   ├── auth/                    # Authentication routes
+│   │   ├── data/                    # Data management routes
+│   │   └── ml/                      # Machine learning routes
+│   ├── uploads/                     # File upload storage
+│   ├── utils/                       # Backend utilities
+│   │   └── pythonBridge.js          # Python script executor
+│   ├── server.js                    # Main server file
+│   └── requirements.txt             # Python dependencies
+├── 📁 datasets/                     # Generated sample datasets
+├── 📁 models/                       # Trained ML models storage
+├── 📁 venv/                         # Python virtual environment
+├── .gitignore                       # Git ignore rules
+├── start.sh                         # Application startup script
+└── README.md                        # Project documentation
 ```
 
-## 🔧 Configuration
+## 🎯 Key Components
 
-### 🔒 Security Setup (CRITICAL)
+### Frontend Components
 
-**Before running in production, you MUST secure your application:**
+#### � Results Dashboard
+- **Real-time analytics** with interactive charts
+- **Summary metrics** for predictions and model performance
+- **Trend analysis** with configurable time ranges
+- **Recent predictions table** with detailed information
 
-#### 1. Generate Secure JWT Secret
-```bash
-cd server
-npm run generate-jwt-secret
-# Or automatically update .env:
-npm run setup-production-env
-```
+#### 🎯 ML Prediction Form
+- **Property feature inputs** (bedrooms, bathrooms, sqft, etc.)
+- **Multiple ML models** selection (Random Forest, Linear Regression, Neural Network, Gradient Boosting)
+- **Uncertainty quantification** with confidence intervals
+- **Real-time predictions** with immediate results
 
-#### 2. Check Security Status
+#### 📈 Property Data Visualization
+- **Interactive charts**: Bar charts, scatter plots, pie charts, line graphs
+- **Market analysis**: Price distribution, size vs price correlation
+- **Property insights**: Type breakdown and trend analysis
+- **Responsive design** with hover effects and tooltips
+
+#### 📁 Data Upload Interface
+- **Drag-and-drop** file upload functionality
+- **File validation** (CSV/JSON/Excel support, size limits)
+- **Progress tracking** with visual feedback
+- **Upload results** display with data validation
+
+### Backend Services
+
+#### 🤖 ML Services
+- **Supervised Learning**: Property price prediction models
+- **Uncertainty Quantification**: Confidence interval calculation
+- **Data Processing**: Feature engineering and validation
+- **Model Training**: Dynamic model creation and updates
+
+#### 🔗 API Endpoints
+- **Prediction API**: Real-time property price predictions
+- **Data Management**: File upload and dataset handling
+- **Model Services**: Model training and evaluation
 ```bash
 npm run check-security
 ```
@@ -230,49 +272,72 @@ UPLOAD_PATH=./uploads
 MAX_FILE_SIZE=10485760  # 10MB
 ```
 
-## 📊 Available ML Services
+## 📊 Available ML Models
 
-### Supervised Learning
-- **Linear Regression** - For continuous target prediction
-- **Random Forest** - For classification and regression
-- **XGBoost** - For high-performance gradient boosting
-- **Neural Networks** - For complex pattern recognition
+### Property Price Prediction Models
+- **Random Forest** - Ensemble method for robust predictions
+- **Linear Regression** - Simple linear relationship modeling
+- **Neural Network** - Deep learning for complex patterns
+- **Gradient Boosting** - Advanced ensemble technique
 
-### Unsupervised Learning
-- **K-Means Clustering** - For data segmentation
-- **PCA** - For dimensionality reduction
-- **DBSCAN** - For density-based clustering
-
-### Uncertainty Quantification
-- **Bayesian Neural Networks** - For uncertainty estimation
-- **Ensemble Methods** - For prediction confidence
-- **Conformal Prediction** - For prediction intervals
+### Uncertainty Quantification Methods
+- **Bootstrap Sampling** - Statistical confidence intervals
+- **Bayesian Approaches** - Probabilistic uncertainty estimation
+- **Ensemble Variance** - Model agreement analysis
 
 ## 🎯 API Endpoints
 
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `GET /api/auth/profile` - Get user profile
+### Machine Learning Predictions
+- `POST /api/ml/predict` - Make property price predictions
+  ```json
+  {
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "sqft": 2000,
+    "year_built": 2010,
+    "lot_size": 8000,
+    "school_rating": 8,
+    "crime_rate": 2.5,
+    "walkability_score": 75
+  }
+  ```
 
 ### Data Management
-- `POST /api/data/upload` - Upload dataset
-- `GET /api/data/datasets` - List datasets
-- `DELETE /api/data/:id` - Delete dataset
+- `POST /api/data/upload` - Upload property dataset files
+- `GET /api/data/properties` - Retrieve property data for visualization
+- `POST /api/data/validate` - Validate uploaded data format
 
-### Machine Learning
-- `POST /api/ml/train` - Train ML model
-- `POST /api/ml/predict` - Make predictions
-- `GET /api/ml/models` - List trained models
-- `POST /api/ml/analyze` - Analyze data patterns
+## 🖥️ Application Screenshots
+
+### 📊 Dashboard Overview
+The main dashboard provides comprehensive analytics and insights:
+- Real-time prediction metrics and statistics
+- Interactive charts showing market trends
+- Recent predictions with confidence levels
+- Model performance comparisons
+
+### 🎯 Prediction Interface
+Make accurate property price predictions:
+- Input property features (bedrooms, bathrooms, square footage, etc.)
+- Select from multiple ML models
+- Choose uncertainty quantification methods
+- Get instant predictions with confidence intervals
+
+### 📈 Data Visualization
+Explore property market insights:
+- Price distribution analysis
+- Size vs price correlation charts
+- Property type breakdowns
+- Market trend analysis over time
+
+### 📁 Data Upload
+Easy data management:
+- Drag-and-drop file upload
+- Support for CSV, JSON, and Excel formats
+- Real-time validation and progress tracking
+- Data quality assessment and feedback
 
 ## 🧪 Testing
-
-### Backend Tests
-```bash
-cd server
-npm test
-```
 
 ### Frontend Tests
 ```bash
@@ -280,26 +345,35 @@ cd client
 npm test
 ```
 
-### Python Tests
+### Backend Tests
+```bash
+cd server
+npm test
+```
+
+### Python Environment Test
 ```bash
 source venv/bin/activate
-python -m pytest server/python-scripts/tests/
+python -c "import pandas, numpy, sklearn; print('All ML packages installed successfully!')"
 ```
 
 ## 🚀 Deployment
 
-### Docker Deployment
+### Production Build
 ```bash
-# Build and run with Docker Compose
-docker-compose up --build
+# Build frontend for production
+cd client
+npm run build
+
+# The build folder will contain optimized production files
 ```
 
-### Manual Deployment
-1. Set `NODE_ENV=production` in server `.env`
-2. Build frontend: `cd client && npm run build`
-3. Configure reverse proxy (nginx/Apache)
-4. Set up process manager (PM2)
-5. Configure SSL certificates
+### Environment Configuration
+For production deployment, ensure:
+1. Set appropriate environment variables
+2. Configure secure file upload limits
+3. Implement proper error logging
+4. Set up monitoring and health checks
 
 ## 🤝 Contributing
 
@@ -311,28 +385,30 @@ docker-compose up --build
 
 ## 📝 License
 
-This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the ISC License.
 
 ## 👥 Authors
 
-- **Your Name** - *Initial work* - [YourGitHub](https://github.com/yourusername)
+- **Erik Williams** - *Project Creator* - [@EPW80](https://github.com/EPW80)
 
 ## 🙏 Acknowledgments
 
-- React team for the amazing framework
-- TensorFlow team for ML capabilities
-- MongoDB team for the database
-- All open-source contributors
+- React team for the excellent frontend framework
+- scikit-learn team for powerful ML capabilities
+- Recharts team for beautiful data visualization
+- Open-source community for inspiration and tools
 
 ## 📞 Support
 
 For support and questions:
 - 📧 Email: erikpw009@gmail.com
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/ml-insights-hub/issues)
-- 📖 Docs: [Project Wiki](https://github.com/yourusername/ml-insights-hub/wiki)
+- 🐛 Issues: [GitHub Issues](https://github.com/EPW80/ml-insights-hub/issues)
+- 📖 Documentation: [Project Wiki](https://github.com/EPW80/ml-insights-hub/wiki)
 
 ---
 
 <div align="center">
-  <strong>Built with 💀 for the ML community</strong>
+  <strong>🏠 Built with � for Real Estate Analytics</strong>
+  <br>
+  <em>Empowering data-driven property decisions with Machine Learning</em>
 </div>
