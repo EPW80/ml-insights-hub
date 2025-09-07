@@ -1,0 +1,50 @@
+{
+  "dataset_name": "Real Estate Properties Dataset",
+  "total_records": 5000,
+  "date_generated": "2025-09-06T19:47:31.824000",
+  "columns": [
+    "property_id",
+    "address",
+    "city",
+    "state",
+    "zipcode",
+    "latitude",
+    "longitude",
+    "bedrooms",
+    "bathrooms",
+    "sqft",
+    "lot_size",
+    "year_built",
+    "garage",
+    "property_type",
+    "condition",
+    "school_rating",
+    "crime_rate",
+    "walkability_score",
+    "public_transport_access",
+    "shopping_proximity",
+    "actual_price",
+    "listed_price",
+    "date_listed",
+    "date_sold",
+    "days_on_market",
+    "data_source",
+    "price_per_sqft",
+    "age",
+    "bed_bath_ratio",
+    "total_rooms"
+  ],
+  "price_statistics": {
+    "mean_price": 686721.6608,
+    "median_price": 603217.5,
+    "min_price": 53819.0,
+    "max_price": 2750013.0,
+    "std_price": 349548.30227366206
+  },
+  "feature_ranges": {
+    "bedrooms": "1-6",
+    "bathrooms": "1-4",
+    "sqft": "600-4497",
+    "year_built": "1950-2023"
+  }
+}

@@ -1,52 +1,199 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { spawn } = require('child_process');
-const path = require('path');
-const Prediction = require('../../models/Prediction');
-const { runPythonScript } = require('../../utils/pythonBridge');
+const { spawn } = require("child_process");
+const path = require("path");
+const Prediction = require("../../models/Prediction");
+const {
+  runPythonScript,
+  PythonExecutionError,
+  PythonTimeoutError,
+  PythonParseError,
+} = require("../../utils/pythonBridge");
 
-router.post('/', async (req, res) => {
+// Enhanced error response helper
+function sendErrorResponse(res, error, statusCode = 500) {
+  const errorResponse = {
+    success: false,
+    error: error.message || "An unexpected error occurred",
+    timestamp: new Date().toISOString(),
+  };
+
+  // Add specific error details based on error type
+  if (error instanceof PythonExecutionError) {
+    errorResponse.type = "python_execution_error";
+    errorResponse.details = {
+      exitCode: error.details.exitCode,
+      executionTime: error.details.executionTime,
+    };
+    statusCode = 422; // Unprocessable Entity
+  } else if (error instanceof PythonTimeoutError) {
+    errorResponse.type = "timeout_error";
+    errorResponse.details = {
+      timeout: error.details.timeout,
+      retryCount: error.details.retryCount,
+    };
+    statusCode = 408; // Request Timeout
+  } else if (error instanceof PythonParseError) {
+    errorResponse.type = "validation_error";
+    statusCode = 400; // Bad Request
+  } else if (error.name === "ValidationError") {
+    errorResponse.type = "database_validation_error";
+    errorResponse.details = Object.keys(error.errors || {});
+    statusCode = 400;
+  } else if (error.name === "MongoError" || error.name === "MongoServerError") {
+    errorResponse.type = "database_error";
+    statusCode = 503; // Service Unavailable
+  }
+
+  console.error(`[${new Date().toISOString()}] Prediction API Error:`, {
+    type: errorResponse.type,
+    message: error.message,
+    stack: error.stack,
+    details: error.details,
+  });
+
+  res.status(statusCode).json(errorResponse);
+}
+
+router.post("/", async (req, res) => {
+  const startTime = Date.now();
+
   try {
+    // Enhanced input validation
     const { features, modelType, uncertaintyMethod } = req.body;
-    
+
     if (!features || !modelType) {
-      return res.status(400).json({ error: 'Missing required parameters' });
+      return sendErrorResponse(
+        res,
+        new Error("Missing required parameters: features and modelType"),
+        400
+      );
+    }
+
+    // Validate features structure
+    if (typeof features !== "object" || Array.isArray(features)) {
+      return sendErrorResponse(
+        res,
+        new Error("Features must be an object"),
+        400
+      );
+    }
+
+    // Validate model type
+    const validModelTypes = [
+      "linear_regression",
+      "random_forest",
+      "neural_network",
+      "gradient_boosting",
+    ];
+    if (!validModelTypes.includes(modelType)) {
+      return sendErrorResponse(
+        res,
+        new Error(
+          `Invalid model type. Must be one of: ${validModelTypes.join(", ")}`
+        ),
+        400
+      );
+    }
+
+    // Validate uncertainty method if provided
+    const validUncertaintyMethods = [
+      "ensemble",
+      "bootstrap",
+      "quantile",
+      "bayesian",
+    ];
+    if (
+      uncertaintyMethod &&
+      !validUncertaintyMethods.includes(uncertaintyMethod)
+    ) {
+      return sendErrorResponse(
+        res,
+        new Error(
+          `Invalid uncertainty method. Must be one of: ${validUncertaintyMethods.join(
+            ", "
+          )}`
+        ),
+        400
+      );
     }
 
     const inputData = {
       features,
       model_type: modelType,
-      uncertainty_method: uncertaintyMethod || 'ensemble',
-      confidence_level: 0.95
+      uncertainty_method: uncertaintyMethod || "ensemble",
+      confidence_level: 0.95,
     };
 
-    const scriptPath = path.join(__dirname, '../../python-scripts/predict_with_uncertainty.py');
-    const result = await runPythonScript(scriptPath, inputData);
+    const scriptPath = path.join(
+      __dirname,
+      "../../python-scripts/predict_with_uncertainty.py"
+    );
 
-    const prediction = new Prediction({
-      property_features: features,
-      model_type: modelType,
-      prediction: {
-        point_estimate: result.prediction,
-        lower_bound: result.lower_bound,
-        upper_bound: result.upper_bound,
-        confidence_level: result.confidence_level,
-        uncertainty_metrics: result.uncertainty_metrics
+    // Enhanced Python script execution with timeout and retries
+    const result = await runPythonScript(scriptPath, inputData, {
+      timeout: 30000, // 30 seconds
+      maxRetries: 2,
+      onProgress: (progress) => {
+        console.log("Prediction progress:", progress);
       },
-      feature_importance: result.feature_importance,
-      timestamp: new Date()
     });
 
-    await prediction.save();
+    // Validate Python script output
+    if (!result || typeof result !== "object") {
+      throw new PythonParseError("Invalid response from prediction script");
+    }
 
+    const requiredFields = [
+      "prediction",
+      "lower_bound",
+      "upper_bound",
+      "confidence_level",
+    ];
+    const missingFields = requiredFields.filter(
+      (field) => result[field] === undefined
+    );
+    if (missingFields.length > 0) {
+      throw new PythonParseError(
+        `Missing required fields in prediction result: ${missingFields.join(
+          ", "
+        )}`
+      );
+    }
+
+    // Create prediction document with enhanced error handling
+    let prediction;
+    try {
+      prediction = new Prediction({
+        property_features: features,
+        model_type: modelType,
+        prediction: {
+          point_estimate: result.prediction,
+          lower_bound: result.lower_bound,
+          upper_bound: result.upper_bound,
+          confidence_level: result.confidence_level,
+          uncertainty_metrics: result.uncertainty_metrics || {},
+        },
+        feature_importance: result.feature_importance || {},
+        execution_time: Date.now() - startTime,
+        timestamp: new Date(),
+      });
+
+      await prediction.save();
+    } catch (dbError) {
+      console.error("Database save error:", dbError);
+      throw dbError;
+    }
+
+    // Success response
     res.json({
       success: true,
-      prediction: prediction
+      prediction: prediction,
+      execution_time: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
-    console.error('Prediction error:', error);
-    res.status(500).json({ error: 'Prediction failed', details: error.message });
+    sendErrorResponse(res, error);
   }
 });
 

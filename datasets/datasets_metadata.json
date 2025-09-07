@@ -1,0 +1,141 @@
+{
+  "datasets": [
+    {
+      "name": "Real Estate Properties",
+      "file": "real_estate/properties_dataset.csv",
+      "description": "Comprehensive real estate dataset with property features, location data, and pricing information",
+      "type": "regression",
+      "target_column": "actual_price",
+      "features": [
+        "bedrooms",
+        "bathrooms",
+        "sqft",
+        "year_built",
+        "school_rating",
+        "crime_rate",
+        "walkability_score"
+      ],
+      "size": "5000 records",
+      "use_cases": [
+        "price prediction",
+        "feature importance analysis",
+        "market trend analysis"
+      ]
+    },
+    {
+      "name": "ML Regression Sample",
+      "file": "sample_ml/regression_dataset.csv",
+      "description": "Synthetic regression dataset for testing ML algorithms",
+      "type": "regression",
+      "target_column": "target",
+      "features": [
+        "feature_1",
+        "feature_2",
+        "feature_3",
+        "feature_4",
+        "feature_5"
+      ],
+      "size": "2000 records",
+      "use_cases": [
+        "algorithm testing",
+        "regression analysis",
+        "model comparison"
+      ]
+    },
+    {
+      "name": "ML Classification Sample",
+      "file": "sample_ml/classification_dataset.csv",
+      "description": "Multi-class classification dataset for ML testing",
+      "type": "classification",
+      "target_column": "target",
+      "features": [
+        "feature_1",
+        "feature_2",
+        "feature_3",
+        "feature_4",
+        "feature_5"
+      ],
+      "size": "2000 records",
+      "use_cases": [
+        "classification testing",
+        "feature selection",
+        "model evaluation"
+      ]
+    },
+    {
+      "name": "Time Series Data",
+      "file": "sample_ml/timeseries_dataset.csv",
+      "description": "Time series data with trend and seasonal components",
+      "type": "time_series",
+      "target_column": "value",
+      "features": [
+        "date",
+        "trend",
+        "seasonal"
+      ],
+      "size": "1000 records",
+      "use_cases": [
+        "time series forecasting",
+        "trend analysis",
+        "seasonal decomposition"
+      ]
+    },
+    {
+      "name": "Clustering Sample",
+      "file": "sample_ml/clustering_dataset.csv",
+      "description": "Unsupervised learning dataset for clustering algorithms",
+      "type": "clustering",
+      "target_column": "true_cluster",
+      "features": [
+        "x1",
+        "x2"
+      ],
+      "size": "1500 records",
+      "use_cases": [
+        "clustering analysis",
+        "unsupervised learning",
+        "pattern discovery"
+      ]
+    }
+  ],
+  "upload_samples": [
+    {
+      "name": "Sample Property Upload",
+      "file": "sample_ml/sample_upload_properties.csv",
+      "description": "Small property dataset for testing upload functionality",
+      "size": "100 records"
+    },
+    {
+      "name": "Feature Importance Sample",
+      "file": "sample_ml/feature_importance_sample.csv",
+      "description": "Dataset designed to test feature importance algorithms",
+      "size": "500 records"
+    }
+  ],
+  "validation_datasets": [
+    {
+      "name": "Missing Values Test",
+      "file": "validation/dataset_with_missing_values.csv",
+      "description": "Dataset with intentional missing values for testing data cleaning",
+      "issues": [
+        "missing_values"
+      ]
+    },
+    {
+      "name": "Outliers Test",
+      "file": "validation/dataset_with_outliers.csv",
+      "description": "Dataset with outliers for testing data preprocessing",
+      "issues": [
+        "outliers"
+      ]
+    },
+    {
+      "name": "Duplicates Test",
+      "file": "validation/dataset_with_duplicates.csv",
+      "description": "Dataset with duplicate rows for testing data deduplication",
+      "issues": [
+        "duplicates"
+      ]
+    }
+  ]
+}
