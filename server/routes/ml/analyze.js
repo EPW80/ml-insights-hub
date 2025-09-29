@@ -2,11 +2,14 @@ const express = require("express");
 const router = express.Router();
 const {
   runPythonScript,
-  streamPythonScript,
+  executeDataValidation,
   PythonExecutionError,
   PythonTimeoutError,
-  PythonParseError,
-} = require("../../utils/pythonBridge");
+  PythonSecurityError,
+} = require("../../utils/securePythonBridge");
+
+// Legacy alias for backward compatibility
+const PythonParseError = PythonExecutionError;
 const path = require("path");
 
 // Enhanced error response helper
@@ -20,17 +23,30 @@ function sendErrorResponse(res, error, statusCode = 500) {
   if (error instanceof PythonExecutionError) {
     errorResponse.type = "python_execution_error";
     errorResponse.details = {
-      exitCode: error.details.exitCode,
-      executionTime: error.details.executionTime,
+      exitCode: error.details?.exitCode,
+      executionTime: error.details?.executionTime,
     };
     statusCode = 422;
   } else if (error instanceof PythonTimeoutError) {
     errorResponse.type = "timeout_error";
     errorResponse.details = {
-      timeout: error.details.timeout,
-      retryCount: error.details.retryCount,
+      timeout: error.details?.timeout,
+      retryCount: error.details?.retryCount,
     };
     statusCode = 408;
+  } else if (error instanceof PythonSecurityError) {
+    errorResponse.type = "security_error";
+    errorResponse.details = {
+      securityViolation: error.type,
+      timestamp: error.timestamp,
+    };
+    statusCode = 403;
+    // Log security incident
+    console.error("🚨 SECURITY VIOLATION in Data Analysis:", {
+      error: error.message,
+      type: error.type,
+      timestamp: error.timestamp
+    });
   } else if (error instanceof PythonParseError) {
     errorResponse.type = "validation_error";
     statusCode = 400;

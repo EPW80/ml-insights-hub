@@ -5,10 +5,14 @@ const path = require("path");
 const Prediction = require("../../models/Prediction");
 const {
   runPythonScript,
+  executeMlPrediction,
   PythonExecutionError,
   PythonTimeoutError,
-  PythonParseError,
-} = require("../../utils/pythonBridge");
+  PythonSecurityError,
+} = require("../../utils/securePythonBridge");
+
+// Legacy alias for backward compatibility
+const PythonParseError = PythonExecutionError;
 
 // Enhanced error response helper
 function sendErrorResponse(res, error, statusCode = 500) {
@@ -22,17 +26,32 @@ function sendErrorResponse(res, error, statusCode = 500) {
   if (error instanceof PythonExecutionError) {
     errorResponse.type = "python_execution_error";
     errorResponse.details = {
-      exitCode: error.details.exitCode,
-      executionTime: error.details.executionTime,
+      exitCode: error.details?.exitCode,
+      executionTime: error.details?.executionTime,
     };
     statusCode = 422; // Unprocessable Entity
   } else if (error instanceof PythonTimeoutError) {
     errorResponse.type = "timeout_error";
     errorResponse.details = {
-      timeout: error.details.timeout,
-      retryCount: error.details.retryCount,
+      timeout: error.details?.timeout,
+      retryCount: error.details?.retryCount,
     };
     statusCode = 408; // Request Timeout
+  } else if (error instanceof PythonSecurityError) {
+    errorResponse.type = "security_error";
+    errorResponse.details = {
+      securityViolation: error.type,
+      timestamp: error.timestamp,
+    };
+    statusCode = 403; // Forbidden
+    // Log security incident
+    console.error("🚨 SECURITY VIOLATION in ML Prediction:", {
+      error: error.message,
+      type: error.type,
+      timestamp: error.timestamp,
+      userAgent: req.get('User-Agent'),
+      ip: req.ip
+    });
   } else if (error instanceof PythonParseError) {
     errorResponse.type = "validation_error";
     statusCode = 400; // Bad Request
@@ -118,26 +137,12 @@ router.post("/", async (req, res) => {
       );
     }
 
-    const inputData = {
-      features,
-      model_type: modelType,
-      uncertainty_method: uncertaintyMethod || "ensemble",
-      confidence_level: 0.95,
-    };
-
-    const scriptPath = path.join(
-      __dirname,
-      "../../python-scripts/predict_with_uncertainty.py"
+    // Enhanced Python script execution with secure bridge
+    const result = await executeMlPrediction(
+      features, 
+      modelType, 
+      uncertaintyMethod || "ensemble"
     );
-
-    // Enhanced Python script execution with timeout and retries
-    const result = await runPythonScript(scriptPath, inputData, {
-      timeout: 30000, // 30 seconds
-      maxRetries: 2,
-      onProgress: (progress) => {
-        console.log("Prediction progress:", progress);
-      },
-    });
 
     // Validate Python script output
     if (!result || typeof result !== "object") {

@@ -12,7 +12,14 @@
     "generate-jwt-secret": "node scripts/generate-jwt-secret.js",
     "setup-production-env": "node scripts/generate-jwt-secret.js --update-env",
     "check-security": "node scripts/generate-jwt-secret.js --check-env",
-    "security-audit": "npm audit && npm run check-security"
+    "security-audit": "node scripts/security-audit.js",
+    "security-full": "npm audit && node scripts/security-audit.js",
+    "security:test-python": "node ../test-secure-python-bridge.js",
+    "security:validate": "node utils/startupSecurity.js",
+    "db:test": "node scripts/test-database-connection.js",
+    "db:health": "node scripts/database-health-check.js",
+    "db:stats": "node scripts/database-stats.js",
+    "preproduction": "npm run security-audit && npm run generate-jwt-secret --update-env"
   },
   "keywords": [
     "ml",
