@@ -243,58 +243,72 @@ source venv/bin/activate
 ## 📁 Project Structure
 
 ```
-ml-insights-hub/
-├── 📁 client/                       # React frontend application
-│   ├── src/
-│   │   ├── components/              # React UI components
-│   │   │   ├── MLPredictionForm.tsx           # Property prediction interface
-│   │   │   ├── PropertyDataVisualization.tsx # Interactive charts and graphs
-│   │   │   ├── DataUploadInterface.tsx       # File upload with validation
-│   │   │   ├── ResultsDashboard.tsx          # Analytics dashboard
-│   │   │   └── *.css                         # Component styling
-│   │   ├── hooks/                   # Custom React hooks
-│   │   │   └── usePrediction.ts              # Prediction state management
-│   │   ├── services/                # API communication layer
-│   │   │   └── api.ts                        # REST API service
-│   │   ├── utils/                   # Utility functions
-│   │   └── App.tsx                  # Main application component
-│   ├── public/                      # Static assets
-│   └── package.json                 # Frontend dependencies
-├── 📁 server/                       # Node.js backend
-│   ├── config/                      # Server configuration
-│   │   └── database.js              # Enhanced MongoDB connection manager
-│   ├── middleware/                  # Express middleware
-│   │   └── security.js              # Security middleware (rate limiting, validation)
-│   ├── ml-services/                 # ML service modules
-│   │   ├── supervised/              # Supervised learning algorithms
-│   │   ├── uncertainty/             # Uncertainty quantification
-│   │   └── unsupervised/            # Unsupervised learning
-│   ├── models/                      # Data models and schemas
-│   ├── python-scripts/              # Python ML scripts
-│   ├── routes/                      # API endpoint definitions
-│   │   ├── auth/                    # Authentication routes
-│   │   ├── data/                    # Data management routes
-│   │   ├── health/                  # Health monitoring endpoints
-│   │   └── ml/                      # Machine learning routes
-│   ├── scripts/                     # Management and testing scripts
-│   │   ├── security-audit.js        # Comprehensive security auditing
-│   │   ├── test-database-connection.js # Database connection testing
-│   │   ├── database-health-check.js    # Database health monitoring
-│   │   └── database-stats.js        # Database statistics collection
-│   ├── uploads/                     # File upload storage
-│   ├── utils/                       # Backend utilities
-│   │   ├── securePythonBridge.js    # Secure Python script executor
-│   │   ├── securePythonExecutor.js  # Core Python security engine
-│   │   └── startupSecurity.js       # Startup security validation
-│   ├── server.js                    # Main server file
-│   └── requirements.txt             # Python dependencies
-├── 📁 datasets/                     # Generated sample datasets
-├── 📁 models/                       # Trained ML models storage
-├── 📁 venv/                         # Python virtual environment
-├── .gitignore                       # Git ignore rules
-├── start.sh                         # Application startup script
-└── README.md                        # Project documentation
+ml-insights-hub/ 🏠────────────────────────────────────────────────────────────
+│
+├── � client/ # React frontend application | 🚀 React 19 + TypeScript
+│   ├── src/ ──────────────────────────────┐
+│   │   ├── 🧩 components/ # React UI components
+│   │   │   ├── 🎯 MLPredictionForm.tsx # Property prediction interface
+│   │   │   ├── 📊 PropertyDataVisualization.tsx # Interactive charts and graphs
+│   │   │   ├── 📁 DataUploadInterface.tsx # File upload with validation
+│   │   │   ├── 📈 ResultsDashboard.tsx # Analytics dashboard
+│   │   │   └── 🎨 *.css # Component styling
+│   │   ├── 🪝 hooks/ # Custom React hooks
+│   │   │   └── 🎯 usePrediction.ts # Prediction state management
+│   │   ├── 🔗 services/ # API communication layer
+│   │   │   └── 🌐 api.ts # REST API service
+│   │   ├── 🛠️ utils/ # Utility functions
+│   │   └── 📱 App.tsx # Main application component
+│   ├── 🌍 public/ # Static assets
+│   └── 📦 package.json # Frontend dependencies
+│
+├── ⚙️ server/ # Node.js backend | 🚀 Express + MongoDB
+│   ├── ⚙️ config/ ───────────────────────┐
+│   │   └── 🗄️ database.js # Enhanced MongoDB connection manager
+│   ├── 🛡️ middleware/ # Express middleware
+│   │   └── 🔐 security.js # Security middleware (rate limiting, validation)
+│   ├── 🤖 ml-services/ # ML service modules
+│   │   ├── 📊 supervised/ # Supervised learning algorithms
+│   │   ├── 🎯 uncertainty/ # Uncertainty quantification
+│   │   └── 🔍 unsupervised/ # Unsupervised learning
+│   ├── 📋 models/ # Data models and schemas
+│   ├── 🐍 python-scripts/ # Python ML scripts
+│   ├── 🛣️ routes/ # API endpoint definitions
+│   │   ├── 🔑 auth/ # Authentication routes
+│   │   ├── 📊 data/ # Data management routes
+│   │   ├── 💓 health/ # Health monitoring endpoints
+│   │   └── 🤖 ml/ # Machine learning routes
+│   ├── 🔧 scripts/ # Management and testing scripts
+│   │   ├── 🛡️ security-audit.js # Comprehensive security auditing
+│   │   ├── 🧪 test-database-connection.js # Database connection testing
+│   │   ├── 💓 database-health-check.js # Database health monitoring
+│   │   └── 📈 database-stats.js # Database statistics collection
+│   ├── 📁 uploads/ # File upload storage
+│   ├── 🛠️ utils/ # Backend utilities
+│   │   ├── 🔐 securePythonBridge.js # Secure Python script executor
+│   │   ├── 🛡️ securePythonExecutor.js # Core Python security engine
+│   │   └── 🚨 startupSecurity.js # Startup security validation
+│   ├── 🖥️ server.js # Main server file
+│   └── 🐍 requirements.txt # Python dependencies
+│
+├── � datasets/ # Generated sample datasets | 🎲 Synthetic data
+├── 🧠 models/ # Trained ML models storage | 🤖 scikit-learn models
+├── � venv/ # Python virtual environment | 📦 Isolated dependencies
+├── 🚫 .gitignore # Git ignore rules
+├── 🚀 start.sh # Application startup script
+└── 📖 README.md # Project documentation
 ```
+
+### 🔑 Key Directory Purposes
+
+| Directory | Purpose | Technologies |
+|-----------|---------|-------------|
+| 🎯 `/client/src/components/` | React UI components | TypeScript, Modern CSS, Glass Morphism |
+| 🤖 `/server/ml-services/` | ML algorithms & services | Python bridge, scikit-learn |
+| 🛡️ `/server/middleware/` | Security & validation | JWT, Rate limiting, Input sanitization |
+| 💓 `/server/routes/health/` | System monitoring | Real-time health checks, MongoDB stats |
+| 🔧 `/server/scripts/` | Automation & testing | Database testing, Security auditing |
+| 🐍 `/server/python-scripts/` | ML model execution | Sandboxed Python environment |
 
 ## 🎯 Key Components
 
