@@ -587,7 +587,7 @@ For support and questions:
 ---
 
 <div align="center">
-  <strong>🏠 Built with ❤️ for Real Estate Analytics</strong>
+  <strong>🏠 Built with 💀 for Real Estate Analytics</strong>
   <br>
   <em>Empowering data-driven property decisions with Machine Learning</em>
   <br><br>
