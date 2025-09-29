@@ -175,8 +175,6 @@ cp server/.env.example server/.env
 
 # Edit .env file with your MongoDB URI
 MONGODB_URI=mongodb://localhost:27017/ml-insights-hub
-# Or for MongoDB Atlas:
-# MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/ml-insights-hub
 
 # Test database connection
 cd server
