@@ -23,7 +23,12 @@ except ImportError:
 class AutoRetrainManager:
     """Manages automated model retraining based on performance thresholds"""
 
-    def __init__(self, config_dir="/home/erikwilliams/dev/ml-insights-hub/models/retrain_configs"):
+    def __init__(self, config_dir=None):
+        if config_dir is None:
+            # Get project root dynamically (3 levels up from this script)
+            script_dir = Path(__file__).resolve().parent
+            project_root = script_dir.parent.parent
+            config_dir = project_root / "models" / "retrain_configs"
         self.config_dir = Path(config_dir)
         self.config_dir.mkdir(parents=True, exist_ok=True)
         self.config_file = self.config_dir / "retrain_config.json"

@@ -16,7 +16,12 @@ import hashlib
 class ModelVersionManager:
     """Manages model versions and enables rollback functionality"""
 
-    def __init__(self, models_dir="/home/erikwilliams/dev/ml-insights-hub/models"):
+    def __init__(self, models_dir=None):
+        if models_dir is None:
+            # Get project root dynamically (3 levels up from this script)
+            script_dir = Path(__file__).resolve().parent
+            project_root = script_dir.parent.parent
+            models_dir = project_root / "models"
         self.models_dir = Path(models_dir)
         self.versions_dir = self.models_dir / "versions"
         self.versions_dir.mkdir(parents=True, exist_ok=True)

@@ -26,10 +26,14 @@ warnings.filterwarnings('ignore')
 def load_dataset(dataset_id):
     """Load dataset for clustering analysis"""
     try:
+        from pathlib import Path
+        script_dir = Path(__file__).resolve().parent
+        project_root = script_dir.parent.parent
+        
         possible_paths = [
-            f'/home/erikwilliams/dev/ml-insights-hub/datasets/sample_ml/{dataset_id}',
-            f'/home/erikwilliams/dev/ml-insights-hub/datasets/real_estate/{dataset_id}',
-            f'/home/erikwilliams/dev/ml-insights-hub/datasets/{dataset_id}',
+            project_root / 'datasets' / 'sample_ml' / dataset_id,
+            project_root / 'datasets' / 'real_estate' / dataset_id,
+            project_root / 'datasets' / dataset_id,
             dataset_id
         ]
         

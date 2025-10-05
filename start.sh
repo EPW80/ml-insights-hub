@@ -3,9 +3,12 @@
 # ML Insights Hub Startup Script
 echo "🚀 Starting ML Insights Hub..."
 
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # Start frontend in background
 echo "📱 Starting React frontend..."
-cd /home/erikwilliams/dev/ml-insights-hub/client
+cd "$SCRIPT_DIR/client"
 npm start &
 FRONTEND_PID=$!
 
@@ -14,13 +17,13 @@ sleep 3
 
 # Start backend in background
 echo "⚙️  Starting Node.js backend..."
-cd /home/erikwilliams/dev/ml-insights-hub/server
+cd "$SCRIPT_DIR/server"
 npm run dev &
 BACKEND_PID=$!
 
 # Activate Python environment
 echo "🐍 Python environment ready..."
-cd /home/erikwilliams/dev/ml-insights-hub
+cd "$SCRIPT_DIR"
 source venv/bin/activate
 
 echo "✅ ML Insights Hub is starting up!"

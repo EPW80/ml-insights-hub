@@ -31,11 +31,15 @@ warnings.filterwarnings('ignore')
 def load_dataset(dataset_id):
     """Load dataset by ID or path"""
     try:
+        from pathlib import Path
+        script_dir = Path(__file__).resolve().parent
+        project_root = script_dir.parent.parent
+        
         # Try different possible paths
         possible_paths = [
-            f'/home/erikwilliams/dev/ml-insights-hub/datasets/real_estate/{dataset_id}',
-            f'/home/erikwilliams/dev/ml-insights-hub/datasets/sample_ml/{dataset_id}',
-            f'/home/erikwilliams/dev/ml-insights-hub/datasets/{dataset_id}',
+            project_root / 'datasets' / 'real_estate' / dataset_id,
+            project_root / 'datasets' / 'sample_ml' / dataset_id,
+            project_root / 'datasets' / dataset_id,
             dataset_id  # Direct path
         ]
         
@@ -44,8 +48,8 @@ def load_dataset(dataset_id):
                 return pd.read_csv(path)
         
         # Default to real estate dataset
-        default_path = '/home/erikwilliams/dev/ml-insights-hub/datasets/real_estate/properties_dataset.csv'
-        if os.path.exists(default_path):
+        default_path = project_root / 'datasets' / 'real_estate' / 'properties_dataset.csv'
+        if default_path.exists():
             return pd.read_csv(default_path)
         
         # Create mock data if nothing found
@@ -263,11 +267,14 @@ def train_model(model_type, dataset_id, hyperparameters, training_config):
             feature_importance = dict(sorted(feature_importance.items(), key=lambda x: x[1], reverse=True))
         
         # Save model
+        from pathlib import Path
+        script_dir = Path(__file__).resolve().parent
+        project_root = script_dir.parent.parent
         model_id = f"{model_type}_{dataset_id}_{int(start_time.timestamp())}"
-        model_dir = "/home/erikwilliams/dev/ml-insights-hub/models"
+        model_dir = project_root / "models"
         os.makedirs(model_dir, exist_ok=True)
         
-        model_path = f"{model_dir}/{model_id}.pkl"
+        model_path = model_dir / f"{model_id}.pkl"
         model_metadata = {
             'model': model,
             'scaler': scaler,

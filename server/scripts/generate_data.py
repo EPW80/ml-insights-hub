@@ -13,15 +13,20 @@ import random
 from faker import Faker
 from sklearn.datasets import make_regression, make_classification
 import requests
+from pathlib import Path
 
 # Initialize Faker for realistic data generation
 fake = Faker()
 np.random.seed(42)
 random.seed(42)
 
+# Get project root dynamically
+script_dir = Path(__file__).resolve().parent
+project_root = script_dir.parent.parent
+
 def create_datasets_directory():
     """Create datasets directory structure"""
-    base_dir = '/home/erikwilliams/dev/ml-insights-hub/datasets'
+    base_dir = project_root / 'datasets'
     directories = [
         'real_estate',
         'sample_ml',
@@ -31,8 +36,8 @@ def create_datasets_directory():
     ]
     
     for directory in directories:
-        dir_path = os.path.join(base_dir, directory)
-        os.makedirs(dir_path, exist_ok=True)
+        dir_path = base_dir / directory
+        dir_path.mkdir(parents=True, exist_ok=True)
         print(f"Created directory: {dir_path}")
 
 def generate_real_estate_dataset(num_properties=5000):
@@ -150,7 +155,7 @@ def generate_real_estate_dataset(num_properties=5000):
     df['total_rooms'] = df['bedrooms'] + df['bathrooms']
     
     # Save dataset
-    output_path = '/home/erikwilliams/dev/ml-insights-hub/datasets/real_estate/properties_dataset.csv'
+    output_path = project_root / 'datasets' / 'real_estate' / 'properties_dataset.csv'
     df.to_csv(output_path, index=False)
     print(f"Real estate dataset saved to: {output_path}")
     
@@ -175,7 +180,7 @@ def generate_real_estate_dataset(num_properties=5000):
         }
     }
     
-    with open('/home/erikwilliams/dev/ml-insights-hub/datasets/real_estate/dataset_summary.json', 'w') as f:
+    with open(project_root / 'datasets' / 'real_estate' / 'dataset_summary.json', 'w') as f:
         json.dump(summary, f, indent=2)
     
     return df
@@ -202,7 +207,7 @@ def generate_ml_sample_datasets():
     
     df_reg = pd.DataFrame(X_reg, columns=feature_names)
     df_reg['target'] = y_reg
-    df_reg.to_csv('/home/erikwilliams/dev/ml-insights-hub/datasets/sample_ml/regression_dataset.csv', index=False)
+    df_reg.to_csv(project_root / 'datasets' / 'sample_ml' / 'regression_dataset.csv', index=False)
     
     # 2. Classification Dataset
     print("Creating classification dataset...")

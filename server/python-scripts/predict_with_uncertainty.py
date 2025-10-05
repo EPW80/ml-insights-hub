@@ -31,9 +31,12 @@ def load_data(dataset_path=None):
         if dataset_path and os.path.exists(dataset_path):
             return pd.read_csv(dataset_path)
         
-        # Try to load default real estate dataset
-        default_path = '/home/erikwilliams/dev/ml-insights-hub/datasets/real_estate/properties_dataset.csv'
-        if os.path.exists(default_path):
+        # Try to load default real estate dataset using relative path
+        from pathlib import Path
+        script_dir = Path(__file__).resolve().parent
+        project_root = script_dir.parent.parent
+        default_path = project_root / 'datasets' / 'real_estate' / 'properties_dataset.csv'
+        if default_path.exists():
             return pd.read_csv(default_path)
         
         # If no dataset available, create mock data

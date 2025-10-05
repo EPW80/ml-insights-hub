@@ -27,7 +27,12 @@ except ImportError:
 class ABTestingFramework:
     """Framework for A/B testing machine learning models"""
 
-    def __init__(self, experiments_dir="/home/erikwilliams/dev/ml-insights-hub/models/ab_tests"):
+    def __init__(self, experiments_dir=None):
+        if experiments_dir is None:
+            # Get project root dynamically (3 levels up from this script)
+            script_dir = Path(__file__).resolve().parent
+            project_root = script_dir.parent.parent
+            experiments_dir = project_root / "models" / "ab_tests"
         self.experiments_dir = Path(experiments_dir)
         self.experiments_dir.mkdir(parents=True, exist_ok=True)
         self.metadata_file = self.experiments_dir / "experiments_metadata.json"
