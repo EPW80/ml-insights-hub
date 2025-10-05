@@ -47,7 +47,7 @@ async function executeMlPrediction(features, modelType = 'random_forest', uncert
   
   try {
     const result = await secureExecutor.executeSecure(
-      path.resolve(__dirname, '../python-scripts/predict_property_price.py'),
+      path.resolve(__dirname, '../python-scripts/predict_with_uncertainty.py'),
       inputData,
       {
         timeout: 30000, // 30 seconds for ML operations

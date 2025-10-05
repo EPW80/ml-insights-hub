@@ -316,11 +316,10 @@ class SecurePythonExecutor {
       const secureEnv = this.createSecureEnvironment();
       
       // Prepare arguments securely
+      const inputJson = JSON.stringify(inputData);
       const args = [
-        '-S', // Don't add user site packages to sys.path
-        '-s', // Don't add user site directory to sys.path
-        '-I', // Isolated mode
-        scriptPath
+        scriptPath,
+        inputJson // Pass input as command-line argument
       ];
       
       // Spawn process with security restrictions
@@ -429,19 +428,11 @@ class SecurePythonExecutor {
         ));
       });
       
-      // Send input data to Python script
+      // Close stdin since we pass input as argument
       try {
-        python.stdin.write(JSON.stringify(inputData));
         python.stdin.end();
       } catch (error) {
-        this.killProcessTree(python.pid);
-        clearTimeout(timeoutHandle);
-        reject(new PythonExecutionError(
-          `Failed to send input to Python script: ${error.message}`,
-          -1,
-          error.message,
-          ''
-        ));
+        // Ignore stdin close errors
       }
       
       this.executionCount++;

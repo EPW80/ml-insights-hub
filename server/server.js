@@ -132,6 +132,10 @@ app.use((req, res, next) => {
 app.use("/api/ml/predict", mlLimiter, require("./routes/ml/predict"));
 app.use("/api/ml/train", mlLimiter, require("./routes/ml/train"));
 app.use("/api/ml/analyze", mlLimiter, require("./routes/ml/analyze"));
+app.use("/api/ml/versions", mlLimiter, require("./routes/ml/versioning"));
+app.use("/api/ml/ab-test", mlLimiter, require("./routes/ml/ab-testing"));
+app.use("/api/ml/auto-retrain", mlLimiter, require("./routes/ml/auto-retrain"));
+app.use("/api/ml/explainability", mlLimiter, require("./routes/ml/explainability"));
 app.use("/api/data", uploadLimiter, require("./routes/data"));
 app.use("/api/auth", authLimiter, require("./routes/auth"));
 app.use("/api/health", require("./routes/health/database")); // Database health monitoring
