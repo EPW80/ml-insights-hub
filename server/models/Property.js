@@ -37,7 +37,35 @@ const propertySchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Geospatial index for location-based queries
 propertySchema.index({ coordinates: '2dsphere' });
+
+// Compound indexes for common filter combinations
 propertySchema.index({ 'features.bedrooms': 1, 'features.bathrooms': 1 });
+propertySchema.index({ 'features.sqft': 1, actual_price: 1 });
+propertySchema.index({ 'features.property_type': 1, actual_price: 1 });
+
+// Price range queries
+propertySchema.index({ actual_price: 1 });
+propertySchema.index({ listed_price: 1 });
+
+// Date-based queries for recent listings
+propertySchema.index({ date_listed: -1 });
+propertySchema.index({ date_sold: -1 });
+propertySchema.index({ createdAt: -1 });
+
+// Neighborhood data for filtering
+propertySchema.index({ 'neighborhood_data.school_rating': 1 });
+propertySchema.index({ 'neighborhood_data.walkability_score': 1 });
+
+// Compound index for multi-filter searches (bedrooms + bathrooms + price range)
+propertySchema.index({
+  'features.bedrooms': 1,
+  'features.bathrooms': 1,
+  actual_price: 1
+});
+
+// Text search index for address
+propertySchema.index({ address: 'text', description: 'text' });
 
 module.exports = mongoose.model('Property', propertySchema);

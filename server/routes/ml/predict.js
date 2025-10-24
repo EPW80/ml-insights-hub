@@ -11,6 +11,13 @@ const {
   PythonSecurityError,
 } = require("../../utils/securePythonBridge");
 
+// Import authentication middleware
+const { requireAuthOrApiKey, logAuthenticatedRequest } = require("../../middleware/mlAuth");
+
+// Apply authentication to all routes in this router
+router.use(requireAuthOrApiKey);
+router.use(logAuthenticatedRequest);
+
 // Legacy alias for backward compatibility
 const PythonParseError = PythonExecutionError;
 

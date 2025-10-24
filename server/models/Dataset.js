@@ -42,4 +42,37 @@ const datasetSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Indexes for efficient querying
+
+// Index for searching datasets by name
+datasetSchema.index({ name: 1 });
+
+// Text search index for name and description
+datasetSchema.index({ name: 'text', description: 'text' });
+
+// Index for filtering by format
+datasetSchema.index({ format: 1 });
+
+// Index for filtering by uploader
+datasetSchema.index({ uploaded_by: 1 });
+
+// Index for recent datasets
+datasetSchema.index({ createdAt: -1 });
+
+// Compound index for user's datasets sorted by date
+datasetSchema.index({ uploaded_by: 1, createdAt: -1 });
+
+// Index for dataset size queries
+datasetSchema.index({ file_size: 1 });
+datasetSchema.index({ row_count: 1 });
+
+// Index for quality metrics
+datasetSchema.index({ 'data_quality_metrics.completeness': -1 });
+
+// Compound index for high-quality recent datasets
+datasetSchema.index({
+  'data_quality_metrics.completeness': -1,
+  createdAt: -1
+});
+
 module.exports = mongoose.model('Dataset', datasetSchema);

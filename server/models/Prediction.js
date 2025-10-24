@@ -40,4 +40,32 @@ const predictionSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Indexes for efficient querying
+
+// Foreign key indexes for joins
+predictionSchema.index({ property_id: 1 });
+predictionSchema.index({ model_id: 1 });
+predictionSchema.index({ user_id: 1 });
+
+// Compound index for user's predictions sorted by date
+predictionSchema.index({ user_id: 1, createdAt: -1 });
+
+// Index for filtering by model type
+predictionSchema.index({ model_type: 1 });
+
+// Compound index for model performance analysis
+predictionSchema.index({ model_id: 1, createdAt: -1 });
+
+// Index for high-confidence predictions
+predictionSchema.index({ model_confidence: -1 });
+
+// Compound index for property + model lookups (prevent duplicate predictions)
+predictionSchema.index({ property_id: 1, model_id: 1 });
+
+// Index for prediction value range queries
+predictionSchema.index({ 'prediction.point_estimate': 1 });
+
+// Time-based queries (most recent predictions)
+predictionSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model('Prediction', predictionSchema);

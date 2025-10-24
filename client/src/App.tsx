@@ -1,12 +1,21 @@
-import React, { useState } from 'react';
-import MLPredictionForm from './components/MLPredictionForm';
-import PropertyDataVisualization from './components/PropertyDataVisualization';
-import DataUploadInterface from './components/DataUploadInterface';
-import ResultsDashboard from './components/ResultsDashboard';
+import React, { useState, useCallback, lazy, Suspense } from 'react';
 import './App.css';
 
+// Lazy load components for code splitting
+const MLPredictionForm = lazy(() => import('./components/MLPredictionForm'));
+const PropertyDataVisualization = lazy(() => import('./components/PropertyDataVisualization'));
+const DataUploadInterface = lazy(() => import('./components/DataUploadInterface'));
+const ResultsDashboard = lazy(() => import('./components/ResultsDashboard'));
+
+// Define proper types for tab navigation
+type TabType = 'dashboard' | 'prediction' | 'visualization' | 'upload';
+
 function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+
+  const handleTabChange = useCallback((tab: TabType) => {
+    setActiveTab(tab);
+  }, []);
 
   const Navigation = () => (
     <nav className="main-navigation">
@@ -16,25 +25,25 @@ function App() {
       <div className="nav-links">
         <button
           className={`nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
-          onClick={() => setActiveTab('dashboard')}
+          onClick={() => handleTabChange('dashboard')}
         >
           📊 Dashboard
         </button>
         <button
           className={`nav-link ${activeTab === 'prediction' ? 'active' : ''}`}
-          onClick={() => setActiveTab('prediction')}
+          onClick={() => handleTabChange('prediction')}
         >
           🎯 Predictions
         </button>
         <button
           className={`nav-link ${activeTab === 'visualization' ? 'active' : ''}`}
-          onClick={() => setActiveTab('visualization')}
+          onClick={() => handleTabChange('visualization')}
         >
           📈 Visualization
         </button>
         <button
           className={`nav-link ${activeTab === 'upload' ? 'active' : ''}`}
-          onClick={() => setActiveTab('upload')}
+          onClick={() => handleTabChange('upload')}
         >
           📁 Upload Data
         </button>
@@ -42,7 +51,7 @@ function App() {
     </nav>
   );
 
-  const renderActiveComponent = () => {
+  const renderActiveComponent = (): React.JSX.Element => {
     switch (activeTab) {
       case 'dashboard':
         return <ResultsDashboard />;
@@ -61,7 +70,14 @@ function App() {
     <div className="App">
       <Navigation />
       <main className="main-content">
-        {renderActiveComponent()}
+        <Suspense fallback={
+          <div className="loading-container">
+            <div className="spinner"></div>
+            <p>Loading component...</p>
+          </div>
+        }>
+          {renderActiveComponent()}
+        </Suspense>
       </main>
     </div>
   );

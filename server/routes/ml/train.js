@@ -1,5 +1,12 @@
 const express = require("express");
 const router = express.Router();
+// Import authentication middleware
+const { requireAuthOrApiKey, logAuthenticatedRequest } = require("../../middleware/mlAuth");
+
+// Apply authentication to all routes in this router
+router.use(requireAuthOrApiKey);
+router.use(logAuthenticatedRequest);
+
 const Model = require("../../models/Model");
 const {
   runPythonScript,

@@ -25,6 +25,21 @@ except ImportError:
 import warnings
 warnings.filterwarnings('ignore')
 
+# Import input validation
+try:
+    from input_validator import (
+        InputValidator,
+        MLInputValidator,
+        InputValidationError,
+        validate_input_safe,
+        send_error,
+        send_success
+    )
+    VALIDATION_AVAILABLE = True
+except ImportError:
+    VALIDATION_AVAILABLE = False
+    print(json.dumps({"error": "Input validation module not available"}), file=sys.stderr)
+
 def load_data(dataset_path=None):
     """Load dataset for training/prediction"""
     try:
@@ -305,16 +320,54 @@ def main():
     try:
         # Parse input arguments
         if len(sys.argv) < 2:
-            print(json.dumps({"error": "No input data provided"}))
-            sys.exit(1)
-        
-        input_data = json.loads(sys.argv[1])
-        
-        # Extract parameters
-        features = input_data.get('features', {})
-        model_type = input_data.get('model_type', 'random_forest')
-        uncertainty_method = input_data.get('uncertainty_method', 'ensemble')
-        confidence_level = input_data.get('confidence_level', 0.95)
+            if VALIDATION_AVAILABLE:
+                send_error("No input data provided")
+            else:
+                print(json.dumps({"error": "No input data provided"}))
+                sys.exit(1)
+
+        # Validate input if validation is available
+        if VALIDATION_AVAILABLE:
+            success, validated_data, error_msg = validate_input_safe(sys.argv[1])
+            if not success:
+                send_error(error_msg)
+            input_data = validated_data
+        else:
+            input_data = json.loads(sys.argv[1])
+
+        # Validate and extract parameters with proper validation
+        if VALIDATION_AVAILABLE:
+            try:
+                features = MLInputValidator.validate_features(
+                    input_data.get('features'),
+                    field='features'
+                )
+                model_type = InputValidator.validate_enum(
+                    input_data.get('model_type', 'random_forest'),
+                    'model_type',
+                    MLInputValidator.ALLOWED_MODEL_TYPES,
+                    required=False
+                ) or 'random_forest'
+                uncertainty_method = InputValidator.validate_enum(
+                    input_data.get('uncertainty_method', 'ensemble'),
+                    'uncertainty_method',
+                    MLInputValidator.ALLOWED_UNCERTAINTY_METHODS,
+                    required=False
+                ) or 'ensemble'
+                confidence_level = InputValidator.validate_number(
+                    input_data.get('confidence_level', 0.95),
+                    'confidence_level',
+                    required=False,
+                    min_value=0.8,
+                    max_value=0.99
+                ) or 0.95
+            except InputValidationError as e:
+                send_error(e.message, e.field)
+        else:
+            features = input_data.get('features', {})
+            model_type = input_data.get('model_type', 'random_forest')
+            uncertainty_method = input_data.get('uncertainty_method', 'ensemble')
+            confidence_level = input_data.get('confidence_level', 0.95)
         
         if not features:
             print(json.dumps({"error": "No features provided for prediction"}))

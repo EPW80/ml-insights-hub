@@ -28,6 +28,13 @@ except ImportError:
 import warnings
 warnings.filterwarnings('ignore')
 
+# Import model caching system
+try:
+    from model_cache import get_cached_model, cache_model, get_cache
+    CACHING_AVAILABLE = True
+except ImportError:
+    CACHING_AVAILABLE = False
+
 def load_dataset(dataset_id):
     """Load dataset by ID or path"""
     try:
@@ -189,7 +196,28 @@ def hyperparameter_tuning(model_class, X_train, y_train, model_type):
 def train_model(model_type, dataset_id, hyperparameters, training_config):
     """Train a machine learning model"""
     start_time = datetime.now()
-    
+
+    # Check for cached model if caching is enabled
+    use_cache = training_config.get('use_cache', True)
+    cache_config = {
+        'model_type': model_type,
+        'dataset_id': dataset_id,
+        'hyperparameters': hyperparameters,
+        'test_size': training_config.get('test_size', 0.2),
+        'random_state': training_config.get('random_state', 42)
+    }
+
+    if CACHING_AVAILABLE and use_cache and SKLEARN_AVAILABLE:
+        cached_result = get_cached_model(model_type, cache_config)
+        if cached_result is not None:
+            print(json.dumps({"type": "progress", "message": "Using cached model (skipping training)"}))
+            return {
+                'cached': True,
+                'model_id': f"cached_{model_type}_{int(start_time.timestamp())}",
+                'cache_hit': True,
+                'message': 'Model loaded from cache to avoid retraining'
+            }
+
     # Load data
     df = load_dataset(dataset_id)
     print(json.dumps({"type": "progress", "message": f"Loaded dataset with {len(df)} records"}))
@@ -285,7 +313,19 @@ def train_model(model_type, dataset_id, hyperparameters, training_config):
         
         with open(model_path, 'wb') as f:
             pickle.dump(model_metadata, f)
-        
+
+        # Cache the trained model
+        if CACHING_AVAILABLE and use_cache:
+            try:
+                cache_model(model_type, cache_config, model_metadata, {
+                    'training_time': (datetime.now() - start_time).total_seconds(),
+                    'test_metrics': test_metrics,
+                    'train_metrics': train_metrics
+                })
+                print(json.dumps({"type": "progress", "message": "Model cached for future use"}))
+            except Exception as e:
+                print(json.dumps({"type": "warning", "message": f"Failed to cache model: {str(e)}"}))
+
         training_time = (datetime.now() - start_time).total_seconds()
         
         result = {
