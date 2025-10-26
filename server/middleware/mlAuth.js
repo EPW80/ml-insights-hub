@@ -10,6 +10,18 @@ const jwt = require('jsonwebtoken');
  */
 const requireAuth = (req, res, next) => {
   try {
+    // DEVELOPMENT MODE: Skip authentication if SKIP_AUTH environment variable is set
+    if (process.env.SKIP_AUTH === 'true' && process.env.NODE_ENV !== 'production') {
+      req.user = {
+        id: 'dev-user',
+        email: 'dev@localhost',
+        role: 'user',
+        username: 'development'
+      };
+      console.log('⚠️  Development mode: Authentication skipped for', req.path);
+      return next();
+    }
+
     // Extract token from Authorization header
     const authHeader = req.header('Authorization');
 
@@ -261,6 +273,18 @@ const requireApiKey = (req, res, next) => {
  * Flexible auth - accepts either JWT or API key
  */
 const requireAuthOrApiKey = (req, res, next) => {
+  // DEVELOPMENT MODE: Skip authentication if SKIP_AUTH environment variable is set
+  if (process.env.SKIP_AUTH === 'true' && process.env.NODE_ENV !== 'production') {
+    req.user = {
+      id: 'dev-user',
+      email: 'dev@localhost',
+      role: 'user',
+      username: 'development'
+    };
+    console.log('⚠️  Development mode: Authentication skipped for', req.path);
+    return next();
+  }
+
   const authHeader = req.header('Authorization');
   const apiKey = req.header('X-API-Key');
 
