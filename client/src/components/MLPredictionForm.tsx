@@ -68,9 +68,9 @@ const MLPredictionForm: React.FC = () => {
     return (
         <div className="ml-prediction-form">
             <div className="form-container">
-                <h2>🏠 Property Price Prediction</h2>
+                <h2><span aria-hidden="true">🏠</span> Property Price Prediction</h2>
 
-                <form onSubmit={handleSubmit} className="prediction-form">
+                <form onSubmit={handleSubmit} className="prediction-form" aria-label="Property price prediction form">
                     <div className="form-grid">
                         <div className="form-group">
                             <label htmlFor="bedrooms">Bedrooms</label>
@@ -223,26 +223,27 @@ const MLPredictionForm: React.FC = () => {
                         type="submit"
                         className="predict-button"
                         disabled={loading}
+                        aria-busy={loading}
                     >
-                        {loading ? '🔄 Predicting...' : '🎯 Get Price Prediction'}
+                        {loading ? <><span aria-hidden="true">🔄</span> Predicting...</> : <><span aria-hidden="true">🎯</span> Get Price Prediction</>}
                     </button>
                 </form>
 
                 {error && (
-                    <div className="error-message">
-                        <span>❌ {error}</span>
-                        <button onClick={clearError} className="close-error">×</button>
+                    <div className="error-message" role="alert" aria-live="assertive">
+                        <span><span aria-hidden="true">❌</span> {error}</span>
+                        <button onClick={clearError} className="close-error" aria-label="Close error message">×</button>
                     </div>
                 )}
             </div>
 
             {result && (
-                <div className="results-container">
-                    <h3>📊 Prediction Results</h3>
+                <div className="results-container" role="region" aria-label="Prediction results" aria-live="polite">
+                    <h3><span aria-hidden="true">📊</span> Prediction Results</h3>
                     <div className="results-grid">
                         <div className="result-card main-prediction">
-                            <h4>💰 Estimated Price</h4>
-                            <div className="price-estimate">
+                            <h4><span aria-hidden="true">💰</span> Estimated Price</h4>
+                            <div className="price-estimate" aria-label={`Estimated price: ${formatCurrency(result.prediction.prediction.point_estimate)}`}>
                                 {formatCurrency(result.prediction.prediction.point_estimate)}
                             </div>
                             <div className="confidence-interval">
@@ -251,17 +252,17 @@ const MLPredictionForm: React.FC = () => {
                         </div>
 
                         <div className="result-card">
-                            <h4>🤖 Model Used</h4>
+                            <h4><span aria-hidden="true">🤖</span> Model Used</h4>
                             <p>{result.prediction.model_type.replace('_', ' ').toUpperCase()}</p>
                         </div>
 
                         <div className="result-card">
-                            <h4>⏱️ Execution Time</h4>
+                            <h4><span aria-hidden="true">⏱️</span> Execution Time</h4>
                             <p>{result.execution_time}ms</p>
                         </div>
 
                         <div className="result-card">
-                            <h4>📈 Confidence Level</h4>
+                            <h4><span aria-hidden="true">📈</span> Confidence Level</h4>
                             <p>{(result.prediction.prediction.confidence_level * 100).toFixed(1)}%</p>
                         </div>
                     </div>

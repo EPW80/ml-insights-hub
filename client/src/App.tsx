@@ -18,34 +18,46 @@ function App() {
   }, []);
 
   const Navigation = () => (
-    <nav className="main-navigation">
+    <nav className="main-navigation" role="navigation" aria-label="Main navigation">
       <div className="nav-brand">
         <h1>🏠 ML Insights Hub</h1>
       </div>
-      <div className="nav-links">
+      <div className="nav-links" role="tablist">
         <button
           className={`nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
           onClick={() => handleTabChange('dashboard')}
+          role="tab"
+          aria-selected={activeTab === 'dashboard'}
+          aria-controls="dashboard-panel"
         >
-          📊 Dashboard
+          <span aria-hidden="true">📊</span> Dashboard
         </button>
         <button
           className={`nav-link ${activeTab === 'prediction' ? 'active' : ''}`}
           onClick={() => handleTabChange('prediction')}
+          role="tab"
+          aria-selected={activeTab === 'prediction'}
+          aria-controls="prediction-panel"
         >
-          🎯 Predictions
+          <span aria-hidden="true">🎯</span> Predictions
         </button>
         <button
           className={`nav-link ${activeTab === 'visualization' ? 'active' : ''}`}
           onClick={() => handleTabChange('visualization')}
+          role="tab"
+          aria-selected={activeTab === 'visualization'}
+          aria-controls="visualization-panel"
         >
-          📈 Visualization
+          <span aria-hidden="true">📈</span> Visualization
         </button>
         <button
           className={`nav-link ${activeTab === 'upload' ? 'active' : ''}`}
           onClick={() => handleTabChange('upload')}
+          role="tab"
+          aria-selected={activeTab === 'upload'}
+          aria-controls="upload-panel"
         >
-          📁 Upload Data
+          <span aria-hidden="true">📁</span> Upload Data
         </button>
       </div>
     </nav>
@@ -67,12 +79,12 @@ function App() {
   };
 
   return (
-    <div className="App">
+    <div className="App" role="application" aria-label="ML Insights Hub Application">
       <Navigation />
-      <main className="main-content">
+      <main className="main-content" role="main">
         <Suspense fallback={
-          <div className="loading-container">
-            <div className="spinner"></div>
+          <div className="loading-container" role="status" aria-live="polite">
+            <div className="spinner" aria-hidden="true"></div>
             <p>Loading component...</p>
           </div>
         }>
