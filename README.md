@@ -4,31 +4,19 @@ A comprehensive full-stack machine learning application for real estate price pr
 
 ## 🌟 Features
 
-- **📊 Interactive ML Dashboard** - Real-time analytics with comprehensive charts and metrics
-- **🎯 Property Price Predictions** - Multiple ML models for accurate price forecasting
-- **📈 Data Visualization** - Interactive charts including scatter plots, bar charts, and trend analysis
-- **📁 Data Upload Interface** - Drag-and-drop file upload with validation and progress tracking
-- **🤖 Multiple ML Algorithms** - Random Forest, Linear Regression, Neural Networks, and Gradient Boosting
-- **🎲 Uncertainty Quantification** - Confidence intervals and prediction reliability metrics
-- **🎨 Modern UI/UX** - Glass morphism design with responsive layout
-- **⚡ Real-time Updates** - Live predictions and dashboard updates
-- **🔐 Enterprise Security** - Comprehensive security infrastructure with JWT, input validation, and Python sandboxing
-- **🗄️ Robust Database Management** - Enterprise-grade MongoDB connection with automatic reconnection and health monitoring
-- **💓 Health Monitoring** - Real-time database and system health checks with performance metrics
-- **🛡️ Secure Python Execution** - Sandboxed ML execution with resource limits and security validation
+**Core Functionality**
+- 📊 Interactive ML Dashboard with 7 chart types (bar, scatter, pie, line, radar, composed, radial)
+- 🎯 Property Price Predictions with 4 ML models and uncertainty quantification
+- 📈 Advanced Visualizations (zoom, brush, gradients, synchronized charts)
+- 📁 Drag-and-drop data upload with validation
+- ⚡ Real-time updates and live predictions
 
-## 🔒 Security & Infrastructure Features
-
-- **🛡️ Secure Python Execution** - Sandboxed Python environment with resource limits and input validation
-- **🔑 JWT Authentication** - Cryptographically secure token generation (512-bit entropy)
-- **🚨 Security Auditing** - Comprehensive security scoring system (95/100 current score)
-- **⚠️ Input Sanitization** - Advanced pattern detection for malicious inputs
-- **📊 Security Monitoring** - Real-time security event logging and alerts
-- **🔄 Startup Validation** - Automatic security checks on server startup
-- **🗄️ MongoDB Connection Management** - Enterprise-grade database connection with automatic reconnection
-- **💓 Health Monitoring** - Real-time database and system health checks
-- **🔧 Connection Recovery** - Exponential backoff reconnection strategy (5s → 80s)
-- **📈 Performance Metrics** - Database response times and connection statistics
+**Security & Infrastructure**
+- 🔐 JWT Authentication (512-bit entropy) + API key support
+- 🛡️ Sandboxed Python execution with resource limits
+- 🚨 Security scoring system (95/100) with startup validation
+- 🗄️ MongoDB with auto-reconnection and health monitoring
+- 📊 Real-time security event logging and performance metrics
 
 ## 🏗️ Architecture
 
@@ -55,30 +43,11 @@ A comprehensive full-stack machine learning application for real estate price pr
 
 ## 🛠️ Tech Stack
 
-### Frontend
-- **React 19** with TypeScript
-- **Modern CSS** with glass morphism effects
-- **Recharts** for interactive data visualization
-- **React Router DOM** for navigation
-- **Axios** for API communication
-- **React Hook Form** for form management
+**Frontend**: React 19, TypeScript, Recharts, Modern CSS (glassmorphism), React Router, Axios
 
-### Backend
-- **Node.js** with Express.js
-- **🔐 Secure Python Bridge** for ML integration with sandboxing
-- **🛡️ Security Middleware** (JWT, rate limiting, input validation)
-- **🗄️ Enhanced MongoDB Connection** with automatic reconnection and health monitoring
-- **💓 Database Health Endpoints** for real-time monitoring
-- **Multer** for file uploads
-- **CORS** for cross-origin requests
-- **🚨 Security Auditing** system
+**Backend**: Node.js, Express.js, MongoDB, JWT, Multer, CORS, Security Middleware
 
-### Machine Learning
-- **scikit-learn** for ML algorithms
-- **pandas & numpy** for data manipulation
-- **faker** for synthetic data generation
-- **Random Forest, Linear Regression, Neural Networks** for predictions
-- **Uncertainty quantification** methods
+**Machine Learning**: Python, scikit-learn, pandas, numpy (Random Forest, Linear Regression, Neural Networks, Gradient Boosting)
 
 ## 📋 Prerequisites
 
@@ -243,115 +212,38 @@ source venv/bin/activate
 ## 📁 Project Structure
 
 ```
-ml-insights-hub/ 🏠────────────────────────────────────────────────────────────
+ml-insights-hub/
+├── client/                    # React Frontend (TypeScript)
+│   ├── src/
+│   │   ├── components/        # UI Components (Charts, Forms, Dashboard)
+│   │   ├── services/          # API & Data Services
+│   │   └── hooks/             # Custom React Hooks
+│   └── public/                # Static Assets
 │
-├── � client/ # React frontend application | 🚀 React 19 + TypeScript
-│   ├── src/ ──────────────────────────────┐
-│   │   ├── 🧩 components/ # React UI components
-│   │   │   ├── 🎯 MLPredictionForm.tsx # Property prediction interface
-│   │   │   ├── 📊 PropertyDataVisualization.tsx # Interactive charts and graphs
-│   │   │   ├── 📁 DataUploadInterface.tsx # File upload with validation
-│   │   │   ├── 📈 ResultsDashboard.tsx # Analytics dashboard
-│   │   │   └── 🎨 *.css # Component styling
-│   │   ├── 🪝 hooks/ # Custom React hooks
-│   │   │   └── 🎯 usePrediction.ts # Prediction state management
-│   │   ├── 🔗 services/ # API communication layer
-│   │   │   └── 🌐 api.ts # REST API service
-│   │   ├── 🛠️ utils/ # Utility functions
-│   │   └── 📱 App.tsx # Main application component
-│   ├── 🌍 public/ # Static assets
-│   └── 📦 package.json # Frontend dependencies
+├── server/                    # Node.js Backend
+│   ├── routes/                # API Routes & Endpoints
+│   ├── middleware/            # Security & Validation (JWT, Rate Limiting)
+│   ├── ml-services/           # ML Algorithm Services
+│   ├── python-scripts/        # Sandboxed Python ML Execution
+│   ├── scripts/               # Automation & Testing Tools
+│   └── uploads/               # File Upload Directory
 │
-├── ⚙️ server/ # Node.js backend | 🚀 Express + MongoDB
-│   ├── ⚙️ config/ ───────────────────────┐
-│   │   └── 🗄️ database.js # Enhanced MongoDB connection manager
-│   ├── 🛡️ middleware/ # Express middleware
-│   │   └── 🔐 security.js # Security middleware (rate limiting, validation)
-│   ├── 🤖 ml-services/ # ML service modules
-│   │   ├── 📊 supervised/ # Supervised learning algorithms
-│   │   ├── 🎯 uncertainty/ # Uncertainty quantification
-│   │   └── 🔍 unsupervised/ # Unsupervised learning
-│   ├── 📋 models/ # Data models and schemas
-│   ├── 🐍 python-scripts/ # Python ML scripts
-│   ├── 🛣️ routes/ # API endpoint definitions
-│   │   ├── 🔑 auth/ # Authentication routes
-│   │   ├── 📊 data/ # Data management routes
-│   │   ├── 💓 health/ # Health monitoring endpoints
-│   │   └── 🤖 ml/ # Machine learning routes
-│   ├── 🔧 scripts/ # Management and testing scripts
-│   │   ├── 🛡️ security-audit.js # Comprehensive security auditing
-│   │   ├── 🧪 test-database-connection.js # Database connection testing
-│   │   ├── 💓 database-health-check.js # Database health monitoring
-│   │   └── 📈 database-stats.js # Database statistics collection
-│   ├── 📁 uploads/ # File upload storage
-│   ├── 🛠️ utils/ # Backend utilities
-│   │   ├── 🔐 securePythonBridge.js # Secure Python script executor
-│   │   ├── 🛡️ securePythonExecutor.js # Core Python security engine
-│   │   └── 🚨 startupSecurity.js # Startup security validation
-│   ├── 🖥️ server.js # Main server file
-│   └── 🐍 requirements.txt # Python dependencies
-│
-├── � datasets/ # Generated sample datasets | 🎲 Synthetic data
-├── 🧠 models/ # Trained ML models storage | 🤖 scikit-learn models
-├── � venv/ # Python virtual environment | 📦 Isolated dependencies
-├── 🚫 .gitignore # Git ignore rules
-├── 🚀 start.sh # Application startup script
-└── 📖 README.md # Project documentation
+└── venv/                      # Python Virtual Environment
 ```
 
-### 🔑 Key Directory Purposes
+### Key Features by Component
 
-| Directory | Purpose | Technologies |
-|-----------|---------|-------------|
-| 🎯 `/client/src/components/` | React UI components | TypeScript, Modern CSS, Glass Morphism |
-| 🤖 `/server/ml-services/` | ML algorithms & services | Python bridge, scikit-learn |
-| 🛡️ `/server/middleware/` | Security & validation | JWT, Rate limiting, Input sanitization |
-| 💓 `/server/routes/health/` | System monitoring | Real-time health checks, MongoDB stats |
-| 🔧 `/server/scripts/` | Automation & testing | Database testing, Security auditing |
-| 🐍 `/server/python-scripts/` | ML model execution | Sandboxed Python environment |
+**Frontend** (`/client/src/components/`)
+- 📊 Interactive Charts: 7 chart types with zoom, brush, gradients
+- 🎯 ML Predictions: Multi-model support with uncertainty quantification
+- 📁 Data Upload: Drag-and-drop with validation
+- 💫 Advanced Visualizations: Radar, composed, radial, area charts
 
-## 🎯 Key Components
-
-### Frontend Components
-
-#### � Results Dashboard
-- **Real-time analytics** with interactive charts
-- **Summary metrics** for predictions and model performance
-- **Trend analysis** with configurable time ranges
-- **Recent predictions table** with detailed information
-
-#### 🎯 ML Prediction Form
-- **Property feature inputs** (bedrooms, bathrooms, sqft, etc.)
-- **Multiple ML models** selection (Random Forest, Linear Regression, Neural Network, Gradient Boosting)
-- **Uncertainty quantification** with confidence intervals
-- **Real-time predictions** with immediate results
-
-#### 📈 Property Data Visualization
-- **Interactive charts**: Bar charts, scatter plots, pie charts, line graphs
-- **Market analysis**: Price distribution, size vs price correlation
-- **Property insights**: Type breakdown and trend analysis
-- **Responsive design** with hover effects and tooltips
-
-#### 📁 Data Upload Interface
-- **Drag-and-drop** file upload functionality
-- **File validation** (CSV/JSON/Excel support, size limits)
-- **Progress tracking** with visual feedback
-- **Upload results** display with data validation
-
-### Backend Services
-
-#### 🤖 ML Services
-- **Supervised Learning**: Property price prediction models
-- **Uncertainty Quantification**: Confidence interval calculation
-- **Data Processing**: Feature engineering and validation
-- **Model Training**: Dynamic model creation and updates
-
-#### 🔗 API Endpoints
-- **Prediction API**: Real-time property price predictions
-- **Data Management**: File upload and dataset handling
-- **Model Services**: Model training and evaluation
-- **Health Monitoring**: Database and system health checks
-- **Security Auditing**: Real-time security status and metrics
+**Backend** (`/server/`)
+- 🤖 ML Services: Random Forest, Linear Regression, Neural Networks, Gradient Boosting
+- 🛡️ Security: JWT auth, rate limiting, input sanitization, sandboxed Python
+- 💓 Health Monitoring: Real-time database & system health checks
+- 🔧 API Endpoints: Predictions, data management, model training
 ```bash
 npm run check-security
 ```
@@ -430,35 +322,15 @@ MAX_FILE_SIZE=10485760  # 10MB
 - `GET /api/health/database/performance` - Database performance metrics
 - `POST /api/health/database/reconnect` - Force database reconnection
 
-## 🖥️ Application Screenshots
+## 🖥️ Application Overview
 
-### 📊 Dashboard Overview
-The main dashboard provides comprehensive analytics and insights:
-- Real-time prediction metrics and statistics
-- Interactive charts showing market trends
-- Recent predictions with confidence levels
-- Model performance comparisons
+📊 **Dashboard**: Real-time analytics, 7 chart types, prediction metrics, model performance
 
-### 🎯 Prediction Interface
-Make accurate property price predictions:
-- Input property features (bedrooms, bathrooms, square footage, etc.)
-- Select from multiple ML models
-- Choose uncertainty quantification methods
-- Get instant predictions with confidence intervals
+🎯 **Predictions**: Multi-model selection, property inputs, uncertainty quantification, instant results
 
-### 📈 Data Visualization
-Explore property market insights:
-- Price distribution analysis
-- Size vs price correlation charts
-- Property type breakdowns
-- Market trend analysis over time
+📈 **Visualizations**: Price distribution, correlation charts, property breakdowns, trend analysis
 
-### 📁 Data Upload
-Easy data management:
-- Drag-and-drop file upload
-- Support for CSV, JSON, and Excel formats
-- Real-time validation and progress tracking
-- Data quality assessment and feedback
+📁 **Data Upload**: Drag-and-drop, CSV/JSON/Excel support, real-time validation
 
 ## 🧪 Testing
 
@@ -528,31 +400,13 @@ Before deploying to production, ensure:
 
 ## 🚀 Latest Integrations
 
-### 🔐 Enterprise Security Infrastructure
-- **Security Score**: 95/100 with comprehensive auditing
-- **Secure Python Execution**: Sandboxed environment with resource limits
-- **JWT Authentication**: 512-bit entropy cryptographically secure tokens
-- **Input Validation**: Advanced pattern detection for malicious inputs
-- **Real-time Monitoring**: Security event logging and alerts
+**🔐 Security**: 95/100 score, sandboxed Python, JWT (512-bit), input validation, real-time monitoring
 
-### 🗄️ Enhanced Database Management
-- **Auto-Reconnection**: Exponential backoff strategy (5s → 80s)
-- **Health Monitoring**: Continuous 30-second health checks
-- **Performance Metrics**: Real-time database response times
-- **Connection Pooling**: Optimized for concurrent requests (min: 2, max: 10)
-- **Graceful Shutdown**: Proper cleanup on application termination
+**🗄️ Database**: Auto-reconnect (5s→80s), 30s health checks, connection pool (2-10), graceful shutdown
 
-### 💓 Health Monitoring System
-- **Real-time Endpoints**: `/api/health/database` for live status
-- **Performance Testing**: Response time measurement and analysis
-- **Statistics Collection**: Comprehensive connection and usage metrics
-- **Administrative Tools**: Force reconnection and maintenance capabilities
+**💓 Monitoring**: `/api/health/*` endpoints, performance metrics, admin tools
 
-### 🛠️ Management Tools
-- **Database Testing**: `npm run db:test` for connection validation
-- **Health Monitoring**: `npm run db:health` for 15-second health tests
-- **Security Auditing**: `npm run security:audit` for comprehensive checks
-- **Python Security**: `npm run security:test-python` for execution validation
+**🛠️ Commands**: `npm run db:test`, `npm run db:health`, `npm run security:audit`, `npm run security:test-python`
 
 ## 🤝 Contributing
 
