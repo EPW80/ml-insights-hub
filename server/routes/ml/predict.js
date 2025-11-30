@@ -22,7 +22,7 @@ router.use(logAuthenticatedRequest);
 const PythonParseError = PythonExecutionError;
 
 // Enhanced error response helper
-function sendErrorResponse(res, error, statusCode = 500) {
+function sendErrorResponse(res, error, statusCode = 500, req = null) {
   const errorResponse = {
     success: false,
     error: error.message || "An unexpected error occurred",
@@ -56,8 +56,8 @@ function sendErrorResponse(res, error, statusCode = 500) {
       error: error.message,
       type: error.type,
       timestamp: error.timestamp,
-      userAgent: req.get('User-Agent'),
-      ip: req.ip
+      userAgent: req ? req.get('User-Agent') : 'unknown',
+      ip: req ? req.ip : 'unknown'
     });
   } else if (error instanceof PythonParseError) {
     errorResponse.type = "validation_error";
@@ -92,7 +92,8 @@ router.post("/", async (req, res) => {
       return sendErrorResponse(
         res,
         new Error("Missing required parameters: features and modelType"),
-        400
+        400,
+        req
       );
     }
 
@@ -101,7 +102,8 @@ router.post("/", async (req, res) => {
       return sendErrorResponse(
         res,
         new Error("Features must be an object"),
-        400
+        400,
+        req
       );
     }
 
@@ -118,7 +120,8 @@ router.post("/", async (req, res) => {
         new Error(
           `Invalid model type. Must be one of: ${validModelTypes.join(", ")}`
         ),
-        400
+        400,
+        req
       );
     }
 
@@ -140,14 +143,15 @@ router.post("/", async (req, res) => {
             ", "
           )}`
         ),
-        400
+        400,
+        req
       );
     }
 
     // Enhanced Python script execution with secure bridge
     const result = await executeMlPrediction(
-      features, 
-      modelType, 
+      features,
+      modelType,
       uncertaintyMethod || "ensemble"
     );
 
@@ -176,6 +180,20 @@ router.post("/", async (req, res) => {
     // Create prediction document with enhanced error handling
     let prediction;
     try {
+      // Convert feature_importance from object to array format if needed
+      let featureImportanceArray = [];
+      if (result.feature_importance) {
+        if (Array.isArray(result.feature_importance)) {
+          featureImportanceArray = result.feature_importance;
+        } else if (typeof result.feature_importance === 'object') {
+          // Convert object format to array format
+          featureImportanceArray = Object.entries(result.feature_importance).map(([feature, importance]) => ({
+            feature,
+            importance
+          }));
+        }
+      }
+
       prediction = new Prediction({
         property_features: features,
         model_type: modelType,
@@ -186,7 +204,7 @@ router.post("/", async (req, res) => {
           confidence_level: result.confidence_level,
           uncertainty_metrics: result.uncertainty_metrics || {},
         },
-        feature_importance: result.feature_importance || {},
+        feature_importance: featureImportanceArray,
         execution_time: Date.now() - startTime,
         timestamp: new Date(),
       });
@@ -205,7 +223,7 @@ router.post("/", async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    sendErrorResponse(res, error);
+    sendErrorResponse(res, error, 500, req);
   }
 });
 

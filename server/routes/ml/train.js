@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 // Import authentication middleware
 const { requireAuthOrApiKey, logAuthenticatedRequest } = require("../../middleware/mlAuth");
 
@@ -8,6 +9,7 @@ router.use(requireAuthOrApiKey);
 router.use(logAuthenticatedRequest);
 
 const Model = require("../../models/Model");
+const Dataset = require("../../models/Dataset");
 const {
   runPythonScript,
   executeModelTraining,
@@ -119,6 +121,25 @@ router.post("/", async (req, res) => {
       );
     }
 
+    // Validate datasetId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(datasetId)) {
+      return sendErrorResponse(
+        res,
+        new Error("Invalid dataset ID format"),
+        400
+      );
+    }
+
+    // Validate dataset exists
+    const dataset = await Dataset.findById(datasetId);
+    if (!dataset) {
+      return sendErrorResponse(
+        res,
+        new Error("Dataset not found"),
+        404
+      );
+    }
+
     const inputData = {
       model_type: modelType,
       dataset_id: datasetId,
@@ -211,17 +232,24 @@ router.post("/", async (req, res) => {
       // Save model metadata to database
       let model;
       try {
+        // Generate unique model name
+        const modelName = `${modelType}_${datasetId}_${Date.now()}`;
+
         model = new Model({
-          model_id: result.model_id,
-          model_type: modelType,
-          dataset_id: datasetId,
+          name: modelName,
+          type: 'regression', // Default to regression, can be enhanced later
+          algorithm: modelType,
           hyperparameters: hyperparameters || {},
-          metrics: result.metrics,
-          training_time: result.training_time,
-          feature_importance: result.feature_importance || {},
-          model_path: result.model_path,
-          created_at: new Date(),
-          status: "trained",
+          performance_metrics: result.metrics || {},
+          training_data: {
+            dataset_id: datasetId,
+            sample_size: result.sample_size,
+            features: result.features || [],
+            target_variable: result.target_variable,
+            train_test_split: 0.2
+          },
+          model_file_path: result.model_path,
+          is_active: true
         });
 
         await model.save();
@@ -249,7 +277,16 @@ router.get("/status/:modelId", async (req, res) => {
   try {
     const { modelId } = req.params;
 
-    const model = await Model.findOne({ model_id: modelId });
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(modelId)) {
+      return sendErrorResponse(
+        res,
+        new Error("Invalid model ID format"),
+        400
+      );
+    }
+
+    const model = await Model.findById(modelId).populate('training_data.dataset_id');
     if (!model) {
       return res.status(404).json({
         success: false,
@@ -260,7 +297,7 @@ router.get("/status/:modelId", async (req, res) => {
     res.json({
       success: true,
       model: model,
-      status: model.status,
+      status: model.is_active ? 'active' : 'inactive',
     });
   } catch (error) {
     sendErrorResponse(res, error);
