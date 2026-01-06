@@ -45,9 +45,11 @@ A comprehensive full-stack machine learning application for real estate price pr
 
 **Frontend**: React 19, TypeScript, Recharts, Modern CSS (glassmorphism), React Router, Axios
 
-**Backend**: Node.js, Express.js, MongoDB, JWT, Multer, CORS, Security Middleware
+**Backend**: Node.js, Express.js, MongoDB, JWT, Multer, CORS, Security Middleware, Winston Logger
 
 **Machine Learning**: Python, scikit-learn, pandas, numpy (Random Forest, Linear Regression, Neural Networks, Gradient Boosting)
+
+**DevOps & Infrastructure**: Docker, Docker Compose, GitHub Actions (CI/CD), Dependabot, Husky, ESLint, Prettier, nginx
 
 ## 📋 Prerequisites
 
@@ -213,22 +215,41 @@ source venv/bin/activate
 
 ```
 ml-insights-hub/
+├── .github/                   # GitHub Actions & Workflows
+│   ├── workflows/             # CI/CD Pipelines (ci.yml, docker-publish.yml)
+│   └── dependabot.yml         # Automated dependency updates
+│
 ├── client/                    # React Frontend (TypeScript)
 │   ├── src/
 │   │   ├── components/        # UI Components (Charts, Forms, Dashboard)
 │   │   ├── services/          # API & Data Services
 │   │   └── hooks/             # Custom React Hooks
-│   └── public/                # Static Assets
+│   ├── public/                # Static Assets
+│   ├── Dockerfile             # Client container configuration
+│   ├── nginx.conf             # Production nginx configuration
+│   └── .eslintrc.js           # ESLint configuration
 │
 ├── server/                    # Node.js Backend
 │   ├── routes/                # API Routes & Endpoints
-│   ├── middleware/            # Security & Validation (JWT, Rate Limiting)
+│   ├── middleware/            # Security & Validation (JWT, Rate Limiting, Logging)
+│   ├── config/                # Configuration (Logger)
 │   ├── ml-services/           # ML Algorithm Services
 │   ├── python-scripts/        # Sandboxed Python ML Execution
 │   ├── scripts/               # Automation & Testing Tools
-│   └── uploads/               # File Upload Directory
+│   ├── uploads/               # File Upload Directory
+│   ├── Dockerfile             # Server container configuration
+│   └── .eslintrc.js           # ESLint configuration
 │
-└── venv/                      # Python Virtual Environment
+├── venv/                      # Python Virtual Environment
+│
+├── docker-compose.yml         # Standard Docker orchestration
+├── docker-compose.dev.yml     # Development environment
+├── docker-compose.prod.yml    # Production environment
+├── .husky/                    # Git hooks (pre-commit)
+├── .prettierrc.json           # Prettier configuration
+├── .editorconfig              # Editor configuration
+├── .env.example               # Environment variable template
+└── package.json               # Root workspace configuration
 ```
 
 ### Key Features by Component
@@ -360,6 +381,65 @@ source venv/bin/activate
 python -c "import pandas, numpy, sklearn; print('All ML packages installed successfully!')"
 ```
 
+## 🐳 Docker & Container Support
+
+### Running with Docker Compose
+
+**Development Mode**:
+```bash
+docker-compose -f docker-compose.dev.yml up
+```
+
+**Production Mode**:
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+**Standard Mode**:
+```bash
+docker-compose up -d
+```
+
+### Docker Features
+- 🐳 Multi-stage builds for optimized images
+- 🔄 Hot reload in development mode
+- 🏗️ Production-ready nginx configuration
+- 📦 Separate client and server containers
+- 🗄️ MongoDB integration
+- 🔐 Environment-based configuration
+- 📊 Health checks and monitoring
+
+### Container Architecture
+- **client**: React app with nginx (production) or webpack dev server (development)
+- **server**: Node.js + Python environment with ML capabilities
+- **mongodb**: Database service (optional, can use Atlas)
+
+## 🔧 Code Quality & Development Tools
+
+### Linting & Formatting
+```bash
+# Lint all code
+npm run lint
+
+# Format all code
+npm run format
+
+# Check formatting
+npm run format:check
+```
+
+### Pre-commit Hooks
+- Automatic ESLint checks on staged files
+- Automatic Prettier formatting
+- Husky-managed git hooks
+- Lint-staged for efficient checks
+
+### Continuous Integration
+- **GitHub Actions CI**: Automated testing and linting on push/PR
+- **Docker Image Publishing**: Automated container builds
+- **Dependabot**: Automated dependency updates
+- **Multi-environment testing**: Node 16, 18, 20
+
 ## 🚀 Deployment
 
 ### Production Build
@@ -369,6 +449,18 @@ cd client
 npm run build
 
 # The build folder will contain optimized production files
+```
+
+### Docker Deployment
+```bash
+# Build and deploy with Docker
+docker-compose -f docker-compose.prod.yml up -d
+
+# View logs
+docker-compose logs -f
+
+# Scale services
+docker-compose up -d --scale server=3
 ```
 
 ### Production Checklist
@@ -404,9 +496,15 @@ Before deploying to production, ensure:
 
 **🗄️ Database**: Auto-reconnect (5s→80s), 30s health checks, connection pool (2-10), graceful shutdown
 
-**💓 Monitoring**: `/api/health/*` endpoints, performance metrics, admin tools
+**💓 Monitoring**: `/api/health/*` endpoints, performance metrics, admin tools, Winston logging
 
-**🛠️ Commands**: `npm run db:test`, `npm run db:health`, `npm run security:audit`, `npm run security:test-python`
+**🐳 DevOps**: Docker multi-stage builds, Docker Compose (dev/prod), GitHub Actions CI/CD, Dependabot
+
+**🔧 Code Quality**: ESLint, Prettier, Husky pre-commit hooks, automated formatting/linting
+
+**📊 Logging**: Winston logger with file rotation, request logging middleware, structured logs
+
+**🛠️ Commands**: `npm run db:test`, `npm run db:health`, `npm run security:audit`, `npm run lint`, `npm run format`
 
 ## 🤝 Contributing
 
