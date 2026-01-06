@@ -1,7 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const helmet = require("helmet");
 const morgan = require("morgan");
 const compression = require("compression");
 const path = require("path");
@@ -18,7 +17,7 @@ const securityValidator = new StartupSecurityValidator();
 // Critical security check - fail fast if insecure
 if (!securityValidator.logResults()) {
   logger.error('🛑 Server startup aborted due to critical security issues');
-  process.exit(1);
+  throw new Error('Server startup aborted due to critical security issues');
 }
 
 // Configure Python environment for ML scripts
@@ -168,7 +167,7 @@ async function initializeDatabase() {
         error.message.includes('not authorized') ||
         error.message.includes('access denied')) {
       logger.error('🛑 Critical database error - stopping application');
-      process.exit(1);
+      throw new Error(`Critical database error: ${error.message}`);
     }
 
     // For other errors, log but continue (reconnection will be attempted)
@@ -181,7 +180,7 @@ async function initializeDatabase() {
 app.use(handleRateLimit);
 
 // Enhanced global error handler with comprehensive error categorization
-app.use((error, req, res, next) => {
+app.use((error, req, res, _next) => {
   const timestamp = new Date().toISOString();
   const requestId = req.headers["x-request-id"] || `req_${Date.now()}`;
 
@@ -289,20 +288,20 @@ app.use("*", (req, res) => {
 
 // Process-level error handlers
 process.on("uncaughtException", (error) => {
+  console.error("========== UNCAUGHT EXCEPTION ==========");
+  console.error("Message:", error.message);
+  console.error("Stack:", error.stack);
+  console.error("========================================");
   logger.error({ message: 'Uncaught Exception', error: error.message, stack: error.stack });
-  // Graceful shutdown
-  setTimeout(() => {
-    process.exit(1);
-  }, 1000);
+  // Throw error to let Node.js handle the exit
+  throw error;
 });
 
 process.on("unhandledRejection", (reason, promise) => {
   logger.error({ message: 'Unhandled Rejection', reason, promise });
   // Don't exit process for unhandled promise rejections in production
   if (process.env.NODE_ENV !== "production") {
-    setTimeout(() => {
-      process.exit(1);
-    }, 1000);
+    throw new Error(`Unhandled Promise Rejection: ${reason}`);
   }
 });
 
@@ -316,6 +315,7 @@ process.on("SIGTERM", () => {
     // Close database connection
     mongoose.connection.close(false, () => {
       logger.info("MongoDB connection closed");
+      // eslint-disable-next-line no-process-exit
       process.exit(0);
     });
   });
@@ -329,6 +329,7 @@ process.on("SIGINT", () => {
 
     mongoose.connection.close(false, () => {
       logger.info("MongoDB connection closed");
+      // eslint-disable-next-line no-process-exit
       process.exit(0);
     });
   });
@@ -362,17 +363,17 @@ async function startServer() {
 
       // Log configuration status
       logger.info(
-        `📊 MongoDB: ${dbInitialized ? "CONNECTED" : "CONNECTING..."}`
+        `MongoDB: ${dbInitialized ? "CONNECTED" : "CONNECTING..."}`
       );
-      logger.info(`🐍 Python: ${process.env.PYTHON_PATH || "python3"}`);
+      logger.info(`Python: ${process.env.PYTHON_PATH || "python3"}`);
       logger.info(
-        `� Upload dir: ${path.resolve(__dirname, "uploads")}`
+        `Upload dir: ${path.resolve(__dirname, "uploads")}`
       );
 
       // Log database statistics if connected
       if (dbInitialized) {
         const stats = dbConnectionManager.getStats();
-        logger.info(`📈 Database stats: ${stats.connectionAttempts} attempts, ${stats.healthCheckSuccessRate} health rate`);
+        logger.info(`Database stats: ${stats.connectionAttempts} attempts, ${stats.healthCheckSuccessRate} health rate`);
       }
 
       logger.info(`🚀 ML Insights Hub Server ready!`);
@@ -380,7 +381,7 @@ async function startServer() {
 
   } catch (error) {
     logger.error(`💥 Server startup failed: ${error.message}`);
-    process.exit(1);
+    throw new Error(`Server startup failed: ${error.message}`);
   }
 }
 
