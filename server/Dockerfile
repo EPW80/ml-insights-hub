@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for ML Insights Hub Backend
 # Stage 1: Builder
-FROM node:22-alpine AS builder
+FROM node:25-alpine AS builder
 
 WORKDIR /app
 
@@ -49,7 +49,7 @@ RUN python -m venv /app/venv && \
     /app/venv/bin/pip install --no-cache-dir -r requirements.txt
 
 # Stage 3: Production
-FROM node:22-alpine
+FROM node:25-alpine
 
 WORKDIR /app
 
