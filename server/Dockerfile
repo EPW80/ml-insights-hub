@@ -24,7 +24,7 @@ COPY package*.json ./
 RUN npm ci --only=production && npm cache clean --force
 
 # Stage 2: Python Environment
-FROM python:3.11-alpine AS python-builder
+FROM python:3.14-alpine AS python-builder
 
 WORKDIR /app
 
