@@ -1,0 +1,46 @@
+{
+  "name": "ml-insights-hub",
+  "version": "1.0.0",
+  "description": "A comprehensive full-stack machine learning application for real estate price prediction and analysis. This application combines modern web technologies with powerful ML capabilities to provide intelligent insights into property markets.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky install",
+    "lint": "npm run lint:server && npm run lint:client",
+    "lint:server": "cd server && eslint .",
+    "lint:client": "cd client && eslint src/",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md,yml,yaml}\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EPW80/ml-insights-hub.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/EPW80/ml-insights-hub/issues"
+  },
+  "homepage": "https://github.com/EPW80/ml-insights-hub#readme",
+  "devDependencies": {
+    "eslint": "^9.39.2",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.7.4"
+  },
+  "lint-staged": {
+    "server/**/*.js": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "client/src/**/*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}

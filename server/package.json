@@ -32,6 +32,10 @@
   ],
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "bull": "^4.10.0",
@@ -50,14 +54,20 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "redis": "^4.6.0",
-    "socket.io": "^4.6.0"
+    "socket.io": "^4.6.0",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^4.7.1"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "concurrently": "^8.0.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.2",
+    "eslint-plugin-node": "^11.1.0",
     "jest": "^30.2.0",
     "mongodb-memory-server": "^10.3.0",
     "nodemon": "^3.0.0",
+    "prettier": "^3.7.4",
     "supertest": "^7.1.4"
   }
 }

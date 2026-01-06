@@ -7,13 +7,17 @@ const compression = require("compression");
 const path = require("path");
 require("dotenv").config();
 
+// Import structured logger
+const logger = require("./config/logger");
+const { requestLogger, errorLogger } = require("./middleware/requestLogger");
+
 // Security validation on startup
 const StartupSecurityValidator = require("./utils/startupSecurity");
 const securityValidator = new StartupSecurityValidator();
 
 // Critical security check - fail fast if insecure
 if (!securityValidator.logResults()) {
-  console.error('🛑 Server startup aborted due to critical security issues');
+  logger.error('🛑 Server startup aborted due to critical security issues');
   process.exit(1);
 }
 
@@ -62,28 +66,28 @@ app.set('dbConnectionManager', dbConnectionManager);
 
 // Setup connection event handlers
 dbConnectionManager.on('connected', () => {
-  console.log('🎉 Database connection established successfully');
+  logger.info('🎉 Database connection established successfully');
 });
 
 dbConnectionManager.on('error', (error) => {
-  console.error('💥 Database connection error:', error.message);
+  logger.error(`💥 Database connection error: ${error.message}`);
 });
 
 dbConnectionManager.on('disconnected', () => {
-  console.warn('⚠️  Database connection lost');
+  logger.warn('⚠️  Database connection lost');
 });
 
 dbConnectionManager.on('reconnected', () => {
-  console.log('🔄 Database connection restored');
+  logger.info('🔄 Database connection restored');
 });
 
 dbConnectionManager.on('maxReconnectAttemptsReached', () => {
-  console.error('🛑 Maximum database reconnection attempts reached');
-  console.error('💡 Please check your MongoDB configuration and network connectivity');
+  logger.error('🛑 Maximum database reconnection attempts reached');
+  logger.error('💡 Please check your MongoDB configuration and network connectivity');
 });
 
 dbConnectionManager.on('healthCheckFailed', (error) => {
-  console.warn('💔 Database health check failed:', error.message);
+  logger.warn(`💔 Database health check failed: ${error.message}`);
 });
 
 // Security Middleware (order matters!)
@@ -99,7 +103,10 @@ app.use(
   })
 );
 app.use(compression());
-app.use(morgan("combined")); // Use 'combined' format for better security logging
+
+// Request logging middleware
+app.use(requestLogger);
+app.use(morgan("combined", { stream: logger.stream })); // Use 'combined' format with Winston stream
 
 // Body parsing with strict limits
 app.use(
@@ -143,32 +150,29 @@ app.use("/api/health", require("./routes/health/database")); // Database health 
 // Static files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Something went wrong!" });
-});
+// Error logging middleware (must be before error handler)
+app.use(errorLogger);
 
 // Initialize database connection on startup
 async function initializeDatabase() {
   try {
-    console.log('🔌 Initializing database connection...');
+    logger.info('🔌 Initializing database connection...');
     await dbConnectionManager.connect();
-    console.log('✅ Database initialization completed');
+    logger.info('✅ Database initialization completed');
     return true;
   } catch (error) {
-    console.error('❌ Database initialization failed:', error.message);
-    
+    logger.error(`❌ Database initialization failed: ${error.message}`);
+
     // Critical database errors should stop the application
-    if (error.message.includes('authentication') || 
+    if (error.message.includes('authentication') ||
         error.message.includes('not authorized') ||
         error.message.includes('access denied')) {
-      console.error('🛑 Critical database error - stopping application');
+      logger.error('🛑 Critical database error - stopping application');
       process.exit(1);
     }
-    
+
     // For other errors, log but continue (reconnection will be attempted)
-    console.warn('⚠️  Starting server without database connection (will attempt reconnection)');
+    logger.warn('⚠️  Starting server without database connection (will attempt reconnection)');
     return false;
   }
 }
@@ -182,7 +186,9 @@ app.use((error, req, res, next) => {
   const requestId = req.headers["x-request-id"] || `req_${Date.now()}`;
 
   // Enhanced error logging with context
-  console.error(`[${timestamp}] [${requestId}] Error occurred:`, {
+  logger.error({
+    timestamp,
+    requestId,
     message: error.message,
     stack: error.stack,
     url: req.url,
@@ -283,7 +289,7 @@ app.use("*", (req, res) => {
 
 // Process-level error handlers
 process.on("uncaughtException", (error) => {
-  console.error(`[${new Date().toISOString()}] Uncaught Exception:`, error);
+  logger.error({ message: 'Uncaught Exception', error: error.message, stack: error.stack });
   // Graceful shutdown
   setTimeout(() => {
     process.exit(1);
@@ -291,12 +297,7 @@ process.on("uncaughtException", (error) => {
 });
 
 process.on("unhandledRejection", (reason, promise) => {
-  console.error(
-    `[${new Date().toISOString()}] Unhandled Rejection at:`,
-    promise,
-    "reason:",
-    reason
-  );
+  logger.error({ message: 'Unhandled Rejection', reason, promise });
   // Don't exit process for unhandled promise rejections in production
   if (process.env.NODE_ENV !== "production") {
     setTimeout(() => {
@@ -307,31 +308,27 @@ process.on("unhandledRejection", (reason, promise) => {
 
 // Graceful shutdown handler
 process.on("SIGTERM", () => {
-  console.log(
-    `[${new Date().toISOString()}] SIGTERM received, starting graceful shutdown`
-  );
+  logger.info('SIGTERM received, starting graceful shutdown');
 
   server.close(() => {
-    console.log("HTTP server closed");
+    logger.info("HTTP server closed");
 
     // Close database connection
     mongoose.connection.close(false, () => {
-      console.log("MongoDB connection closed");
+      logger.info("MongoDB connection closed");
       process.exit(0);
     });
   });
 });
 
 process.on("SIGINT", () => {
-  console.log(
-    `[${new Date().toISOString()}] SIGINT received, starting graceful shutdown`
-  );
+  logger.info('SIGINT received, starting graceful shutdown');
 
   server.close(() => {
-    console.log("HTTP server closed");
+    logger.info("HTTP server closed");
 
     mongoose.connection.close(false, () => {
-      console.log("MongoDB connection closed");
+      logger.info("MongoDB connection closed");
       process.exit(0);
     });
   });
@@ -348,41 +345,41 @@ async function startServer() {
     
     const PORT = process.env.PORT || 5000;
     server.listen(PORT, () => {
-      console.log(`[${new Date().toISOString()}] Server running on port ${PORT}`);
+      logger.info(`Server running on port ${PORT}`);
 
       // Log security and environment status
       if (process.env.NODE_ENV === "production") {
-        console.log("🔒 Production security mode enabled");
-        console.log("✅ Rate limiting: ACTIVE");
-        console.log("✅ CORS protection: ACTIVE");
-        console.log("✅ Security headers: ACTIVE");
-        console.log("✅ Input validation: ACTIVE");
+        logger.info("🔒 Production security mode enabled");
+        logger.info("✅ Rate limiting: ACTIVE");
+        logger.info("✅ CORS protection: ACTIVE");
+        logger.info("✅ Security headers: ACTIVE");
+        logger.info("✅ Input validation: ACTIVE");
       } else {
-        console.log("⚠️  Development mode - security relaxed");
-        console.log("⚠️  Ensure JWT_SECRET is secure for production");
-        console.log("⚠️  Enable HTTPS in production");
+        logger.warn("⚠️  Development mode - security relaxed");
+        logger.warn("⚠️  Ensure JWT_SECRET is secure for production");
+        logger.warn("⚠️  Enable HTTPS in production");
       }
 
       // Log configuration status
-      console.log(
+      logger.info(
         `📊 MongoDB: ${dbInitialized ? "CONNECTED" : "CONNECTING..."}`
       );
-      console.log(`🐍 Python: ${process.env.PYTHON_PATH || "python3"}`);
-      console.log(
+      logger.info(`🐍 Python: ${process.env.PYTHON_PATH || "python3"}`);
+      logger.info(
         `� Upload dir: ${path.resolve(__dirname, "uploads")}`
       );
 
       // Log database statistics if connected
       if (dbInitialized) {
         const stats = dbConnectionManager.getStats();
-        console.log(`📈 Database stats: ${stats.connectionAttempts} attempts, ${stats.healthCheckSuccessRate} health rate`);
+        logger.info(`📈 Database stats: ${stats.connectionAttempts} attempts, ${stats.healthCheckSuccessRate} health rate`);
       }
 
-      console.log(`🚀 ML Insights Hub Server ready!`);
+      logger.info(`🚀 ML Insights Hub Server ready!`);
     });
 
   } catch (error) {
-    console.error('💥 Server startup failed:', error);
+    logger.error(`💥 Server startup failed: ${error.message}`);
     process.exit(1);
   }
 }

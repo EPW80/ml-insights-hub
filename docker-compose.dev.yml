@@ -1,0 +1,68 @@
+version: '3.8'
+
+# Development overrides for docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  mongodb:
+    ports:
+      - "27017:27017"  # Expose MongoDB for local development tools
+
+  redis:
+    ports:
+      - "6379:6379"  # Expose Redis for local development tools
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: builder  # Use builder stage for development (optional)
+    environment:
+      NODE_ENV: development
+      ENABLE_FILE_LOGGING: "true"
+      SKIP_AUTH: "${SKIP_AUTH:-false}"  # Optional: skip auth in dev
+    volumes:
+      # Hot reload - mount source code
+      - ./server:/app
+      - /app/node_modules  # Preserve node_modules from container
+      - /app/venv  # Preserve Python venv from container
+    command: npm run dev  # Use nodemon for hot reload
+    stdin_open: true
+    tty: true
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: builder  # Use builder stage for development (optional)
+    environment:
+      NODE_ENV: development
+      REACT_APP_API_URL: http://localhost:5000
+    volumes:
+      # Hot reload - mount source code
+      - ./client:/app
+      - /app/node_modules  # Preserve node_modules from container
+      - /app/build  # Preserve build folder
+    command: npm start  # Use CRA dev server
+    stdin_open: true
+    tty: true
+    ports:
+      - "3000:3000"
+
+  # Development tools container (optional)
+  mongo-express:
+    image: mongo-express:latest
+    container_name: ml-insights-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USER:-admin}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD:-changeme}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-changeme}@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USER:-admin}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD:-pass}
+    depends_on:
+      - mongodb
+    networks:
+      - ml-insights-network
