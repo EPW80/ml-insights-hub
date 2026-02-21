@@ -5,6 +5,7 @@ import {
     PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
 } from 'recharts';
 import { usePrediction } from '../hooks/usePrediction';
+import { apiService } from '../services/api';
 import './ResultsDashboard.css';
 
 interface DashboardData {
@@ -39,12 +40,51 @@ const ResultsDashboard: React.FC = () => {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const chartContainerRef = useRef<HTMLDivElement>(null);
 
-    const generateDashboardData = useCallback(() => {
-        // Generate demo data for the dashboard
+    const loadDashboardData = useCallback(async () => {
         const now = new Date();
-        const demoData: DashboardData = {
-            predictions: Array.from({ length: 20 }, (_, i) => ({
-                id: `pred_${i}`,
+
+        // Try fetching real data from the API
+        let apiPredictions: any[] = [];
+        let apiSummary: any = null;
+
+        try {
+            const [predictions, summary] = await Promise.all([
+                apiService.getPredictionHistory(20),
+                apiService.getDataSummary(),
+            ]);
+            apiPredictions = predictions;
+            apiSummary = summary;
+        } catch {
+            // API unavailable — will fall back to demo data
+        }
+
+        // Build dashboard data from API results or demo data
+        const hasPredictions = apiPredictions.length > 0 || history.length > 0;
+
+        const mappedApiPredictions = apiPredictions.map((pred: any, i: number) => ({
+            id: pred._id || `api_${i}`,
+            timestamp: pred.createdAt || new Date(now.getTime() - i * 3600000).toISOString(),
+            modelType: pred.model_type || 'random_forest',
+            prediction: pred.prediction?.point_estimate || pred.predicted_price || 0,
+            confidence: pred.prediction?.confidence_level || 0.85,
+            features: pred.property_features || {},
+        }));
+
+        const mappedHistoryPredictions = history.map((pred, i) => ({
+            id: `session_${i}`,
+            timestamp: new Date().toISOString(),
+            modelType: pred.prediction.model_type,
+            prediction: pred.prediction.prediction.point_estimate,
+            confidence: pred.prediction.prediction.confidence_level,
+            features: pred.prediction.property_features,
+        }));
+
+        let allPredictions = [...mappedHistoryPredictions, ...mappedApiPredictions];
+
+        // If no real data, generate demo predictions
+        if (!hasPredictions) {
+            allPredictions = Array.from({ length: 20 }, (_, i) => ({
+                id: `demo_${i}`,
                 timestamp: new Date(now.getTime() - i * 3600000).toISOString(),
                 modelType: ['random_forest', 'linear_regression', 'neural_network'][Math.floor(Math.random() * 3)],
                 prediction: Math.floor(Math.random() * 500000) + 300000,
@@ -54,11 +94,28 @@ const ResultsDashboard: React.FC = () => {
                     bathrooms: Math.floor(Math.random() * 3) + 1,
                     sqft: Math.floor(Math.random() * 2000) + 1000,
                 }
-            })),
-            summary: {
-                totalPredictions: 1247,
-                avgPrediction: 587450,
-                avgConfidence: 0.847,
+            }));
+        }
+
+        const predictions = allPredictions.slice(0, 20);
+        const avgPred = predictions.length > 0
+            ? predictions.reduce((sum, p) => sum + p.prediction, 0) / predictions.length
+            : 587450;
+        const avgConf = predictions.length > 0
+            ? predictions.reduce((sum, p) => sum + p.confidence, 0) / predictions.length
+            : 0.847;
+
+        const demoData: DashboardData = {
+            predictions,
+            summary: apiSummary ? {
+                totalPredictions: apiSummary.totalPredictions || predictions.length,
+                avgPrediction: apiSummary.avgPrediction || Math.round(avgPred),
+                avgConfidence: apiSummary.avgConfidence || parseFloat(avgConf.toFixed(3)),
+                mostUsedModel: apiSummary.mostUsedModel || 'Random Forest',
+            } : {
+                totalPredictions: predictions.length,
+                avgPrediction: Math.round(avgPred),
+                avgConfidence: parseFloat(avgConf.toFixed(3)),
                 mostUsedModel: 'Random Forest',
             },
             trends: Array.from({ length: 30 }, (_, i) => ({
@@ -68,27 +125,12 @@ const ResultsDashboard: React.FC = () => {
             })).reverse(),
         };
 
-        // Add actual prediction history if available
-        if (history.length > 0) {
-            const actualPredictions = history.map((pred, i) => ({
-                id: `actual_${i}`,
-                timestamp: new Date().toISOString(),
-                modelType: pred.prediction.model_type,
-                prediction: pred.prediction.prediction.point_estimate,
-                confidence: pred.prediction.prediction.confidence_level,
-                features: pred.prediction.property_features,
-            }));
-
-            demoData.predictions = [...actualPredictions, ...demoData.predictions].slice(0, 20);
-            demoData.summary.totalPredictions += history.length;
-        }
-
         setDashboardData(demoData);
     }, [history]);
 
     useEffect(() => {
-        generateDashboardData();
-    }, [generateDashboardData, timeRange]);
+        loadDashboardData();
+    }, [loadDashboardData, timeRange]);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-US', {

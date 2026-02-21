@@ -2,10 +2,39 @@ const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const { body, validationResult } = require('express-validator');
 const helmet = require('helmet');
+const { createClient } = require('redis');
+const { RedisStore } = require('rate-limit-redis');
+const logger = require('../config/logger');
+
+// Redis client for rate limiting (shared across replicas)
+let redisClient = null;
+let redisStore = null;
+
+async function initRedisRateLimitStore() {
+  try {
+    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    redisClient = createClient({ url: redisUrl });
+    redisClient.on('error', (err) => {
+      logger.warn(`Redis rate-limit store error: ${err.message}. Falling back to memory store.`);
+    });
+    await redisClient.connect();
+    redisStore = new RedisStore({
+      sendCommand: (...args) => redisClient.sendCommand(args),
+      prefix: 'rl:'
+    });
+    logger.info('Rate limiter connected to Redis');
+  } catch (err) {
+    logger.warn(`Redis unavailable (${err.message}). Rate limiter using in-memory store.`);
+    redisStore = null;
+  }
+}
+
+// Initialize Redis connection (non-blocking)
+initRedisRateLimitStore();
 
 // Rate limiting configurations
 const createRateLimit = (windowMs, max, message) => {
-  return rateLimit({
+  const opts = {
     windowMs,
     max,
     message: {
@@ -14,9 +43,12 @@ const createRateLimit = (windowMs, max, message) => {
     },
     standardHeaders: true,
     legacyHeaders: false,
-    // Store rate limit info in memory (use Redis for production)
-    // store: new RedisStore({...}) for production
-  });
+  };
+  // Use Redis store if available, otherwise fall back to memory
+  if (redisStore) {
+    opts.store = redisStore;
+  }
+  return rateLimit(opts);
 };
 
 // General API rate limit
@@ -92,7 +124,7 @@ const validateMLInput = [
         details: errors.array()
       });
     }
-    next();
+    return next();
   }
 ];
 
@@ -113,7 +145,7 @@ const validateDataUpload = [
         details: errors.array()
       });
     }
-    next();
+    return next();
   }
 ];
 
@@ -137,7 +169,7 @@ const validateAuth = [
         details: errors.array()
       });
     }
-    next();
+    return next();
   }
 ];
 
@@ -163,7 +195,7 @@ const securityHeaders = helmet({
 const mongoSanitizer = mongoSanitize({
   replaceWith: '_',
   onSanitize: ({ req, key }) => {
-    console.warn(`Sanitized key ${key} in request to ${req.originalUrl}`);
+    logger.warn(`Sanitized key ${key} in request to ${req.originalUrl}`);
   },
 });
 
@@ -178,7 +210,7 @@ const requestSizeLimiter = (req, res, next) => {
       message: 'Maximum request size is 10MB'
     });
   }
-  next();
+  return next();
 };
 
 // Error handling middleware for rate limiting
@@ -190,7 +222,7 @@ const handleRateLimit = (error, req, res, next) => {
       retryAfter: error.retryAfter
     });
   }
-  next(error);
+  return next(error);
 };
 
 module.exports = {

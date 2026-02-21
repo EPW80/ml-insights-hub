@@ -1,4 +1,5 @@
 import React, { useState, useRef, ChangeEvent, DragEvent } from 'react';
+import { apiService } from '../services/api';
 import './DataUploadInterface.css';
 
 interface UploadState {
@@ -64,43 +65,24 @@ const DataUploadInterface: React.FC = () => {
         setUploadState(prev => ({ ...prev, uploading: true }));
 
         try {
-            // Simulate progress for demo (replace with real progress tracking)
+            // Show progress animation during upload
             const progressInterval = setInterval(() => {
                 setUploadState(prev => ({
                     ...prev,
-                    progress: Math.min(prev.progress + Math.random() * 20, 90),
+                    progress: Math.min(prev.progress + Math.random() * 15, 90),
                 }));
             }, 500);
 
-            // For demo purposes, we'll simulate a successful upload
-            // In real implementation, uncomment the line below:
-            // const result = await apiService.uploadData(file);
-
-            // Simulate API call delay
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            const result = await apiService.uploadData(file);
 
             clearInterval(progressInterval);
-
-            // Demo result
-            const demoResult = {
-                success: true,
-                message: 'File uploaded successfully',
-                recordsProcessed: Math.floor(Math.random() * 1000) + 100,
-                fileSize: (file.size / 1024).toFixed(2) + ' KB',
-                processingTime: (Math.random() * 5 + 1).toFixed(2) + 's',
-                validation: {
-                    validRecords: Math.floor(Math.random() * 900) + 800,
-                    invalidRecords: Math.floor(Math.random() * 50),
-                    duplicates: Math.floor(Math.random() * 20),
-                }
-            };
 
             setUploadState({
                 uploading: false,
                 progress: 100,
                 success: true,
                 error: null,
-                result: demoResult,
+                result: result,
             });
 
         } catch (error) {

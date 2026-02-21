@@ -19,14 +19,47 @@ const MLPredictionForm: React.FC = () => {
         uncertaintyMethod: 'bootstrap' as const,
     });
 
+    const [displayValues, setDisplayValues] = useState<Record<string, string>>({
+        bedrooms: '3',
+        bathrooms: '2',
+        sqft: '1500',
+        year_built: '2000',
+        lot_size: '6000',
+        school_rating: '7.5',
+        crime_rate: '3.2',
+        walkability_score: '75',
+    });
+
     const [result, setResult] = useState<any>(null);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: name === 'modelType' || name === 'uncertaintyMethod' ? value : parseFloat(value) || 0
-        }));
+
+        if (name === 'modelType' || name === 'uncertaintyMethod') {
+            setFormData(prev => ({ ...prev, [name]: value }));
+            return;
+        }
+
+        // Always update display so the user can type freely
+        setDisplayValues(prev => ({ ...prev, [name]: value }));
+
+        // Only sync to numeric formData when the value is a valid number
+        const parsed = parseFloat(value);
+        if (!Number.isNaN(parsed)) {
+            setFormData(prev => ({ ...prev, [name]: parsed }));
+        }
+    };
+
+    const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        const parsed = parseFloat(value);
+        // On blur, snap back to the last valid numeric value if field is empty/invalid
+        if (Number.isNaN(parsed)) {
+            setDisplayValues(prev => ({
+                ...prev,
+                [name]: String(formData[name as keyof typeof formData]),
+            }));
+        }
     };
 
     const handleSubmit = async (e: FormEvent) => {
@@ -78,8 +111,9 @@ const MLPredictionForm: React.FC = () => {
                                 type="number"
                                 id="bedrooms"
                                 name="bedrooms"
-                                value={formData.bedrooms}
+                                value={displayValues.bedrooms}
                                 onChange={handleInputChange}
+                                onBlur={handleInputBlur}
                                 min="1"
                                 max="10"
                                 required
@@ -92,8 +126,9 @@ const MLPredictionForm: React.FC = () => {
                                 type="number"
                                 id="bathrooms"
                                 name="bathrooms"
-                                value={formData.bathrooms}
+                                value={displayValues.bathrooms}
                                 onChange={handleInputChange}
+                                onBlur={handleInputBlur}
                                 min="1"
                                 max="10"
                                 step="0.5"
@@ -107,8 +142,9 @@ const MLPredictionForm: React.FC = () => {
                                 type="number"
                                 id="sqft"
                                 name="sqft"
-                                value={formData.sqft}
+                                value={displayValues.sqft}
                                 onChange={handleInputChange}
+                                onBlur={handleInputBlur}
                                 min="500"
                                 max="10000"
                                 required
@@ -121,8 +157,9 @@ const MLPredictionForm: React.FC = () => {
                                 type="number"
                                 id="year_built"
                                 name="year_built"
-                                value={formData.year_built}
+                                value={displayValues.year_built}
                                 onChange={handleInputChange}
+                                onBlur={handleInputBlur}
                                 min="1900"
                                 max="2024"
                                 required
@@ -135,8 +172,9 @@ const MLPredictionForm: React.FC = () => {
                                 type="number"
                                 id="lot_size"
                                 name="lot_size"
-                                value={formData.lot_size}
+                                value={displayValues.lot_size}
                                 onChange={handleInputChange}
+                                onBlur={handleInputBlur}
                                 min="1000"
                                 max="50000"
                                 required
@@ -149,8 +187,9 @@ const MLPredictionForm: React.FC = () => {
                                 type="number"
                                 id="school_rating"
                                 name="school_rating"
-                                value={formData.school_rating}
+                                value={displayValues.school_rating}
                                 onChange={handleInputChange}
+                                onBlur={handleInputBlur}
                                 min="1"
                                 max="10"
                                 step="0.1"
@@ -164,8 +203,9 @@ const MLPredictionForm: React.FC = () => {
                                 type="number"
                                 id="crime_rate"
                                 name="crime_rate"
-                                value={formData.crime_rate}
+                                value={displayValues.crime_rate}
                                 onChange={handleInputChange}
+                                onBlur={handleInputBlur}
                                 min="1"
                                 max="10"
                                 step="0.1"
@@ -179,8 +219,9 @@ const MLPredictionForm: React.FC = () => {
                                 type="number"
                                 id="walkability_score"
                                 name="walkability_score"
-                                value={formData.walkability_score}
+                                value={displayValues.walkability_score}
                                 onChange={handleInputChange}
+                                onBlur={handleInputBlur}
                                 min="0"
                                 max="100"
                                 required

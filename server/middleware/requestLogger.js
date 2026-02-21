@@ -1,5 +1,5 @@
 const logger = require('../config/logger');
-const { v4: uuidv4 } = require('crypto');
+const crypto = require('crypto');
 
 /**
  * Request logging middleware
@@ -7,7 +7,7 @@ const { v4: uuidv4 } = require('crypto');
  */
 const requestLogger = (req, res, next) => {
   // Generate unique request ID
-  const requestId = uuidv4();
+  const requestId = crypto.randomUUID();
   req.requestId = requestId;
 
   // Add request ID to response headers for tracking

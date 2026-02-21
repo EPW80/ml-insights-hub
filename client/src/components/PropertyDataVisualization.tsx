@@ -4,7 +4,7 @@ import {
     ScatterChart, Scatter, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area,
     ComposedChart, RadialBarChart, RadialBar, Brush
 } from 'recharts';
-import { PropertyData } from '../services/api';
+import { PropertyData, apiService } from '../services/api';
 import './PropertyDataVisualization.css';
 
 const COLORS = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
@@ -33,7 +33,18 @@ const PropertyDataVisualization: React.FC = () => {
             setLoading(true);
             setError(null);
 
-            // For demo purposes, we'll generate some sample data since the API endpoint might not exist yet
+            // Try to fetch real data from the API first
+            try {
+                const fetchedData = await apiService.getPropertyData(200);
+                if (fetchedData.length > 0) {
+                    setData(fetchedData);
+                    return;
+                }
+            } catch {
+                // API not available, fall back to sample data
+            }
+
+            // Fallback: generate sample data when API is unavailable or returns empty
             const sampleData: PropertyData[] = Array.from({ length: 100 }, () => ({
                 bedrooms: Math.floor(Math.random() * 5) + 1,
                 bathrooms: Math.floor(Math.random() * 4) + 1,
@@ -49,10 +60,6 @@ const PropertyDataVisualization: React.FC = () => {
             }));
 
             setData(sampleData);
-
-            // Uncomment this when the API endpoint is available
-            // const fetchedData = await apiService.getPropertyData(200);
-            // setData(fetchedData);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load data');
         } finally {

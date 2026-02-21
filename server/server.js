@@ -136,6 +136,7 @@ app.use((req, res, next) => {
 
 // Routes with specific rate limiting
 app.use("/api/ml/predict", mlLimiter, require("./routes/ml/predict"));
+app.use("/api/ml/predictions", mlLimiter, require("./routes/ml/predict"));
 app.use("/api/ml/train", mlLimiter, require("./routes/ml/train"));
 app.use("/api/ml/analyze", mlLimiter, require("./routes/ml/analyze"));
 app.use("/api/ml/versions", mlLimiter, require("./routes/ml/versioning"));
@@ -306,8 +307,8 @@ process.on("unhandledRejection", (reason, promise) => {
 });
 
 // Graceful shutdown handler
-process.on("SIGTERM", () => {
-  logger.info('SIGTERM received, starting graceful shutdown');
+const gracefulShutdown = (signal) => {
+  logger.info(`${signal} received, starting graceful shutdown`);
 
   server.close(() => {
     logger.info("HTTP server closed");
@@ -319,21 +320,10 @@ process.on("SIGTERM", () => {
       process.exit(0);
     });
   });
-});
+};
 
-process.on("SIGINT", () => {
-  logger.info('SIGINT received, starting graceful shutdown');
-
-  server.close(() => {
-    logger.info("HTTP server closed");
-
-    mongoose.connection.close(false, () => {
-      logger.info("MongoDB connection closed");
-      // eslint-disable-next-line no-process-exit
-      process.exit(0);
-    });
-  });
-});
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
 // WebSocket handling
 require("./websocket/mlWebsocket").initializeMLWebSocket(io);

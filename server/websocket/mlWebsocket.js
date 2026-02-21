@@ -3,8 +3,9 @@ const {
   PythonExecutionError,
   PythonTimeoutError,
   PythonParseError,
-} = require("../utils/pythonBridge");
+} = require("../utils/securePythonBridge");
 const path = require("path");
+const logger = require("../config/logger");
 
 // Enhanced WebSocket error handling and connection management
 class MLWebSocketManager {
@@ -27,9 +28,7 @@ class MLWebSocketManager {
     };
 
     this.activeConnections.set(connectionId, connectionInfo);
-    console.log(
-      `[${new Date().toISOString()}] Client connected: ${connectionId}`
-    );
+    logger.info(`Client connected: ${connectionId}`);
 
     // Set up heartbeat mechanism
     this.setupHeartbeat(socket, connectionInfo);
@@ -63,10 +62,8 @@ class MLWebSocketManager {
         connectionInfo.isAlive = false;
         socket.emit("ping");
       } else {
-        console.log(
-          `[${new Date().toISOString()}] Heartbeat failed for ${
-            socket.id
-          }, terminating connection`
+        logger.warn(
+          `Heartbeat failed for ${socket.id}, terminating connection`
         );
         socket.terminate();
         this.cleanupConnection(socket.id);
@@ -84,12 +81,9 @@ class MLWebSocketManager {
   }
 
   // Enhanced socket error handling
-  setupSocketErrorHandling(socket, connectionInfo) {
+  setupSocketErrorHandling(socket, _connectionInfo) {
     socket.on("error", (error) => {
-      console.error(
-        `[${new Date().toISOString()}] Socket error for ${socket.id}:`,
-        error
-      );
+      logger.error(`Socket error for ${socket.id}:`, error);
 
       socket.emit("error", {
         type: "socket_error",
@@ -101,9 +95,7 @@ class MLWebSocketManager {
 
     // Handle connection timeout
     socket.setTimeout(60000, () => {
-      console.log(
-        `[${new Date().toISOString()}] Socket timeout for ${socket.id}`
-      );
+      logger.warn(`Socket timeout for ${socket.id}`);
       socket.emit("timeout_warning", {
         message: "Connection timeout detected",
         timestamp: new Date().toISOString(),
@@ -159,11 +151,7 @@ class MLWebSocketManager {
       );
     }
 
-    console.log(
-      `[${new Date().toISOString()}] Starting training job ${jobId} for ${
-        socket.id
-      }`
-    );
+    logger.info(`Starting training job ${jobId} for ${socket.id}`);
 
     // Store job information
     const jobInfo = {
@@ -261,24 +249,20 @@ class MLWebSocketManager {
       "../python-scripts/predict_with_uncertainty.py"
     );
 
-    try {
-      await streamPythonScript(
-        scriptPath,
-        inputData,
-        (data) => {
-          socket.emit("prediction_result", {
-            data: data,
-            timestamp: new Date().toISOString(),
-          });
-        },
-        {
-          timeout: 30000, // 30 seconds
-          maxRetries: 2,
-        }
-      );
-    } catch (error) {
-      throw error;
-    }
+    await streamPythonScript(
+      scriptPath,
+      inputData,
+      (data) => {
+        socket.emit("prediction_result", {
+          data: data,
+          timestamp: new Date().toISOString(),
+        });
+      },
+      {
+        timeout: 30000, // 30 seconds
+        maxRetries: 2,
+      }
+    );
   }
 
   // Enhanced analysis request handler
@@ -300,24 +284,20 @@ class MLWebSocketManager {
 
     const scriptPath = path.join(__dirname, "../python-scripts/analysis.py");
 
-    try {
-      await streamPythonScript(
-        scriptPath,
-        inputData,
-        (data) => {
-          socket.emit("analysis_result", {
-            data: data,
-            timestamp: new Date().toISOString(),
-          });
-        },
-        {
-          timeout: 120000, // 2 minutes
-          maxRetries: 2,
-        }
-      );
-    } catch (error) {
-      throw error;
-    }
+    await streamPythonScript(
+      scriptPath,
+      inputData,
+      (data) => {
+        socket.emit("analysis_result", {
+          data: data,
+          timestamp: new Date().toISOString(),
+        });
+      },
+      {
+        timeout: 120000, // 2 minutes
+        maxRetries: 2,
+      }
+    );
   }
 
   // Handle job cancellation
@@ -369,17 +349,14 @@ class MLWebSocketManager {
       errorResponse.category = "system_error";
     }
 
-    console.error(
-      `[${new Date().toISOString()}] WebSocket Error for ${socket.id}:`,
-      errorResponse
-    );
+    logger.error(`WebSocket Error for ${socket.id}:`, errorResponse);
     socket.emit("error", errorResponse);
   }
 
   // Handle client disconnection
   handleDisconnection(connectionId, reason) {
-    console.log(
-      `[${new Date().toISOString()}] Client disconnected: ${connectionId}, reason: ${reason}`
+    logger.info(
+      `Client disconnected: ${connectionId}, reason: ${reason}`
     );
 
     const connectionInfo = this.activeConnections.get(connectionId);
@@ -397,10 +374,7 @@ class MLWebSocketManager {
 
   // Handle socket-level errors
   handleSocketError(connectionId, error) {
-    console.error(
-      `[${new Date().toISOString()}] Socket error for ${connectionId}:`,
-      error
-    );
+    logger.error(`Socket error for ${connectionId}:`, error);
     this.cleanupConnection(connectionId);
   }
 
@@ -443,7 +417,7 @@ function initializeMLWebSocket(io) {
   // Periodic cleanup of stale connections
   setInterval(() => {
     const stats = mlWebSocketManager.getConnectionStats();
-    console.log(`[${new Date().toISOString()}] WebSocket Stats:`, stats);
+    logger.info("WebSocket Stats:", stats);
   }, 60000); // Every minute
 }
 

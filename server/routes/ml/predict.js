@@ -81,6 +81,19 @@ function sendErrorResponse(res, error, statusCode = 500, req = null) {
   res.status(statusCode).json(errorResponse);
 }
 
+router.get("/", async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const predictions = await Prediction.find()
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+    res.json({ success: true, predictions });
+  } catch (error) {
+    sendErrorResponse(res, error, 500, req);
+  }
+});
+
 router.post("/", async (req, res) => {
   const startTime = Date.now();
 

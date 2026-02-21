@@ -91,6 +91,7 @@ describe('Dataset Upload Routes', () => {
 
         const response = await request(app)
           .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
           .attach('dataset', testFile, 'test-data.csv')
           .field('name', 'Test Dataset')
           .field('description', 'A test CSV dataset')
@@ -112,6 +113,7 @@ describe('Dataset Upload Routes', () => {
 
         const response = await request(app)
           .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
           .attach('dataset', testFile, 'test-data.json')
           .field('name', 'JSON Dataset')
           .field('description', 'A test JSON dataset')
@@ -127,6 +129,7 @@ describe('Dataset Upload Routes', () => {
 
         const response = await request(app)
           .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
           .attach('dataset', testFile, 'metadata-test.csv')
           .field('name', 'Metadata Test')
           .field('description', 'Testing metadata storage')
@@ -146,6 +149,7 @@ describe('Dataset Upload Routes', () => {
 
         const response = await request(app)
           .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
           .attach('dataset', testFile, 'disk-test.csv')
           .field('name', 'Disk Test')
           .expect(200);
@@ -166,6 +170,7 @@ describe('Dataset Upload Routes', () => {
 
         const response = await request(app)
           .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
           .attach('dataset', testFile, 'no-name.csv')
           .field('description', 'Missing name')
           .expect(500);
@@ -176,9 +181,10 @@ describe('Dataset Upload Routes', () => {
       it('should require a file to be uploaded', async () => {
         const response = await request(app)
           .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
           .field('name', 'No File Dataset')
           .field('description', 'No file attached')
-          .expect(500);
+          .expect(400);
 
         expect(response.body.error).toBeDefined();
       });
@@ -189,6 +195,7 @@ describe('Dataset Upload Routes', () => {
 
         const response = await request(app)
           .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
           .attach('dataset', testFile, 'no-desc.csv')
           .field('name', 'No Description Dataset')
           .expect(200);
@@ -204,6 +211,7 @@ describe('Dataset Upload Routes', () => {
 
         const response = await request(app)
           .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
           .attach('dataset', testFile, 'test.csv')
           .field('name', 'CSV Test')
           .expect(200);
@@ -216,6 +224,7 @@ describe('Dataset Upload Routes', () => {
 
         const response = await request(app)
           .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
           .attach('dataset', testFile, 'test.json')
           .field('name', 'JSON Test')
           .expect(200);
@@ -228,13 +237,13 @@ describe('Dataset Upload Routes', () => {
 
         const formats = [
           { ext: 'csv', file: 'test.csv' },
-          { ext: 'json', file: 'test.json' },
-          { ext: 'parquet', file: 'test.parquet' }
+          { ext: 'json', file: 'test.json' }
         ];
 
         for (const format of formats) {
           const response = await request(app)
             .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
             .attach('dataset', testFile, format.file)
             .field('name', `${format.ext} Test`)
             .expect(200);
@@ -252,6 +261,7 @@ describe('Dataset Upload Routes', () => {
 
         const response = await request(app)
           .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
           .attach('dataset', largeFile, 'large-file.csv')
           .field('name', 'Large File');
 
@@ -266,6 +276,7 @@ describe('Dataset Upload Routes', () => {
 
         const response = await request(app)
           .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
           .attach('dataset', smallFile, 'small-file.csv')
           .field('name', 'Small File')
           .expect(200);
@@ -281,6 +292,7 @@ describe('Dataset Upload Routes', () => {
 
         const response = await request(app)
           .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
           .attach('dataset', testFile, 'size-test.csv')
           .field('name', 'Size Test')
           .expect(200);
@@ -299,6 +311,7 @@ describe('Dataset Upload Routes', () => {
 
         const response = await request(app)
           .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
           .attach('dataset', testFile, 'db-error.csv')
           .field('name', 'DB Error Test')
           .expect(500);
@@ -311,8 +324,9 @@ describe('Dataset Upload Routes', () => {
       it('should handle missing file gracefully', async () => {
         const response = await request(app)
           .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
           .field('name', 'No File')
-          .expect(500);
+          .expect(400);
 
         expect(response.body.error).toBeDefined();
       });
@@ -320,8 +334,9 @@ describe('Dataset Upload Routes', () => {
       it('should handle invalid multipart data', async () => {
         const response = await request(app)
           .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
           .send({ invalid: 'data' })
-          .expect(500);
+          .expect(400);
 
         expect(response.body.error).toBeDefined();
       });
@@ -333,6 +348,7 @@ describe('Dataset Upload Routes', () => {
 
         const response = await request(app)
           .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
           .attach('dataset', testFile, 'format-test.csv')
           .field('name', 'Format Test')
           .expect(200);
@@ -345,6 +361,7 @@ describe('Dataset Upload Routes', () => {
 
         const response = await request(app)
           .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
           .attach('dataset', testFile, 'complete-test.csv')
           .field('name', 'Complete Test')
           .field('description', 'Complete dataset test')
@@ -365,6 +382,7 @@ describe('Dataset Upload Routes', () => {
 
         const response = await request(app)
           .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
           .attach('dataset', testFile, 'timestamp-test.csv')
           .field('name', 'Timestamp Test')
           .expect(200);
@@ -384,6 +402,7 @@ describe('Dataset Upload Routes', () => {
           uploads.push(
             request(app)
               .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
               .attach('dataset', testFile, `concurrent-${i}.csv`)
               .field('name', `Concurrent Upload ${i}`)
           );

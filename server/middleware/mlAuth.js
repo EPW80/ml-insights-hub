@@ -18,7 +18,7 @@ const requireAuth = (req, res, next) => {
         role: 'user',
         username: 'development'
       };
-      console.log('⚠️  Development mode: Authentication skipped for', req.path);
+      // Development mode: Authentication skipped
       return next();
     }
 
@@ -83,7 +83,7 @@ const requireAuth = (req, res, next) => {
       console.log(`✅ User authenticated: ${req.user.email} (${req.user.role})`);
     }
 
-    next();
+    return next();
 
   } catch (error) {
     // Handle specific JWT errors
@@ -150,7 +150,7 @@ const requireAdmin = (req, res, next) => {
     });
   }
 
-  next();
+  return next();
 };
 
 /**
@@ -182,12 +182,12 @@ const optionalAuth = (req, res, next) => {
       username: decoded.username
     };
 
-    next();
+    return next();
 
   } catch (error) {
     // If token is invalid, just continue without user
     req.user = null;
-    next();
+    return next();
   }
 };
 
@@ -228,7 +228,7 @@ const userRateLimiter = (maxRequests = 100, windowMs = 900000) => {
     }
 
     userRecord.requests.push(now);
-    next();
+    return next();
   };
 };
 
@@ -266,7 +266,7 @@ const requireApiKey = (req, res, next) => {
     role: 'user' // API keys have user-level access by default
   };
 
-  next();
+  return next();
 };
 
 /**

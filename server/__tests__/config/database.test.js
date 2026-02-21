@@ -62,7 +62,8 @@ describe('MongoDBConnectionManager', () => {
 
       if (mongoose.connection.readyState !== 0) {
         try {
-          await mongoose.connection.close();
+          // Use force:true to close even if a connection attempt is still in progress
+          await mongoose.connection.close(true);
         } catch (error) {
           // Ignore close errors
         }
@@ -77,7 +78,7 @@ describe('MongoDBConnectionManager', () => {
 
     jest.clearAllTimers();
     jest.clearAllMocks();
-  });
+  }, 30000); // Extended timeout to handle slow connection teardowns
 
   describe('Initialization', () => {
     it('should initialize with default options', () => {
@@ -225,8 +226,12 @@ describe('MongoDBConnectionManager', () => {
       manager = new MongoDBConnectionManager({
         uri: 'mongodb://localhost:27999/timeout-test', // Non-existent port
         connectionTimeout: 100,
-        serverSelectionTimeoutMS: 100
+        serverSelectionTimeoutMS: 100,
+        maxReconnectAttempts: 0 // Prevent reconnection timers from leaking into subsequent tests
       });
+
+      // Suppress unhandled Mongoose error event that fires after promise rejection
+      mongoose.connection.on('error', () => {});
 
       await expect(manager.connect()).rejects.toThrow();
       expect(manager.isConnecting).toBe(false);
@@ -509,8 +514,12 @@ describe('MongoDBConnectionManager', () => {
       manager = new MongoDBConnectionManager({
         uri: 'mongodb://localhost:27999/fail-test',
         connectionTimeout: 100,
-        serverSelectionTimeoutMS: 100
+        serverSelectionTimeoutMS: 100,
+        maxReconnectAttempts: 0 // Prevent reconnection timers from leaking into subsequent tests
       });
+
+      // Suppress unhandled Mongoose error event that fires after promise rejection
+      mongoose.connection.on('error', () => {});
 
       const eventSpy = jest.fn();
       manager.on('connectionFailed', eventSpy);
@@ -537,7 +546,7 @@ describe('MongoDBConnectionManager', () => {
     beforeEach(async () => {
       // Ensure clean mongoose state
       if (mongoose.connection.readyState !== 0) {
-        await mongoose.connection.close();
+        await mongoose.connection.close(true);
       }
       mongoose.connection.removeAllListeners();
 

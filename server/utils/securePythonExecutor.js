@@ -22,6 +22,16 @@ const SECURITY_CONFIG = {
     /^predict_.*\.py$/,
     /^train_.*\.py$/,
     /^analyze_.*\.py$/,
+    /^analysis\.py$/,
+    /^anomaly_detection\.py$/,
+    /^clustering_analysis\.py$/,
+    /^cross_validation\.py$/,
+    /^ensemble_models\.py$/,
+    /^feature_engineering\.py$/,
+    /^model_explainability\.py$/,
+    /^model_versioning\.py$/,
+    /^ab_testing\.py$/,
+    /^auto_retrain\.py$/,
     /^validate_.*\.py$/,
     /^test_connection\.py$/
   ],
@@ -302,7 +312,7 @@ class SecurePythonExecutor {
   /**
    * Core Python execution with sandboxing
    */
-  async executePython(scriptPath, inputData, options) {
+  executePython(scriptPath, inputData, options) {
     return new Promise((resolve, reject) => {
       const {
         timeout = SECURITY_CONFIG.MAX_EXECUTION_TIME,

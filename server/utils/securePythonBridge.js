@@ -157,6 +157,46 @@ function sanitizeInput(inputData) {
   return secureExecutor.sanitizeInput(inputData);
 }
 
+/**
+ * Secure streaming Python script execution.
+ * Mirrors the legacy streamPythonScript API but uses the secure executor
+ * for path validation, input sanitization, and concurrent execution limits.
+ */
+async function streamPythonScript(scriptPath, inputData, onData, options = {}) {
+  const {
+    timeout = 120000,
+    maxRetries = 0,
+    onProgress = null
+  } = options;
+
+  // Convert relative path to absolute if needed
+  if (!path.isAbsolute(scriptPath)) {
+    scriptPath = path.resolve(__dirname, '../python-scripts', scriptPath);
+  }
+
+  let retryCount = 0;
+
+  async function attempt() {
+    try {
+      const result = await secureExecutor.executeSecure(scriptPath, inputData, { timeout });
+
+      // Emit the final result through the data callback
+      if (onData && result.data) {
+        onData(result.data);
+      }
+      return result;
+    } catch (error) {
+      if (retryCount < maxRetries) {
+        retryCount++;
+        return attempt();
+      }
+      throw error;
+    }
+  }
+
+  return attempt();
+}
+
 // Export error classes for proper error handling
 module.exports = {
   // Main functions
@@ -165,6 +205,7 @@ module.exports = {
   executeModelTraining,
   executeDataValidation,
   testPythonConnection,
+  streamPythonScript,
   
   // Utility functions
   getExecutionStats,

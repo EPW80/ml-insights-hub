@@ -50,7 +50,7 @@ describe('Authentication Routes', () => {
         const userData = {
           username: 'testuser',
           email: 'test@example.com',
-          password: 'password123'
+          password: 'P@ssw0rd123'
         };
 
         const response = await request(app)
@@ -71,7 +71,7 @@ describe('Authentication Routes', () => {
         const userData = {
           username: 'jwtuser',
           email: 'jwt@example.com',
-          password: 'password123'
+          password: 'P@ssw0rd123'
         };
 
         const response = await request(app)
@@ -92,7 +92,7 @@ describe('Authentication Routes', () => {
         const userData = {
           username: 'hashtest',
           email: 'hash@example.com',
-          password: 'password123'
+          password: 'P@ssw0rd123'
         };
 
         await request(app)
@@ -119,7 +119,7 @@ describe('Authentication Routes', () => {
         const userData = {
           username: 'newuser',
           email: 'existing@example.com',
-          password: 'password123'
+          password: 'P@ssw0rd123'
         };
 
         const response = await request(app)
@@ -135,7 +135,7 @@ describe('Authentication Routes', () => {
         const userData = {
           username: 'existinguser',
           email: 'newemail@example.com',
-          password: 'password123'
+          password: 'P@ssw0rd123'
         };
 
         const response = await request(app)
@@ -151,7 +151,7 @@ describe('Authentication Routes', () => {
         const userData = {
           username: 'existinguser',
           email: 'existing@example.com',
-          password: 'password123'
+          password: 'P@ssw0rd123'
         };
 
         const response = await request(app)
@@ -167,13 +167,13 @@ describe('Authentication Routes', () => {
       it('should handle missing username', async () => {
         const userData = {
           email: 'test@example.com',
-          password: 'password123'
+          password: 'P@ssw0rd123'
         };
 
         const response = await request(app)
           .post('/api/auth/register')
           .send(userData)
-          .expect(500);
+          .expect(400);
 
         expect(response.body).toHaveProperty('error');
       });
@@ -181,13 +181,13 @@ describe('Authentication Routes', () => {
       it('should handle missing email', async () => {
         const userData = {
           username: 'testuser',
-          password: 'password123'
+          password: 'P@ssw0rd123'
         };
 
         const response = await request(app)
           .post('/api/auth/register')
           .send(userData)
-          .expect(500);
+          .expect(400);
 
         expect(response.body).toHaveProperty('error');
       });
@@ -201,7 +201,7 @@ describe('Authentication Routes', () => {
         const response = await request(app)
           .post('/api/auth/register')
           .send(userData)
-          .expect(500);
+          .expect(400);
 
         expect(response.body).toHaveProperty('error');
       });
@@ -325,9 +325,9 @@ describe('Authentication Routes', () => {
         const response = await request(app)
           .post('/api/auth/login')
           .send(credentials)
-          .expect(401);
+          .expect(400);
 
-        expect(response.body.error).toBe('Invalid credentials');
+        expect(response.body.error).toBe('Validation failed');
       });
     });
 
@@ -340,7 +340,7 @@ describe('Authentication Routes', () => {
         const response = await request(app)
           .post('/api/auth/login')
           .send(credentials)
-          .expect(401);
+          .expect(400);
 
         expect(response.body).toHaveProperty('error');
       });
@@ -353,7 +353,7 @@ describe('Authentication Routes', () => {
         const response = await request(app)
           .post('/api/auth/login')
           .send(credentials)
-          .expect(500);
+          .expect(400);
 
         expect(response.body).toHaveProperty('error');
       });
@@ -591,7 +591,7 @@ describe('Authentication Routes', () => {
           .send({
             username: 'errortest',
             email: 'error@example.com',
-            password: 'password123'
+            password: 'P@ssw0rd123'
           })
           .expect(500);
 
@@ -624,7 +624,7 @@ describe('Authentication Routes', () => {
         const response = await request(app)
           .post('/api/auth/register')
           .send({})
-          .expect(500);
+          .expect(400);
 
         expect(response.body).toHaveProperty('error');
       });
@@ -633,7 +633,7 @@ describe('Authentication Routes', () => {
         const response = await request(app)
           .post('/api/auth/login')
           .send({})
-          .expect(401);
+          .expect(400);
 
         expect(response.body).toHaveProperty('error');
       });
@@ -654,7 +654,7 @@ describe('Authentication Routes', () => {
       const userData = {
         username: 'flowtest',
         email: 'flow@example.com',
-        password: 'password123'
+        password: 'P@ssw0rd123'
       };
 
       const registerResponse = await request(app)

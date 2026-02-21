@@ -75,10 +75,6 @@ class MongoDBConnectionManager extends EventEmitter {
       
       // Security
       authSource: userOptions.authSource || 'admin',
-      
-      // Additional options
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
     };
 
     // Filter out custom options that aren't for mongoose
@@ -87,7 +83,7 @@ class MongoDBConnectionManager extends EventEmitter {
       'maxPoolSize', 'minPoolSize', 'serverSelectionTimeoutMS', 'socketTimeoutMS',
       'connectTimeoutMS', 'maxIdleTimeMS', 'waitQueueTimeoutMS', 'retryWrites',
       'retryReads', 'w', 'readPreference', 'readConcern', 'heartbeatFrequencyMS',
-      'authSource', 'useNewUrlParser', 'useUnifiedTopology'
+      'authSource'
     ];
 
     Object.keys(userOptions).forEach(key => {
@@ -164,10 +160,9 @@ class MongoDBConnectionManager extends EventEmitter {
       this.emit('serverSelectionError', error);
     });
 
-    // Process termination handlers
-    process.on('SIGINT', () => this._gracefulShutdown('SIGINT'));
-    process.on('SIGTERM', () => this._gracefulShutdown('SIGTERM'));
-    process.on('SIGUSR2', () => this._gracefulShutdown('SIGUSR2')); // nodemon restart
+    // Note: SIGINT/SIGTERM are handled in server.js to avoid duplicate handlers.
+    // Only register SIGUSR2 for nodemon restart here.
+    process.on('SIGUSR2', () => this._gracefulShutdown('SIGUSR2'));
   }
 
   /**
@@ -354,8 +349,13 @@ class MongoDBConnectionManager extends EventEmitter {
         console.error(`❌ [${new Date().toISOString()}] Error during MongoDB shutdown:`, error.message);
       }
     }
-    
+
     this.emit('shutdown');
+
+    // Allow nodemon to restart the process after cleanup
+    if (signal === 'SIGUSR2') {
+      process.kill(process.pid, 'SIGUSR2');
+    }
   }
 
   /**
