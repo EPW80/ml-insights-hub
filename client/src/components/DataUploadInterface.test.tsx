@@ -43,10 +43,10 @@ describe('DataUploadInterface', () => {
   });
 
   it('shows error for invalid file type', async () => {
-    const { container } = render(<DataUploadInterface />);
+    render(<DataUploadInterface />);
 
     const file = new File(['invalid content'], 'test.txt', { type: 'text/plain' });
-    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = screen.getByTestId('file-upload-input');
 
     fireEvent.change(input, { target: { files: [file] } });
 
@@ -56,13 +56,13 @@ describe('DataUploadInterface', () => {
   });
 
   it('shows error for oversized file', async () => {
-    const { container } = render(<DataUploadInterface />);
+    render(<DataUploadInterface />);
 
     // Create a mock file larger than 10MB
     const largeContent = new ArrayBuffer(11 * 1024 * 1024);
     const file = new File([largeContent], 'large.csv', { type: 'text/csv' });
 
-    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = screen.getByTestId('file-upload-input');
     fireEvent.change(input, { target: { files: [file] } });
 
     await waitFor(() => {
@@ -82,12 +82,12 @@ describe('DataUploadInterface', () => {
       },
     });
 
-    const { container } = render(<DataUploadInterface />);
+    render(<DataUploadInterface />);
 
     const csvContent = 'bedrooms,bathrooms,sqft,actual_price\n3,2,1500,450000';
     const file = new File([csvContent], 'properties.csv', { type: 'text/csv' });
 
-    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = screen.getByTestId('file-upload-input');
     fireEvent.change(input, { target: { files: [file] } });
 
     await waitFor(() => {
@@ -100,10 +100,10 @@ describe('DataUploadInterface', () => {
   it('shows upload error when API fails', async () => {
     (apiService.uploadData as jest.Mock).mockRejectedValue(new Error('Server error'));
 
-    const { container } = render(<DataUploadInterface />);
+    render(<DataUploadInterface />);
 
     const file = new File(['data'], 'test.csv', { type: 'text/csv' });
-    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = screen.getByTestId('file-upload-input');
     fireEvent.change(input, { target: { files: [file] } });
 
     await waitFor(() => {
@@ -129,9 +129,9 @@ describe('DataUploadInterface', () => {
   });
 
   it('handles drag events on upload zone', () => {
-    const { container } = render(<DataUploadInterface />);
+    render(<DataUploadInterface />);
 
-    const uploadZone = container.querySelector('.upload-zone') as HTMLElement;
+    const uploadZone = screen.getByTestId('upload-zone');
 
     fireEvent.dragEnter(uploadZone, {
       dataTransfer: { files: [] },

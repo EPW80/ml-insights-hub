@@ -192,6 +192,7 @@ const DataUploadInterface: React.FC = () => {
                     onDragOver={handleDragOver}
                     onDrop={handleDrop}
                     onClick={openFileDialog}
+                    data-testid="upload-zone"
                 >
                     <input
                         ref={fileInputRef}
@@ -199,6 +200,7 @@ const DataUploadInterface: React.FC = () => {
                         accept=".csv,.json,.xlsx,.xls"
                         onChange={handleFileInputChange}
                         style={{ display: 'none' }}
+                        data-testid="file-upload-input"
                     />
 
                     {!uploadState.uploading && !uploadState.success && (
