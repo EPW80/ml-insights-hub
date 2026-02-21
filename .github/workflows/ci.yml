@@ -22,6 +22,7 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'npm'
           cache-dependency-path: |
+            package-lock.json
             server/package-lock.json
             client/package-lock.json
 
