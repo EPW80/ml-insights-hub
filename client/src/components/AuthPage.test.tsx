@@ -9,11 +9,13 @@ import { apiService, tokenManager } from '../services/api';
 
 // Mock react-router-dom to avoid JSDOM TextEncoder issue with react-router v7
 jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom') as Record<string, unknown>,
+  ...(jest.requireActual('react-router-dom') as Record<string, unknown>),
   BrowserRouter: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   Routes: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   Route: () => null,
-  NavLink: ({ children, to }: { children: React.ReactNode; to: string }) => <a href={to}>{children}</a>,
+  NavLink: ({ children, to }: { children: React.ReactNode; to: string }) => (
+    <a href={to}>{children}</a>
+  ),
   Navigate: () => null,
   useNavigate: () => jest.fn(),
 }));
@@ -38,11 +40,7 @@ jest.mock('../services/api', () => ({
 }));
 
 const renderWithProviders = (ui: React.ReactElement) => {
-  return render(
-    <AuthProvider>
-      {ui}
-    </AuthProvider>
-  );
+  return render(<AuthProvider>{ui}</AuthProvider>);
 };
 
 describe('AuthPage', () => {
@@ -57,8 +55,8 @@ describe('AuthPage', () => {
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
     // Submit button has type="submit"
-    const submitBtn = screen.getByText((content, element) =>
-      /sign in/i.test(content) && element?.getAttribute('type') === 'submit'
+    const submitBtn = screen.getByText(
+      (content, element) => /sign in/i.test(content) && element?.getAttribute('type') === 'submit'
     );
     expect(submitBtn).toBeInTheDocument();
   });
@@ -99,7 +97,9 @@ describe('AuthPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/uppercase, lowercase, number, and special character/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/uppercase, lowercase, number, and special character/i)
+      ).toBeInTheDocument();
     });
   });
 
@@ -114,8 +114,8 @@ describe('AuthPage', () => {
     await userEvent.type(screen.getByLabelText('Email'), 'test@example.com');
     await userEvent.type(screen.getByLabelText('Password'), 'StrongP@ss1');
 
-    const submitBtn = screen.getByText((content, element) =>
-      /sign in/i.test(content) && element?.getAttribute('type') === 'submit'
+    const submitBtn = screen.getByText(
+      (content, element) => /sign in/i.test(content) && element?.getAttribute('type') === 'submit'
     );
     fireEvent.click(submitBtn);
 
@@ -135,8 +135,8 @@ describe('AuthPage', () => {
     await userEvent.type(screen.getByLabelText('Email'), 'test@example.com');
     await userEvent.type(screen.getByLabelText('Password'), 'WrongP@ss1');
 
-    const submitBtn = screen.getByText((content, element) =>
-      /sign in/i.test(content) && element?.getAttribute('type') === 'submit'
+    const submitBtn = screen.getByText(
+      (content, element) => /sign in/i.test(content) && element?.getAttribute('type') === 'submit'
     );
     fireEvent.click(submitBtn);
 
@@ -163,7 +163,13 @@ describe('App', () => {
 
   it('shows main app with navigation when authenticated', async () => {
     // Simulate a valid JWT token
-    const payload = { id: '1', username: 'testuser', email: 'test@test.com', role: 'user', exp: Math.floor(Date.now() / 1000) + 3600 };
+    const payload = {
+      id: '1',
+      username: 'testuser',
+      email: 'test@test.com',
+      role: 'user',
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    };
     const fakeToken = `header.${btoa(JSON.stringify(payload))}.signature`;
     (tokenManager.getToken as jest.Mock).mockReturnValue(fakeToken);
 

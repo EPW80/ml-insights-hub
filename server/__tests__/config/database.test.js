@@ -40,7 +40,7 @@ describe('MongoDBConnectionManager', () => {
     processListeners = {
       SIGINT: process.listeners('SIGINT').slice(),
       SIGTERM: process.listeners('SIGTERM').slice(),
-      SIGUSR2: process.listeners('SIGUSR2').slice()
+      SIGUSR2: process.listeners('SIGUSR2').slice(),
     };
   });
 
@@ -56,9 +56,9 @@ describe('MongoDBConnectionManager', () => {
       process.removeAllListeners('SIGUSR2');
 
       // Restore original listeners
-      processListeners.SIGINT.forEach(listener => process.on('SIGINT', listener));
-      processListeners.SIGTERM.forEach(listener => process.on('SIGTERM', listener));
-      processListeners.SIGUSR2.forEach(listener => process.on('SIGUSR2', listener));
+      processListeners.SIGINT.forEach((listener) => process.on('SIGINT', listener));
+      processListeners.SIGTERM.forEach((listener) => process.on('SIGTERM', listener));
+      processListeners.SIGUSR2.forEach((listener) => process.on('SIGUSR2', listener));
 
       if (mongoose.connection.readyState !== 0) {
         try {
@@ -74,7 +74,7 @@ describe('MongoDBConnectionManager', () => {
     mongoose.connection.removeAllListeners();
 
     // Wait for any background operations to complete
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     jest.clearAllTimers();
     jest.clearAllMocks();
@@ -83,7 +83,7 @@ describe('MongoDBConnectionManager', () => {
   describe('Initialization', () => {
     it('should initialize with default options', () => {
       manager = new MongoDBConnectionManager({
-        uri: process.env.MONGODB_URI_TEST
+        uri: process.env.MONGODB_URI_TEST,
       });
 
       expect(manager.connectionString).toBe(process.env.MONGODB_URI_TEST);
@@ -104,7 +104,7 @@ describe('MongoDBConnectionManager', () => {
         healthCheckInterval: 15000,
         connectionTimeout: 5000,
         maxPoolSize: 20,
-        minPoolSize: 5
+        minPoolSize: 5,
       });
 
       expect(manager.maxReconnectAttempts).toBe(3);
@@ -117,7 +117,7 @@ describe('MongoDBConnectionManager', () => {
 
     it('should initialize connection statistics', () => {
       manager = new MongoDBConnectionManager({
-        uri: process.env.MONGODB_URI_TEST
+        uri: process.env.MONGODB_URI_TEST,
       });
 
       expect(manager.stats).toEqual({
@@ -127,7 +127,7 @@ describe('MongoDBConnectionManager', () => {
         lastConnectionTime: null,
         lastDisconnectionTime: null,
         healthChecks: 0,
-        healthCheckFailures: 0
+        healthCheckFailures: 0,
       });
     });
 
@@ -135,7 +135,7 @@ describe('MongoDBConnectionManager', () => {
       manager = new MongoDBConnectionManager({
         uri: process.env.MONGODB_URI_TEST,
         maxPoolSize: 15,
-        serverSelectionTimeoutMS: 3000
+        serverSelectionTimeoutMS: 3000,
       });
 
       expect(manager.options.maxPoolSize).toBe(15);
@@ -151,7 +151,7 @@ describe('MongoDBConnectionManager', () => {
         uri: process.env.MONGODB_URI_TEST,
         maxPoolSize: 15,
         customOption: 'value',
-        anotherCustomOption: 123
+        anotherCustomOption: 123,
       });
 
       expect(manager.options.maxPoolSize).toBe(15);
@@ -163,7 +163,7 @@ describe('MongoDBConnectionManager', () => {
   describe('Connection Management', () => {
     beforeEach(() => {
       manager = new MongoDBConnectionManager({
-        uri: process.env.MONGODB_URI_TEST
+        uri: process.env.MONGODB_URI_TEST,
       });
     });
 
@@ -217,7 +217,7 @@ describe('MongoDBConnectionManager', () => {
       await manager.disconnect();
 
       // Wait for disconnection event
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       expect(mongoose.connection.readyState).toBe(0); // 0 = disconnected
     });
@@ -227,7 +227,7 @@ describe('MongoDBConnectionManager', () => {
         uri: 'mongodb://localhost:27999/timeout-test', // Non-existent port
         connectionTimeout: 100,
         serverSelectionTimeoutMS: 100,
-        maxReconnectAttempts: 0 // Prevent reconnection timers from leaking into subsequent tests
+        maxReconnectAttempts: 0, // Prevent reconnection timers from leaking into subsequent tests
       });
 
       // Suppress unhandled Mongoose error event that fires after promise rejection
@@ -250,7 +250,7 @@ describe('MongoDBConnectionManager', () => {
       manager = new MongoDBConnectionManager({
         uri: process.env.MONGODB_URI_TEST,
         reconnectInterval: 1000,
-        maxReconnectAttempts: 3
+        maxReconnectAttempts: 3,
       });
     });
 
@@ -273,7 +273,7 @@ describe('MongoDBConnectionManager', () => {
       mongoose.connection.emit('disconnected');
 
       // Wait for event processing and reconnection attempt
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       expect(reconnectSpy).toHaveBeenCalled();
       expect(manager.reconnectAttempts).toBe(1);
@@ -343,7 +343,7 @@ describe('MongoDBConnectionManager', () => {
       jest.useFakeTimers();
       manager = new MongoDBConnectionManager({
         uri: process.env.MONGODB_URI_TEST,
-        healthCheckInterval: 5000
+        healthCheckInterval: 5000,
       });
       await manager.connect();
     });
@@ -424,7 +424,7 @@ describe('MongoDBConnectionManager', () => {
   describe('Event Emissions', () => {
     beforeEach(() => {
       manager = new MongoDBConnectionManager({
-        uri: process.env.MONGODB_URI_TEST
+        uri: process.env.MONGODB_URI_TEST,
       });
     });
 
@@ -446,7 +446,7 @@ describe('MongoDBConnectionManager', () => {
       mongoose.connection.emit('disconnected');
 
       // Wait for event processing
-      await new Promise(resolve => setImmediate(resolve));
+      await new Promise((resolve) => setImmediate(resolve));
 
       expect(eventSpy).toHaveBeenCalled();
     });
@@ -515,7 +515,7 @@ describe('MongoDBConnectionManager', () => {
         uri: 'mongodb://localhost:27999/fail-test',
         connectionTimeout: 100,
         serverSelectionTimeoutMS: 100,
-        maxReconnectAttempts: 0 // Prevent reconnection timers from leaking into subsequent tests
+        maxReconnectAttempts: 0, // Prevent reconnection timers from leaking into subsequent tests
       });
 
       // Suppress unhandled Mongoose error event that fires after promise rejection
@@ -552,7 +552,7 @@ describe('MongoDBConnectionManager', () => {
 
       manager = new MongoDBConnectionManager({
         uri: process.env.MONGODB_URI_TEST,
-        maxReconnectAttempts: 0 // Prevent reconnection during shutdown tests
+        maxReconnectAttempts: 0, // Prevent reconnection during shutdown tests
       });
       await manager.connect();
     });
@@ -604,7 +604,7 @@ describe('MongoDBConnectionManager', () => {
       await manager._gracefulShutdown('SIGTERM');
 
       // Wait for disconnection
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       expect(mongoose.connection.readyState).toBe(0); // 0 = disconnected
     });
@@ -613,7 +613,7 @@ describe('MongoDBConnectionManager', () => {
       await manager.disconnect();
 
       // Wait for disconnection
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const eventSpy = jest.fn();
       manager.on('shutdown', eventSpy);
@@ -627,7 +627,7 @@ describe('MongoDBConnectionManager', () => {
   describe('Error Handling Scenarios', () => {
     beforeEach(() => {
       manager = new MongoDBConnectionManager({
-        uri: process.env.MONGODB_URI_TEST
+        uri: process.env.MONGODB_URI_TEST,
       });
     });
 
@@ -708,7 +708,7 @@ describe('MongoDBConnectionManager', () => {
   describe('Statistics and Health Status', () => {
     beforeEach(async () => {
       manager = new MongoDBConnectionManager({
-        uri: process.env.MONGODB_URI_TEST
+        uri: process.env.MONGODB_URI_TEST,
       });
       await manager.connect();
     });
@@ -728,7 +728,7 @@ describe('MongoDBConnectionManager', () => {
       const startStats = manager.getStats();
 
       // Wait 100ms
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const endStats = manager.getStats();
 
@@ -736,12 +736,12 @@ describe('MongoDBConnectionManager', () => {
     });
 
     it('should track uptime across reconnections', async () => {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       await manager.disconnect();
 
       // Wait for disconnection
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       await manager.connect();
 
@@ -759,7 +759,7 @@ describe('MongoDBConnectionManager', () => {
       await manager.disconnect();
 
       // Wait for disconnection
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       expect(manager.isHealthy()).toBe(false);
     });
@@ -779,7 +779,7 @@ describe('MongoDBConnectionManager', () => {
       await manager.disconnect();
 
       // Wait for disconnection event to process
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Manually set state to ensure it's disconnected
       manager.isConnected = false;
@@ -793,7 +793,7 @@ describe('MongoDBConnectionManager', () => {
   describe('Connection State Helpers', () => {
     beforeEach(() => {
       manager = new MongoDBConnectionManager({
-        uri: process.env.MONGODB_URI_TEST
+        uri: process.env.MONGODB_URI_TEST,
       });
     });
 

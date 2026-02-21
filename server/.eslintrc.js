@@ -38,11 +38,5 @@ module.exports = {
     // Import best practices
     'no-duplicate-imports': 'error',
   },
-  ignorePatterns: [
-    'node_modules/',
-    'dist/',
-    'coverage/',
-    '*.config.js',
-    'python-scripts/',
-  ],
+  ignorePatterns: ['node_modules/', 'dist/', 'coverage/', '*.config.js', 'python-scripts/'],
 };

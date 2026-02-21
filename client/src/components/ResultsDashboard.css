@@ -4,7 +4,7 @@
   padding: 2rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .dashboard-header {
@@ -247,7 +247,7 @@
 .prediction-value {
   font-weight: 700;
   color: #2d3748;
-  font-family: "Monaco", "Consolas", monospace;
+  font-family: 'Monaco', 'Consolas', monospace;
 }
 
 .confidence-bar {
@@ -360,7 +360,7 @@
   background: rgba(255, 255, 255, 0.15);
 }
 
-.control-label input[type="checkbox"] {
+.control-label input[type='checkbox'] {
   width: 18px;
   height: 18px;
   cursor: pointer;

@@ -20,11 +20,5 @@ module.exports = {
     'no-var': 'error',
     'no-duplicate-imports': 'error',
   },
-  ignorePatterns: [
-    'node_modules/',
-    'build/',
-    'coverage/',
-    '*.config.js',
-    'public/',
-  ],
+  ignorePatterns: ['node_modules/', 'build/', 'coverage/', '*.config.js', 'public/'],
 };

@@ -18,7 +18,7 @@ const predictRoutes = require('../../../routes/ml/predict');
 const {
   PythonExecutionError,
   PythonTimeoutError,
-  PythonSecurityError
+  PythonSecurityError,
 } = require('../../../utils/securePythonBridge');
 
 // Setup Express app for testing
@@ -37,28 +37,34 @@ jest.mock('../../../utils/securePythonBridge', () => {
   return {
     ...originalModule,
     executeMlPrediction: jest.fn(),
-    PythonExecutionError: originalModule.PythonExecutionError || class PythonExecutionError extends Error {
-      constructor(message, details) {
-        super(message);
-        this.name = 'PythonExecutionError';
-        this.details = details;
-      }
-    },
-    PythonTimeoutError: originalModule.PythonTimeoutError || class PythonTimeoutError extends Error {
-      constructor(message, details) {
-        super(message);
-        this.name = 'PythonTimeoutError';
-        this.details = details;
-      }
-    },
-    PythonSecurityError: originalModule.PythonSecurityError || class PythonSecurityError extends Error {
-      constructor(message, type) {
-        super(message);
-        this.name = 'PythonSecurityError';
-        this.type = type;
-        this.timestamp = new Date();
-      }
-    }
+    PythonExecutionError:
+      originalModule.PythonExecutionError ||
+      class PythonExecutionError extends Error {
+        constructor(message, details) {
+          super(message);
+          this.name = 'PythonExecutionError';
+          this.details = details;
+        }
+      },
+    PythonTimeoutError:
+      originalModule.PythonTimeoutError ||
+      class PythonTimeoutError extends Error {
+        constructor(message, details) {
+          super(message);
+          this.name = 'PythonTimeoutError';
+          this.details = details;
+        }
+      },
+    PythonSecurityError:
+      originalModule.PythonSecurityError ||
+      class PythonSecurityError extends Error {
+        constructor(message, type) {
+          super(message);
+          this.name = 'PythonSecurityError';
+          this.type = type;
+          this.timestamp = new Date();
+        }
+      },
   };
 });
 
@@ -74,14 +80,11 @@ describe('ML Prediction Routes', () => {
       username: 'mluser',
       email: 'ml@example.com',
       password: 'password123',
-      role: 'user'
+      role: 'user',
     });
 
     // Generate auth token
-    authToken = jwt.sign(
-      { id: testUser._id, role: testUser.role },
-      process.env.JWT_SECRET
-    );
+    authToken = jwt.sign({ id: testUser._id, role: testUser.role }, process.env.JWT_SECRET);
   });
 
   beforeEach(() => {
@@ -96,7 +99,7 @@ describe('ML Prediction Routes', () => {
           .post('/api/ml/predict')
           .send({
             features: { bedrooms: 3, sqft: 1500 },
-            modelType: 'linear_regression'
+            modelType: 'linear_regression',
           })
           .expect(401);
 
@@ -111,7 +114,7 @@ describe('ML Prediction Routes', () => {
           lower_bound: 325000,
           upper_bound: 375000,
           confidence_level: 0.95,
-          uncertainty_metrics: { std_deviation: 15000 }
+          uncertainty_metrics: { std_deviation: 15000 },
         });
 
         const response = await request(app)
@@ -119,7 +122,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features: { bedrooms: 3, sqft: 1500 },
-            modelType: 'linear_regression'
+            modelType: 'linear_regression',
           })
           .expect(200);
 
@@ -133,7 +136,7 @@ describe('ML Prediction Routes', () => {
           .post('/api/ml/predict')
           .set('Authorization', `Bearer ${authToken}`)
           .send({
-            modelType: 'linear_regression'
+            modelType: 'linear_regression',
           })
           .expect(400);
 
@@ -146,7 +149,7 @@ describe('ML Prediction Routes', () => {
           .post('/api/ml/predict')
           .set('Authorization', `Bearer ${authToken}`)
           .send({
-            features: { bedrooms: 3, sqft: 1500 }
+            features: { bedrooms: 3, sqft: 1500 },
           })
           .expect(400);
 
@@ -160,7 +163,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features: 'invalid',
-            modelType: 'linear_regression'
+            modelType: 'linear_regression',
           })
           .expect(400);
 
@@ -173,7 +176,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features: [1, 2, 3],
-            modelType: 'linear_regression'
+            modelType: 'linear_regression',
           })
           .expect(400);
 
@@ -186,7 +189,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features: { bedrooms: 3, sqft: 1500 },
-            modelType: 'invalid_model'
+            modelType: 'invalid_model',
           })
           .expect(400);
 
@@ -198,10 +201,15 @@ describe('ML Prediction Routes', () => {
           prediction: 350000,
           lower_bound: 325000,
           upper_bound: 375000,
-          confidence_level: 0.95
+          confidence_level: 0.95,
         });
 
-        const validModels = ['linear_regression', 'random_forest', 'neural_network', 'gradient_boosting'];
+        const validModels = [
+          'linear_regression',
+          'random_forest',
+          'neural_network',
+          'gradient_boosting',
+        ];
 
         for (const modelType of validModels) {
           const response = await request(app)
@@ -209,7 +217,7 @@ describe('ML Prediction Routes', () => {
             .set('Authorization', `Bearer ${authToken}`)
             .send({
               features: { bedrooms: 3, sqft: 1500 },
-              modelType
+              modelType,
             })
             .expect(200);
 
@@ -224,7 +232,7 @@ describe('ML Prediction Routes', () => {
           .send({
             features: { bedrooms: 3, sqft: 1500 },
             modelType: 'linear_regression',
-            uncertaintyMethod: 'invalid_method'
+            uncertaintyMethod: 'invalid_method',
           })
           .expect(400);
 
@@ -236,7 +244,7 @@ describe('ML Prediction Routes', () => {
           prediction: 350000,
           lower_bound: 325000,
           upper_bound: 375000,
-          confidence_level: 0.95
+          confidence_level: 0.95,
         });
 
         const validMethods = ['ensemble', 'bootstrap', 'quantile', 'bayesian'];
@@ -248,7 +256,7 @@ describe('ML Prediction Routes', () => {
             .send({
               features: { bedrooms: 3, sqft: 1500 },
               modelType: 'linear_regression',
-              uncertaintyMethod
+              uncertaintyMethod,
             })
             .expect(200);
 
@@ -266,13 +274,13 @@ describe('ML Prediction Routes', () => {
           confidence_level: 0.95,
           uncertainty_metrics: {
             std_deviation: 15000,
-            prediction_interval: [325000, 375000]
+            prediction_interval: [325000, 375000],
           },
           feature_importance: {
             sqft: 0.6,
             bedrooms: 0.3,
-            bathrooms: 0.1
-          }
+            bathrooms: 0.1,
+          },
         });
       });
 
@@ -284,7 +292,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features,
-            modelType: 'random_forest'
+            modelType: 'random_forest',
           })
           .expect(200);
 
@@ -302,7 +310,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features,
-            modelType: 'gradient_boosting'
+            modelType: 'gradient_boosting',
           })
           .expect(200);
 
@@ -319,7 +327,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features: { bedrooms: 3, sqft: 1500 },
-            modelType: 'linear_regression'
+            modelType: 'linear_regression',
           })
           .expect(200);
 
@@ -337,7 +345,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features: { bedrooms: 3, sqft: 1500, bathrooms: 2 },
-            modelType: 'random_forest'
+            modelType: 'random_forest',
           })
           .expect(200);
 
@@ -345,7 +353,9 @@ describe('ML Prediction Routes', () => {
         expect(Array.isArray(response.body.prediction.feature_importance)).toBe(true);
         // Feature importance is stored as an array of {feature, importance} objects
         if (response.body.prediction.feature_importance.length > 0) {
-          const sqftImportance = response.body.prediction.feature_importance.find(item => item.feature === 'sqft');
+          const sqftImportance = response.body.prediction.feature_importance.find(
+            (item) => item.feature === 'sqft'
+          );
           expect(sqftImportance).toBeDefined();
           expect(sqftImportance.importance).toBe(0.6);
         }
@@ -357,7 +367,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features: { bedrooms: 3, sqft: 1500 },
-            modelType: 'linear_regression'
+            modelType: 'linear_regression',
           })
           .expect(200);
 
@@ -372,7 +382,7 @@ describe('ML Prediction Routes', () => {
         executeMlPrediction.mockRejectedValue(
           new PythonExecutionError('Script execution failed', {
             exitCode: 1,
-            executionTime: 5000
+            executionTime: 5000,
           })
         );
 
@@ -381,7 +391,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features: { bedrooms: 3, sqft: 1500 },
-            modelType: 'linear_regression'
+            modelType: 'linear_regression',
           })
           .expect(422);
 
@@ -394,7 +404,7 @@ describe('ML Prediction Routes', () => {
         executeMlPrediction.mockRejectedValue(
           new PythonTimeoutError('Script execution timed out', {
             timeout: 30000,
-            retryCount: 1
+            retryCount: 1,
           })
         );
 
@@ -403,7 +413,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features: { bedrooms: 3, sqft: 1500 },
-            modelType: 'neural_network'
+            modelType: 'neural_network',
           })
           .expect(408);
 
@@ -426,7 +436,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features: { bedrooms: 3, sqft: 1500 },
-            modelType: 'linear_regression'
+            modelType: 'linear_regression',
           })
           .expect(403);
 
@@ -442,7 +452,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features: { bedrooms: 3, sqft: 1500 },
-            modelType: 'linear_regression'
+            modelType: 'linear_regression',
           })
           .expect(422); // PythonParseError returns 422
 
@@ -453,7 +463,7 @@ describe('ML Prediction Routes', () => {
 
       it('should handle missing required fields in Python response', async () => {
         executeMlPrediction.mockResolvedValue({
-          prediction: 350000
+          prediction: 350000,
           // Missing lower_bound, upper_bound, confidence_level
         });
 
@@ -462,7 +472,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features: { bedrooms: 3, sqft: 1500 },
-            modelType: 'linear_regression'
+            modelType: 'linear_regression',
           })
           .expect(422); // PythonParseError returns 422
 
@@ -478,7 +488,7 @@ describe('ML Prediction Routes', () => {
           prediction: 350000,
           lower_bound: 325000,
           upper_bound: 375000,
-          confidence_level: 0.95
+          confidence_level: 0.95,
         });
       });
 
@@ -492,7 +502,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features: { bedrooms: 3, sqft: 1500 },
-            modelType: 'linear_regression'
+            modelType: 'linear_regression',
           })
           .expect(500);
 
@@ -508,7 +518,7 @@ describe('ML Prediction Routes', () => {
           prediction: 'invalid', // Should be number
           lower_bound: 325000,
           upper_bound: 375000,
-          confidence_level: 0.95
+          confidence_level: 0.95,
         });
 
         const response = await request(app)
@@ -516,7 +526,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features: { bedrooms: 3, sqft: 1500 },
-            modelType: 'linear_regression'
+            modelType: 'linear_regression',
           });
 
         // Should either handle gracefully or return error
@@ -528,7 +538,7 @@ describe('ML Prediction Routes', () => {
           bedrooms: 5,
           bathrooms: 4,
           sqft: 3000,
-          year_built: 2015
+          year_built: 2015,
         };
 
         const response = await request(app)
@@ -537,7 +547,7 @@ describe('ML Prediction Routes', () => {
           .send({
             features,
             modelType: 'random_forest',
-            uncertaintyMethod: 'bootstrap'
+            uncertaintyMethod: 'bootstrap',
           })
           .expect(200);
 
@@ -555,7 +565,7 @@ describe('ML Prediction Routes', () => {
           lower_bound: 325000,
           upper_bound: 375000,
           confidence_level: 0.95,
-          uncertainty_metrics: { std_deviation: 15000 }
+          uncertainty_metrics: { std_deviation: 15000 },
         });
       });
 
@@ -565,7 +575,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features: { bedrooms: 3, sqft: 1500 },
-            modelType: 'linear_regression'
+            modelType: 'linear_regression',
           })
           .expect(200);
 
@@ -578,7 +588,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features: { bedrooms: 3, sqft: 1500 },
-            modelType: 'linear_regression'
+            modelType: 'linear_regression',
           })
           .expect(200);
 
@@ -594,7 +604,7 @@ describe('ML Prediction Routes', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             features: { bedrooms: 3, sqft: 1500 },
-            modelType: 'linear_regression'
+            modelType: 'linear_regression',
           })
           .expect(500);
 

@@ -4,8 +4,8 @@ module.exports = async () => {
   // Start MongoDB Memory Server
   const mongoServer = await MongoMemoryServer.create({
     binary: {
-      version: '7.0.0'
-    }
+      version: '7.0.0',
+    },
   });
 
   const mongoUri = mongoServer.getUri();

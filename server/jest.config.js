@@ -6,10 +6,7 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
 
   // Test patterns
-  testMatch: [
-    '**/__tests__/**/*.js',
-    '**/?(*.)+(spec|test).js'
-  ],
+  testMatch: ['**/__tests__/**/*.js', '**/?(*.)+(spec|test).js'],
 
   // Coverage configuration
   collectCoverage: false, // Enable with --coverage flag
@@ -19,7 +16,7 @@ module.exports = {
     '!**/tests/**',
     '!**/coverage/**',
     '!jest.config.js',
-    '!**/__tests__/**'
+    '!**/__tests__/**',
   ],
 
   // Coverage thresholds - temporarily lowered, target 80%
@@ -29,25 +26,15 @@ module.exports = {
       branches: 20,
       functions: 20,
       lines: 20,
-      statements: 20
-    }
+      statements: 20,
+    },
   },
 
   // Coverage reporters
-  coverageReporters: [
-    'text',
-    'text-summary',
-    'html',
-    'lcov',
-    'json'
-  ],
+  coverageReporters: ['text', 'text-summary', 'html', 'lcov', 'json'],
 
   // Ignore patterns
-  testPathIgnorePatterns: [
-    '/node_modules/',
-    '/coverage/',
-    '/dist/'
-  ],
+  testPathIgnorePatterns: ['/node_modules/', '/coverage/', '/dist/'],
 
   // Module paths
   moduleDirectories: ['node_modules', '<rootDir>'],
@@ -72,5 +59,5 @@ module.exports = {
 
   // Global setup/teardown for MongoDB
   globalSetup: '<rootDir>/tests/globalSetup.js',
-  globalTeardown: '<rootDir>/tests/globalTeardown.js'
+  globalTeardown: '<rootDir>/tests/globalTeardown.js',
 };

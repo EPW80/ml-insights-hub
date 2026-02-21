@@ -59,7 +59,9 @@ class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="error-boundary-container" role="alert" aria-live="assertive">
           <div className="error-boundary-content">
-            <div className="error-icon" aria-hidden="true">⚠️</div>
+            <div className="error-icon" aria-hidden="true">
+              ⚠️
+            </div>
             <h1 className="error-title">Something Went Wrong</h1>
             <p className="error-message">
               We're sorry, but something unexpected happened. Please try refreshing the page.
@@ -69,10 +71,10 @@ class ErrorBoundary extends Component<Props, State> {
               <details className="error-details">
                 <summary>Error Details</summary>
                 <div className="error-stack">
-                  <p><strong>Error:</strong> {this.state.error.toString()}</p>
-                  {this.state.errorInfo && (
-                    <pre>{this.state.errorInfo.componentStack}</pre>
-                  )}
+                  <p>
+                    <strong>Error:</strong> {this.state.error.toString()}
+                  </p>
+                  {this.state.errorInfo && <pre>{this.state.errorInfo.componentStack}</pre>}
                 </div>
               </details>
             )}

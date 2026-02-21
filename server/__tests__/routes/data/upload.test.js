@@ -38,14 +38,11 @@ describe('Dataset Upload Routes', () => {
       username: 'datauser',
       email: 'data@example.com',
       password: 'password123',
-      role: 'user'
+      role: 'user',
     });
 
     // Generate auth token
-    authToken = jwt.sign(
-      { id: testUser._id, role: testUser.role },
-      process.env.JWT_SECRET
-    );
+    authToken = jwt.sign({ id: testUser._id, role: testUser.role }, process.env.JWT_SECRET);
 
     // Ensure uploads directory exists
     try {
@@ -107,7 +104,7 @@ describe('Dataset Upload Routes', () => {
       it('should upload a JSON file successfully', async () => {
         const jsonContent = JSON.stringify([
           { name: 'John', age: 30 },
-          { name: 'Jane', age: 25 }
+          { name: 'Jane', age: 25 },
         ]);
         const testFile = Buffer.from(jsonContent);
 
@@ -155,7 +152,8 @@ describe('Dataset Upload Routes', () => {
           .expect(200);
 
         const filePath = response.body.dataset.file_path;
-        const fileExists = await fs.access(filePath)
+        const fileExists = await fs
+          .access(filePath)
           .then(() => true)
           .catch(() => false);
 
@@ -237,13 +235,13 @@ describe('Dataset Upload Routes', () => {
 
         const formats = [
           { ext: 'csv', file: 'test.csv' },
-          { ext: 'json', file: 'test.json' }
+          { ext: 'json', file: 'test.json' },
         ];
 
         for (const format of formats) {
           const response = await request(app)
             .post('/api/data/upload')
-          .set('Authorization', `Bearer ${authToken}`)
+            .set('Authorization', `Bearer ${authToken}`)
             .attach('dataset', testFile, format.file)
             .field('name', `${format.ext} Test`)
             .expect(200);
@@ -370,7 +368,7 @@ describe('Dataset Upload Routes', () => {
         expect(response.body.dataset).toMatchObject({
           name: 'Complete Test',
           description: 'Complete dataset test',
-          format: 'csv'
+          format: 'csv',
         });
         expect(response.body.dataset._id).toBeDefined();
         expect(response.body.dataset.file_path).toBeDefined();
@@ -402,7 +400,7 @@ describe('Dataset Upload Routes', () => {
           uploads.push(
             request(app)
               .post('/api/data/upload')
-          .set('Authorization', `Bearer ${authToken}`)
+              .set('Authorization', `Bearer ${authToken}`)
               .attach('dataset', testFile, `concurrent-${i}.csv`)
               .field('name', `Concurrent Upload ${i}`)
           );
@@ -418,7 +416,7 @@ describe('Dataset Upload Routes', () => {
 
         // Verify all were saved
         const savedDatasets = await Dataset.find({
-          name: /^Concurrent Upload \d$/
+          name: /^Concurrent Upload \d$/,
         });
         expect(savedDatasets.length).toBe(5);
       });

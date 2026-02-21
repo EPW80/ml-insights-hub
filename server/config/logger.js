@@ -34,9 +34,7 @@ const level = () => {
 const devFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.colorize({ all: true }),
-  winston.format.printf(
-    (info) => `${info.timestamp} [${info.level}]: ${info.message}`
-  )
+  winston.format.printf((info) => `${info.timestamp} [${info.level}]: ${info.message}`)
 );
 
 // Define format for production (JSON for log aggregation tools)
@@ -47,8 +45,7 @@ const prodFormat = winston.format.combine(
 );
 
 // Choose format based on environment
-const format =
-  process.env.NODE_ENV === 'production' ? prodFormat : devFormat;
+const format = process.env.NODE_ENV === 'production' ? prodFormat : devFormat;
 
 // Define transports
 const transports = [
@@ -70,10 +67,7 @@ if (process.env.NODE_ENV === 'production' || process.env.ENABLE_FILE_LOGGING ===
       level: 'error',
       maxFiles: '14d', // Keep logs for 14 days
       maxSize: '20m', // Rotate if file exceeds 20MB
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-      ),
+      format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
     })
   );
 
@@ -84,10 +78,7 @@ if (process.env.NODE_ENV === 'production' || process.env.ENABLE_FILE_LOGGING ===
       datePattern: 'YYYY-MM-DD',
       maxFiles: '14d',
       maxSize: '20m',
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-      ),
+      format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
     })
   );
 }

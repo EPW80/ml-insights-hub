@@ -1,8 +1,8 @@
 // API Service for ML Insights Hub
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 // Token storage key
-const TOKEN_KEY = "ml_insights_token";
+const TOKEN_KEY = 'ml_insights_token';
 
 // Token management
 export const tokenManager = {
@@ -21,11 +21,11 @@ export const tokenManager = {
 function getAuthHeaders(contentType?: string): HeadersInit {
   const headers: HeadersInit = {};
   if (contentType) {
-    headers["Content-Type"] = contentType;
+    headers['Content-Type'] = contentType;
   }
   const token = tokenManager.getToken();
   if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
+    headers['Authorization'] = `Bearer ${token}`;
   }
   return headers;
 }
@@ -64,12 +64,8 @@ export interface PredictionRequest {
     crime_rate?: number;
     walkability_score?: number;
   };
-  modelType:
-    | "linear_regression"
-    | "random_forest"
-    | "neural_network"
-    | "gradient_boosting";
-  uncertaintyMethod?: "ensemble" | "bootstrap" | "quantile" | "bayesian";
+  modelType: 'linear_regression' | 'random_forest' | 'neural_network' | 'gradient_boosting';
+  uncertaintyMethod?: 'ensemble' | 'bootstrap' | 'quantile' | 'bayesian';
 }
 
 export interface PredictionResponse {
@@ -111,15 +107,13 @@ export const apiService = {
   // Auth - Register
   async register(request: RegisterRequest): Promise<AuthResponse> {
     const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-      method: "POST",
-      headers: getAuthHeaders("application/json"),
+      method: 'POST',
+      headers: getAuthHeaders('application/json'),
       body: JSON.stringify(request),
     });
 
     if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ error: "Registration failed" }));
+      const errorData = await response.json().catch(() => ({ error: 'Registration failed' }));
       throw new Error(
         errorData.error || errorData.details?.[0]?.msg || `Registration failed: ${response.status}`
       );
@@ -133,18 +127,14 @@ export const apiService = {
   // Auth - Login
   async login(request: LoginRequest): Promise<AuthResponse> {
     const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: "POST",
-      headers: getAuthHeaders("application/json"),
+      method: 'POST',
+      headers: getAuthHeaders('application/json'),
       body: JSON.stringify(request),
     });
 
     if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ error: "Login failed" }));
-      throw new Error(
-        errorData.error || `Login failed: ${response.status}`
-      );
+      const errorData = await response.json().catch(() => ({ error: 'Login failed' }));
+      throw new Error(errorData.error || `Login failed: ${response.status}`);
     }
 
     const data = await response.json();
@@ -158,22 +148,16 @@ export const apiService = {
   },
 
   // ML Prediction
-  async makePrediction(
-    request: PredictionRequest
-  ): Promise<PredictionResponse> {
+  async makePrediction(request: PredictionRequest): Promise<PredictionResponse> {
     const response = await fetch(`${API_BASE_URL}/api/ml/predict`, {
-      method: "POST",
-      headers: getAuthHeaders("application/json"),
+      method: 'POST',
+      headers: getAuthHeaders('application/json'),
       body: JSON.stringify(request),
     });
 
     if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ message: "Network error" }));
-      throw new Error(
-        errorData.error || `HTTP error! status: ${response.status}`
-      );
+      const errorData = await response.json().catch(() => ({ message: 'Network error' }));
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
 
     return response.json();
@@ -182,18 +166,16 @@ export const apiService = {
   // Data Upload
   async uploadData(file: File): Promise<any> {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('file', file);
 
     const response = await fetch(`${API_BASE_URL}/api/data/upload`, {
-      method: "POST",
+      method: 'POST',
       headers: getAuthHeaders(), // No Content-Type for FormData
       body: formData,
     });
 
     if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ message: "Upload failed" }));
+      const errorData = await response.json().catch(() => ({ message: 'Upload failed' }));
       throw new Error(errorData.error || `Upload failed: ${response.status}`);
     }
 
@@ -202,10 +184,9 @@ export const apiService = {
 
   // Get property data for visualization
   async getPropertyData(limit: number = 100): Promise<PropertyData[]> {
-    const response = await fetch(
-      `${API_BASE_URL}/api/data/properties?limit=${limit}`,
-      { headers: getAuthHeaders() }
-    );
+    const response = await fetch(`${API_BASE_URL}/api/data/properties?limit=${limit}`, {
+      headers: getAuthHeaders(),
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch property data: ${response.status}`);
@@ -217,10 +198,9 @@ export const apiService = {
 
   // Get prediction history
   async getPredictionHistory(limit: number = 50): Promise<any[]> {
-    const response = await fetch(
-      `${API_BASE_URL}/api/ml/predictions?limit=${limit}`,
-      { headers: getAuthHeaders() }
-    );
+    const response = await fetch(`${API_BASE_URL}/api/ml/predictions?limit=${limit}`, {
+      headers: getAuthHeaders(),
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch prediction history: ${response.status}`);

@@ -12,11 +12,11 @@ const validator = require('validator');
 // Security configuration
 const SECURITY_CONFIG = {
   // Execution limits
-  MAX_EXECUTION_TIME: 30000,      // 30 seconds
+  MAX_EXECUTION_TIME: 30000, // 30 seconds
   MAX_OUTPUT_SIZE: 5 * 1024 * 1024, // 5MB
-  MAX_INPUT_SIZE: 1024 * 1024,     // 1MB
+  MAX_INPUT_SIZE: 1024 * 1024, // 1MB
   MAX_CONCURRENT_EXECUTIONS: 3,
-  
+
   // Allowed script patterns
   ALLOWED_SCRIPT_PATTERNS: [
     /^predict_.*\.py$/,
@@ -33,9 +33,9 @@ const SECURITY_CONFIG = {
     /^ab_testing\.py$/,
     /^auto_retrain\.py$/,
     /^validate_.*\.py$/,
-    /^test_connection\.py$/
+    /^test_connection\.py$/,
   ],
-  
+
   // Blocked patterns in input
   BLOCKED_INPUT_PATTERNS: [
     /import\s+os/i,
@@ -49,12 +49,12 @@ const SECURITY_CONFIG = {
     /\.\.\/|\.\.\\/, // Path traversal
     /\/etc\/|\/proc\/|\/dev\//, // System directories
   ],
-  
+
   // Resource limits
   RESOURCE_LIMITS: {
     memory: 512 * 1024 * 1024, // 512MB
     cpu: 80, // 80% CPU usage limit
-  }
+  },
 };
 
 // Error classes
@@ -98,49 +98,49 @@ class SecurePythonExecutor {
    */
   validateScriptPath(scriptPath) {
     const errors = [];
-    
+
     // Check if path is absolute and within allowed directory
     if (!path.isAbsolute(scriptPath)) {
       scriptPath = path.resolve(scriptPath);
     }
-    
+
     // Ensure script is in python-scripts directory
     const allowedDir = path.resolve(__dirname, '../python-scripts');
     if (!scriptPath.startsWith(allowedDir)) {
       errors.push('Script must be in the python-scripts directory');
     }
-    
+
     // Check for path traversal
     if (scriptPath.includes('..')) {
       errors.push('Path traversal detected');
     }
-    
+
     // Validate file extension
     if (!scriptPath.endsWith('.py')) {
       errors.push('Only Python (.py) files are allowed');
     }
-    
+
     // Check against allowed script patterns
     const scriptName = path.basename(scriptPath);
-    const isAllowed = SECURITY_CONFIG.ALLOWED_SCRIPT_PATTERNS.some(
-      pattern => pattern.test(scriptName)
+    const isAllowed = SECURITY_CONFIG.ALLOWED_SCRIPT_PATTERNS.some((pattern) =>
+      pattern.test(scriptName)
     );
-    
+
     if (!isAllowed) {
       errors.push(`Script name '${scriptName}' does not match allowed patterns`);
     }
-    
+
     // Verify file exists and is readable
     try {
       fs.accessSync(scriptPath, fs.constants.R_OK);
     } catch (error) {
       errors.push('Script file is not accessible');
     }
-    
+
     return {
       isValid: errors.length === 0,
       errors,
-      sanitizedPath: scriptPath
+      sanitizedPath: scriptPath,
     };
   }
 
@@ -149,11 +149,11 @@ class SecurePythonExecutor {
    */
   sanitizeInput(inputData) {
     const errors = [];
-    
+
     if (!inputData) {
       return { isValid: true, sanitizedData: {}, errors: [] };
     }
-    
+
     // Convert to JSON string for validation
     let jsonString;
     try {
@@ -162,19 +162,19 @@ class SecurePythonExecutor {
       errors.push('Input data is not serializable to JSON');
       return { isValid: false, errors };
     }
-    
+
     // Check input size
     if (Buffer.byteLength(jsonString, 'utf8') > SECURITY_CONFIG.MAX_INPUT_SIZE) {
       errors.push(`Input size exceeds limit (${SECURITY_CONFIG.MAX_INPUT_SIZE} bytes)`);
     }
-    
+
     // Check for blocked patterns
     for (const pattern of SECURITY_CONFIG.BLOCKED_INPUT_PATTERNS) {
       if (pattern.test(jsonString)) {
         errors.push(`Input contains blocked pattern: ${pattern.source}`);
       }
     }
-    
+
     // Parse and validate JSON structure
     let parsedData;
     try {
@@ -183,14 +183,14 @@ class SecurePythonExecutor {
       errors.push('Input is not valid JSON');
       return { isValid: false, errors };
     }
-    
+
     // Recursively sanitize object
     const sanitizedData = this.deepSanitize(parsedData);
-    
+
     return {
       isValid: errors.length === 0,
       sanitizedData,
-      errors
+      errors,
     };
   }
 
@@ -201,18 +201,18 @@ class SecurePythonExecutor {
     if (obj === null || typeof obj !== 'object') {
       return this.sanitizeValue(obj);
     }
-    
+
     if (Array.isArray(obj)) {
-      return obj.map(item => this.deepSanitize(item));
+      return obj.map((item) => this.deepSanitize(item));
     }
-    
+
     const sanitized = {};
     for (const [key, value] of Object.entries(obj)) {
       // Sanitize key
       const cleanKey = validator.escape(String(key));
       sanitized[cleanKey] = this.deepSanitize(value);
     }
-    
+
     return sanitized;
   }
 
@@ -224,16 +224,16 @@ class SecurePythonExecutor {
       // Remove potentially dangerous characters
       return validator.escape(value);
     }
-    
+
     if (typeof value === 'number') {
       // Ensure number is finite
       return Number.isFinite(value) ? value : 0;
     }
-    
+
     if (typeof value === 'boolean') {
       return Boolean(value);
     }
-    
+
     return value;
   }
 
@@ -247,16 +247,16 @@ class SecurePythonExecutor {
       PYTHONPATH: path.resolve(__dirname, '../python-scripts'),
       PYTHONDONTWRITEBYTECODE: '1',
       PYTHONUNBUFFERED: '1',
-      
+
       // Security restrictions
       PYTHONNOUSERSITE: '1',
       PYTHONHASHSEED: 'random',
-      
+
       // Resource limits (if supported by system)
       RLIMIT_CPU: Math.floor(SECURITY_CONFIG.MAX_EXECUTION_TIME / 1000),
       RLIMIT_AS: SECURITY_CONFIG.RESOURCE_LIMITS.memory,
     };
-    
+
     return baseEnv;
   }
 
@@ -266,16 +266,13 @@ class SecurePythonExecutor {
   async executeSecure(scriptPath, inputData, options = {}) {
     // Check concurrent execution limit
     if (this.activeExecutions.size >= SECURITY_CONFIG.MAX_CONCURRENT_EXECUTIONS) {
-      throw new PythonSecurityError(
-        'Maximum concurrent executions exceeded',
-        'RATE_LIMIT'
-      );
+      throw new PythonSecurityError('Maximum concurrent executions exceeded', 'RATE_LIMIT');
     }
-    
+
     // Generate execution ID for tracking
     const executionId = crypto.randomBytes(16).toString('hex');
     this.activeExecutions.add(executionId);
-    
+
     try {
       // Validate script path
       const pathValidation = this.validateScriptPath(scriptPath);
@@ -285,7 +282,7 @@ class SecurePythonExecutor {
           'SCRIPT_VALIDATION'
         );
       }
-      
+
       // Sanitize input
       const inputValidation = this.sanitizeInput(inputData);
       if (!inputValidation.isValid) {
@@ -294,16 +291,15 @@ class SecurePythonExecutor {
           'INPUT_VALIDATION'
         );
       }
-      
+
       // Execute with security measures
       const result = await this.executePython(
         pathValidation.sanitizedPath,
         inputValidation.sanitizedData,
         { ...options, executionId }
       );
-      
+
       return result;
-      
     } finally {
       this.activeExecutions.delete(executionId);
     }
@@ -314,24 +310,21 @@ class SecurePythonExecutor {
    */
   executePython(scriptPath, inputData, options) {
     return new Promise((resolve, reject) => {
-      const {
-        timeout = SECURITY_CONFIG.MAX_EXECUTION_TIME,
-        executionId
-      } = options;
-      
+      const { timeout = SECURITY_CONFIG.MAX_EXECUTION_TIME, executionId } = options;
+
       // Get Python executable path
       const pythonPath = process.env.PYTHON_PATH || 'python3';
-      
+
       // Create secure environment
       const secureEnv = this.createSecureEnvironment();
-      
+
       // Prepare arguments securely
       const inputJson = JSON.stringify(inputData);
       const args = [
         scriptPath,
-        inputJson // Pass input as command-line argument
+        inputJson, // Pass input as command-line argument
       ];
-      
+
       // Spawn process with security restrictions
       const python = spawn(pythonPath, args, {
         cwd: path.dirname(scriptPath),
@@ -342,71 +335,59 @@ class SecurePythonExecutor {
         uid: process.getuid ? process.getuid() : undefined,
         gid: process.getgid ? process.getgid() : undefined,
       });
-      
+
       let stdout = '';
       let stderr = '';
       let outputSize = 0;
       let isTimedOut = false;
-      
+
       // Set up timeout
       const timeoutHandle = setTimeout(() => {
         isTimedOut = true;
         this.killProcessTree(python.pid);
-        reject(new PythonTimeoutError(
-          `Script execution timed out after ${timeout}ms`,
-          timeout
-        ));
+        reject(new PythonTimeoutError(`Script execution timed out after ${timeout}ms`, timeout));
       }, timeout);
-      
+
       // Handle stdout
       python.stdout.on('data', (data) => {
         const chunk = data.toString();
         outputSize += chunk.length;
-        
+
         if (outputSize > SECURITY_CONFIG.MAX_OUTPUT_SIZE) {
           this.killProcessTree(python.pid);
           clearTimeout(timeoutHandle);
-          reject(new PythonSecurityError(
-            'Output size limit exceeded',
-            'OUTPUT_LIMIT'
-          ));
+          reject(new PythonSecurityError('Output size limit exceeded', 'OUTPUT_LIMIT'));
           return;
         }
-        
+
         stdout += chunk;
       });
-      
+
       // Handle stderr
       python.stderr.on('data', (data) => {
         stderr += data.toString();
       });
-      
+
       // Handle process completion
       python.on('close', (code, signal) => {
         clearTimeout(timeoutHandle);
-        
+
         if (isTimedOut) return; // Already handled
-        
+
         if (signal) {
-          reject(new PythonExecutionError(
-            `Process killed with signal: ${signal}`,
-            code,
-            stderr,
-            stdout
-          ));
+          reject(
+            new PythonExecutionError(`Process killed with signal: ${signal}`, code, stderr, stdout)
+          );
           return;
         }
-        
+
         if (code !== 0) {
-          reject(new PythonExecutionError(
-            `Python script exited with code ${code}`,
-            code,
-            stderr,
-            stdout
-          ));
+          reject(
+            new PythonExecutionError(`Python script exited with code ${code}`, code, stderr, stdout)
+          );
           return;
         }
-        
+
         // Parse output safely
         try {
           const result = JSON.parse(stdout);
@@ -415,36 +396,40 @@ class SecurePythonExecutor {
             data: result,
             executionId,
             executionTime: Date.now() - this.executionCount,
-            outputSize: outputSize
+            outputSize: outputSize,
           });
         } catch (error) {
-          reject(new PythonExecutionError(
-            'Failed to parse Python script output as JSON',
-            0,
-            stderr,
-            stdout
-          ));
+          reject(
+            new PythonExecutionError(
+              'Failed to parse Python script output as JSON',
+              0,
+              stderr,
+              stdout
+            )
+          );
         }
       });
-      
+
       // Handle process errors
       python.on('error', (error) => {
         clearTimeout(timeoutHandle);
-        reject(new PythonExecutionError(
-          `Failed to start Python process: ${error.message}`,
-          -1,
-          error.message,
-          ''
-        ));
+        reject(
+          new PythonExecutionError(
+            `Failed to start Python process: ${error.message}`,
+            -1,
+            error.message,
+            ''
+          )
+        );
       });
-      
+
       // Close stdin since we pass input as argument
       try {
         python.stdin.end();
       } catch (error) {
         // Ignore stdin close errors
       }
-      
+
       this.executionCount++;
     });
   }
@@ -455,7 +440,7 @@ class SecurePythonExecutor {
   killProcessTree(pid) {
     try {
       process.kill(-pid, 'SIGTERM');
-      
+
       // Force kill after 5 seconds
       setTimeout(() => {
         try {
@@ -476,7 +461,7 @@ class SecurePythonExecutor {
     return {
       activeExecutions: this.activeExecutions.size,
       totalExecutions: this.executionCount,
-      maxConcurrent: SECURITY_CONFIG.MAX_CONCURRENT_EXECUTIONS
+      maxConcurrent: SECURITY_CONFIG.MAX_CONCURRENT_EXECUTIONS,
     };
   }
 }
@@ -487,5 +472,5 @@ module.exports = {
   PythonSecurityError,
   PythonExecutionError,
   PythonTimeoutError,
-  SECURITY_CONFIG
+  SECURITY_CONFIG,
 };

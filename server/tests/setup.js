@@ -8,7 +8,7 @@ beforeAll(async () => {
   if (mongoUri) {
     await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
-      useUnifiedTopology: true
+      useUnifiedTopology: true,
     });
   }
 });

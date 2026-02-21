@@ -93,7 +93,9 @@
   background: rgba(255, 255, 255, 0.05);
   color: #fff;
   font-size: 0.95rem;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
 }
 
 .form-group input:focus {
@@ -125,7 +127,9 @@
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .auth-submit:hover:not(:disabled) {

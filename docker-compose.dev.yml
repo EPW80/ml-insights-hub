@@ -6,27 +6,27 @@ version: '3.8'
 services:
   mongodb:
     ports:
-      - "27017:27017"  # Expose MongoDB for local development tools
+      - '27017:27017' # Expose MongoDB for local development tools
 
   redis:
     ports:
-      - "6379:6379"  # Expose Redis for local development tools
+      - '6379:6379' # Expose Redis for local development tools
 
   backend:
     build:
       context: ./server
       dockerfile: Dockerfile
-      target: builder  # Use builder stage for development (optional)
+      target: builder # Use builder stage for development (optional)
     environment:
       NODE_ENV: development
-      ENABLE_FILE_LOGGING: "true"
-      SKIP_AUTH: "${SKIP_AUTH:-false}"  # Optional: skip auth in dev
+      ENABLE_FILE_LOGGING: 'true'
+      SKIP_AUTH: '${SKIP_AUTH:-false}' # Optional: skip auth in dev
     volumes:
       # Hot reload - mount source code
       - ./server:/app
-      - /app/node_modules  # Preserve node_modules from container
-      - /app/venv  # Preserve Python venv from container
-    command: npm run dev  # Use nodemon for hot reload
+      - /app/node_modules # Preserve node_modules from container
+      - /app/venv # Preserve Python venv from container
+    command: npm run dev # Use nodemon for hot reload
     stdin_open: true
     tty: true
 
@@ -34,20 +34,20 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile
-      target: builder  # Use builder stage for development (optional)
+      target: builder # Use builder stage for development (optional)
     environment:
       NODE_ENV: development
       REACT_APP_API_URL: http://localhost:5000
     volumes:
       # Hot reload - mount source code
       - ./client:/app
-      - /app/node_modules  # Preserve node_modules from container
-      - /app/build  # Preserve build folder
-    command: npm start  # Use CRA dev server
+      - /app/node_modules # Preserve node_modules from container
+      - /app/build # Preserve build folder
+    command: npm start # Use CRA dev server
     stdin_open: true
     tty: true
     ports:
-      - "3000:3000"
+      - '3000:3000'
 
   # Development tools container (optional)
   mongo-express:
@@ -55,7 +55,7 @@ services:
     container_name: ml-insights-mongo-express
     restart: unless-stopped
     ports:
-      - "8081:8081"
+      - '8081:8081'
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USER:-admin}
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD:-changeme}

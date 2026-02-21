@@ -38,13 +38,22 @@ function App() {
           <NavLink to="/" end className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             <span aria-hidden="true">📊</span> Dashboard
           </NavLink>
-          <NavLink to="/predictions" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <NavLink
+            to="/predictions"
+            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+          >
             <span aria-hidden="true">🎯</span> Predictions
           </NavLink>
-          <NavLink to="/visualization" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <NavLink
+            to="/visualization"
+            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+          >
             <span aria-hidden="true">📈</span> Visualization
           </NavLink>
-          <NavLink to="/upload" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <NavLink
+            to="/upload"
+            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+          >
             <span aria-hidden="true">📁</span> Upload Data
           </NavLink>
         </div>

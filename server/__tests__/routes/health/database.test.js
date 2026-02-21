@@ -24,7 +24,7 @@ const mockConnectionManager = {
   getHealthStatus: jest.fn(),
   getStats: jest.fn(),
   connect: jest.fn(),
-  disconnect: jest.fn()
+  disconnect: jest.fn(),
 };
 
 // Set connection manager in app
@@ -42,31 +42,27 @@ describe('Database Health Check Routes', () => {
     mockConnectionManager.getHealthStatus.mockReturnValue({
       status: 'healthy',
       state: 'connected',
-      message: 'Database connection is healthy'
+      message: 'Database connection is healthy',
     });
 
     mockConnectionManager.getStats.mockReturnValue({
       connectionAttempts: 1,
       reconnections: 0,
       uptime: 1000,
-      state: 'connected'
+      state: 'connected',
     });
   });
 
   describe('GET /api/health/database', () => {
     describe('Healthy Connection', () => {
       it('should return 200 for healthy database', async () => {
-        const response = await request(app)
-          .get('/api/health/database')
-          .expect(200);
+        const response = await request(app).get('/api/health/database').expect(200);
 
         expect(response.body.status).toBe('healthy');
       });
 
       it('should include health status from connection manager', async () => {
-        const response = await request(app)
-          .get('/api/health/database')
-          .expect(200);
+        const response = await request(app).get('/api/health/database').expect(200);
 
         expect(mockConnectionManager.getHealthStatus).toHaveBeenCalled();
         expect(response.body.state).toBe('connected');
@@ -74,9 +70,7 @@ describe('Database Health Check Routes', () => {
       });
 
       it('should include connection statistics', async () => {
-        const response = await request(app)
-          .get('/api/health/database')
-          .expect(200);
+        const response = await request(app).get('/api/health/database').expect(200);
 
         expect(mockConnectionManager.getStats).toHaveBeenCalled();
         expect(response.body.metrics).toBeDefined();
@@ -85,9 +79,7 @@ describe('Database Health Check Routes', () => {
       });
 
       it('should include database metrics', async () => {
-        const response = await request(app)
-          .get('/api/health/database')
-          .expect(200);
+        const response = await request(app).get('/api/health/database').expect(200);
 
         expect(response.body.metrics).toBeDefined();
         expect(response.body.metrics.database).toBeDefined();
@@ -99,12 +91,10 @@ describe('Database Health Check Routes', () => {
         mockConnectionManager.getHealthStatus.mockReturnValue({
           status: 'unhealthy',
           state: 'disconnected',
-          message: 'Database connection lost'
+          message: 'Database connection lost',
         });
 
-        const response = await request(app)
-          .get('/api/health/database')
-          .expect(503);
+        const response = await request(app).get('/api/health/database').expect(503);
 
         expect(response.body.status).toBe('unhealthy');
       });
@@ -114,12 +104,10 @@ describe('Database Health Check Routes', () => {
           status: 'unhealthy',
           state: 'disconnected',
           message: 'Connection timeout',
-          error: 'ETIMEDOUT'
+          error: 'ETIMEDOUT',
         });
 
-        const response = await request(app)
-          .get('/api/health/database')
-          .expect(503);
+        const response = await request(app).get('/api/health/database').expect(503);
 
         expect(response.body.status).toBe('unhealthy');
         expect(response.body.message).toBe('Connection timeout');
@@ -132,9 +120,7 @@ describe('Database Health Check Routes', () => {
         appWithoutManager.use(express.json());
         appWithoutManager.use('/api/health', healthRoutes);
 
-        const response = await request(appWithoutManager)
-          .get('/api/health/database')
-          .expect(500);
+        const response = await request(appWithoutManager).get('/api/health/database').expect(500);
 
         expect(response.body.status).toBe('error');
         expect(response.body.message).toBe('Database connection manager not available');
@@ -145,9 +131,7 @@ describe('Database Health Check Routes', () => {
           throw new Error('Connection manager failed');
         });
 
-        const response = await request(app)
-          .get('/api/health/database')
-          .expect(500);
+        const response = await request(app).get('/api/health/database').expect(500);
 
         expect(response.body.status).toBe('error');
         expect(response.body.message).toBe('Health check failed');
@@ -159,9 +143,7 @@ describe('Database Health Check Routes', () => {
           throw new Error('Test error');
         });
 
-        const response = await request(app)
-          .get('/api/health/database')
-          .expect(500);
+        const response = await request(app).get('/api/health/database').expect(500);
 
         expect(response.body.timestamp).toBeDefined();
         expect(new Date(response.body.timestamp)).toBeInstanceOf(Date);
@@ -172,9 +154,7 @@ describe('Database Health Check Routes', () => {
   describe('GET /api/health/database/stats', () => {
     describe('Successful Stats Retrieval', () => {
       it('should return connection statistics', async () => {
-        const response = await request(app)
-          .get('/api/health/database/stats')
-          .expect(200);
+        const response = await request(app).get('/api/health/database/stats').expect(200);
 
         expect(response.body.connection).toBeDefined();
         expect(response.body.connection.connectionAttempts).toBe(1);
@@ -182,26 +162,20 @@ describe('Database Health Check Routes', () => {
       });
 
       it('should return database metrics', async () => {
-        const response = await request(app)
-          .get('/api/health/database/stats')
-          .expect(200);
+        const response = await request(app).get('/api/health/database/stats').expect(200);
 
         expect(response.body.database).toBeDefined();
       });
 
       it('should include timestamp', async () => {
-        const response = await request(app)
-          .get('/api/health/database/stats')
-          .expect(200);
+        const response = await request(app).get('/api/health/database/stats').expect(200);
 
         expect(response.body.timestamp).toBeDefined();
         expect(new Date(response.body.timestamp)).toBeInstanceOf(Date);
       });
 
       it('should call connection manager methods', async () => {
-        await request(app)
-          .get('/api/health/database/stats')
-          .expect(200);
+        await request(app).get('/api/health/database/stats').expect(200);
 
         expect(mockConnectionManager.getStats).toHaveBeenCalled();
       });
@@ -225,9 +199,7 @@ describe('Database Health Check Routes', () => {
           throw new Error('Stats unavailable');
         });
 
-        const response = await request(app)
-          .get('/api/health/database/stats')
-          .expect(500);
+        const response = await request(app).get('/api/health/database/stats').expect(500);
 
         expect(response.body.error).toBe('Failed to retrieve database statistics');
         expect(response.body.message).toBe('Stats unavailable');
@@ -238,39 +210,32 @@ describe('Database Health Check Routes', () => {
   describe('GET /api/health/database/performance', () => {
     describe('Performance Testing', () => {
       it('should return performance metrics', async () => {
-        const response = await request(app)
-          .get('/api/health/database/performance')
-          .expect(200);
+        const response = await request(app).get('/api/health/database/performance').expect(200);
 
         expect(response.body.status).toBe('success');
         expect(response.body.performance).toBeDefined();
       });
 
       it('should include ping response time', async () => {
-        const response = await request(app)
-          .get('/api/health/database/performance')
-          .expect(200);
+        const response = await request(app).get('/api/health/database/performance').expect(200);
 
         expect(response.body.performance.pingResponseTime).toBeDefined();
         expect(response.body.performance.pingResponseTime).toMatch(/ms$/);
       });
 
       it('should include connection state', async () => {
-        const response = await request(app)
-          .get('/api/health/database/performance')
-          .expect(200);
+        const response = await request(app).get('/api/health/database/performance').expect(200);
 
         expect(response.body.performance.connectionState).toBeDefined();
-        expect(['connected', 'disconnected', 'connecting', 'disconnecting'])
-          .toContain(response.body.performance.connectionState);
+        expect(['connected', 'disconnected', 'connecting', 'disconnecting']).toContain(
+          response.body.performance.connectionState
+        );
       });
 
       it('should include collection test when connected', async () => {
         // Ensure mongoose is in connected state
         if (mongoose.connection.readyState === 1) {
-          const response = await request(app)
-            .get('/api/health/database/performance')
-            .expect(200);
+          const response = await request(app).get('/api/health/database/performance').expect(200);
 
           expect(response.body.performance.collections).toBeDefined();
           if (response.body.performance.collections) {
@@ -281,9 +246,7 @@ describe('Database Health Check Routes', () => {
       });
 
       it('should include timestamp', async () => {
-        const response = await request(app)
-          .get('/api/health/database/performance')
-          .expect(200);
+        const response = await request(app).get('/api/health/database/performance').expect(200);
 
         expect(response.body.timestamp).toBeDefined();
       });
@@ -299,9 +262,7 @@ describe('Database Health Check Routes', () => {
           };
         }
 
-        const response = await request(app)
-          .get('/api/health/database/performance')
-          .expect(500);
+        const response = await request(app).get('/api/health/database/performance').expect(500);
 
         expect(response.body.status).toBe('error');
         expect(response.body.error).toBe('Performance test failed');
@@ -322,18 +283,14 @@ describe('Database Health Check Routes', () => {
       });
 
       it('should trigger database reconnection', async () => {
-        const response = await request(app)
-          .post('/api/health/database/reconnect')
-          .expect(200);
+        const response = await request(app).post('/api/health/database/reconnect').expect(200);
 
         expect(response.body.status).toBe('success');
         expect(response.body.message).toBe('Database reconnection initiated');
       });
 
       it('should disconnect before reconnecting', async () => {
-        await request(app)
-          .post('/api/health/database/reconnect')
-          .expect(200);
+        await request(app).post('/api/health/database/reconnect').expect(200);
 
         expect(mockConnectionManager.disconnect).toHaveBeenCalled();
         expect(mockConnectionManager.connect).toHaveBeenCalled();
@@ -345,9 +302,7 @@ describe('Database Health Check Routes', () => {
       });
 
       it('should include timestamp in response', async () => {
-        const response = await request(app)
-          .post('/api/health/database/reconnect')
-          .expect(200);
+        const response = await request(app).post('/api/health/database/reconnect').expect(200);
 
         expect(response.body.timestamp).toBeDefined();
       });
@@ -369,9 +324,7 @@ describe('Database Health Check Routes', () => {
       it('should handle disconnect failures', async () => {
         mockConnectionManager.disconnect.mockRejectedValue(new Error('Disconnect failed'));
 
-        const response = await request(app)
-          .post('/api/health/database/reconnect')
-          .expect(500);
+        const response = await request(app).post('/api/health/database/reconnect').expect(500);
 
         expect(response.body.status).toBe('error');
         expect(response.body.error).toBe('Reconnection failed');
@@ -381,9 +334,7 @@ describe('Database Health Check Routes', () => {
         mockConnectionManager.disconnect.mockResolvedValue();
         mockConnectionManager.connect.mockRejectedValue(new Error('Connect failed'));
 
-        const response = await request(app)
-          .post('/api/health/database/reconnect')
-          .expect(500);
+        const response = await request(app).post('/api/health/database/reconnect').expect(500);
 
         expect(response.body.status).toBe('error');
         expect(response.body.message).toBe('Connect failed');
@@ -396,7 +347,7 @@ describe('Database Health Check Routes', () => {
       const endpoints = [
         '/api/health/database',
         '/api/health/database/stats',
-        '/api/health/database/performance'
+        '/api/health/database/performance',
       ];
 
       for (const endpoint of endpoints) {
@@ -409,14 +360,14 @@ describe('Database Health Check Routes', () => {
       // Healthy connection
       mockConnectionManager.getHealthStatus.mockReturnValue({
         status: 'healthy',
-        state: 'connected'
+        state: 'connected',
       });
       await request(app).get('/api/health/database').expect(200);
 
       // Unhealthy connection
       mockConnectionManager.getHealthStatus.mockReturnValue({
         status: 'unhealthy',
-        state: 'disconnected'
+        state: 'disconnected',
       });
       await request(app).get('/api/health/database').expect(503);
 
@@ -433,12 +384,10 @@ describe('Database Health Check Routes', () => {
       mockConnectionManager.getHealthStatus.mockReturnValue({
         status: 'healthy',
         state: 'connected',
-        message: 'Connected to database'
+        message: 'Connected to database',
       });
 
-      const response = await request(app)
-        .get('/api/health/database')
-        .expect(200);
+      const response = await request(app).get('/api/health/database').expect(200);
 
       expect(response.body.state).toBe('connected');
     });
@@ -447,12 +396,10 @@ describe('Database Health Check Routes', () => {
       mockConnectionManager.getHealthStatus.mockReturnValue({
         status: 'unhealthy',
         state: 'disconnected',
-        message: 'Disconnected from database'
+        message: 'Disconnected from database',
       });
 
-      const response = await request(app)
-        .get('/api/health/database')
-        .expect(503);
+      const response = await request(app).get('/api/health/database').expect(503);
 
       expect(response.body.state).toBe('disconnected');
     });
@@ -461,12 +408,10 @@ describe('Database Health Check Routes', () => {
       mockConnectionManager.getHealthStatus.mockReturnValue({
         status: 'degraded',
         state: 'connecting',
-        message: 'Connecting to database'
+        message: 'Connecting to database',
       });
 
-      const response = await request(app)
-        .get('/api/health/database')
-        .expect(503);
+      const response = await request(app).get('/api/health/database').expect(503);
 
       expect(response.body.state).toBe('connecting');
     });

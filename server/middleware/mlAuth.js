@@ -16,7 +16,7 @@ const requireAuth = (req, res, next) => {
         id: 'dev-user',
         email: 'dev@localhost',
         role: 'user',
-        username: 'development'
+        username: 'development',
       };
       // Development mode: Authentication skipped
       return next();
@@ -30,7 +30,7 @@ const requireAuth = (req, res, next) => {
         success: false,
         error: 'Authentication required',
         message: 'No authorization header provided',
-        type: 'MISSING_AUTH_HEADER'
+        type: 'MISSING_AUTH_HEADER',
       });
     }
 
@@ -40,7 +40,7 @@ const requireAuth = (req, res, next) => {
         success: false,
         error: 'Invalid authorization format',
         message: 'Authorization header must use Bearer scheme',
-        type: 'INVALID_AUTH_FORMAT'
+        type: 'INVALID_AUTH_FORMAT',
       });
     }
 
@@ -51,20 +51,23 @@ const requireAuth = (req, res, next) => {
         success: false,
         error: 'No token provided',
         message: 'Bearer token is empty',
-        type: 'EMPTY_TOKEN'
+        type: 'EMPTY_TOKEN',
       });
     }
 
     // Verify JWT token
     const jwtSecret = process.env.JWT_SECRET;
 
-    if (!jwtSecret || jwtSecret === 'GENERATE_SECURE_SECRET_FOR_PRODUCTION_USE_CRYPTO_RANDOM_BYTES_64_HEX') {
+    if (
+      !jwtSecret ||
+      jwtSecret === 'GENERATE_SECURE_SECRET_FOR_PRODUCTION_USE_CRYPTO_RANDOM_BYTES_64_HEX'
+    ) {
       console.error('🚨 CRITICAL SECURITY ERROR: JWT_SECRET not properly configured!');
       return res.status(500).json({
         success: false,
         error: 'Server authentication not configured',
         message: 'Contact system administrator',
-        type: 'SERVER_CONFIG_ERROR'
+        type: 'SERVER_CONFIG_ERROR',
       });
     }
 
@@ -75,7 +78,7 @@ const requireAuth = (req, res, next) => {
       id: decoded.id || decoded.userId,
       email: decoded.email,
       role: decoded.role || 'user',
-      username: decoded.username
+      username: decoded.username,
     };
 
     // Log authentication success (in development)
@@ -84,7 +87,6 @@ const requireAuth = (req, res, next) => {
     }
 
     return next();
-
   } catch (error) {
     // Handle specific JWT errors
     if (error.name === 'TokenExpiredError') {
@@ -93,7 +95,7 @@ const requireAuth = (req, res, next) => {
         error: 'Token expired',
         message: 'Your session has expired. Please login again.',
         type: 'TOKEN_EXPIRED',
-        expiredAt: error.expiredAt
+        expiredAt: error.expiredAt,
       });
     }
 
@@ -102,7 +104,7 @@ const requireAuth = (req, res, next) => {
         success: false,
         error: 'Invalid token',
         message: 'The provided token is invalid or malformed',
-        type: 'INVALID_TOKEN'
+        type: 'INVALID_TOKEN',
       });
     }
 
@@ -111,7 +113,7 @@ const requireAuth = (req, res, next) => {
         success: false,
         error: 'Token not active',
         message: 'This token is not yet valid',
-        type: 'TOKEN_NOT_ACTIVE'
+        type: 'TOKEN_NOT_ACTIVE',
       });
     }
 
@@ -121,7 +123,7 @@ const requireAuth = (req, res, next) => {
       success: false,
       error: 'Authentication failed',
       message: 'Unable to authenticate request',
-      type: 'AUTH_ERROR'
+      type: 'AUTH_ERROR',
     });
   }
 };
@@ -135,7 +137,7 @@ const requireAdmin = (req, res, next) => {
       success: false,
       error: 'Authentication required',
       message: 'You must be logged in to access this resource',
-      type: 'NOT_AUTHENTICATED'
+      type: 'NOT_AUTHENTICATED',
     });
   }
 
@@ -146,7 +148,7 @@ const requireAdmin = (req, res, next) => {
       message: 'Admin access required for this operation',
       type: 'INSUFFICIENT_PERMISSIONS',
       userRole: req.user.role,
-      requiredRole: 'admin'
+      requiredRole: 'admin',
     });
   }
 
@@ -179,11 +181,10 @@ const optionalAuth = (req, res, next) => {
       id: decoded.id || decoded.userId,
       email: decoded.email,
       role: decoded.role || 'user',
-      username: decoded.username
+      username: decoded.username,
     };
 
     return next();
-
   } catch (error) {
     // If token is invalid, just continue without user
     req.user = null;
@@ -208,9 +209,7 @@ const userRateLimiter = (maxRequests = 100, windowMs = 900000) => {
     // Clean up old entries
     if (userRequests.has(userId)) {
       const userRecord = userRequests.get(userId);
-      userRecord.requests = userRecord.requests.filter(
-        timestamp => now - timestamp < windowMs
-      );
+      userRecord.requests = userRecord.requests.filter((timestamp) => now - timestamp < windowMs);
     } else {
       userRequests.set(userId, { requests: [] });
     }
@@ -223,7 +222,7 @@ const userRateLimiter = (maxRequests = 100, windowMs = 900000) => {
         error: 'Rate limit exceeded',
         message: `You have exceeded the limit of ${maxRequests} requests per ${windowMs / 1000 / 60} minutes`,
         type: 'USER_RATE_LIMIT',
-        resetAt: new Date(userRecord.requests[0] + windowMs).toISOString()
+        resetAt: new Date(userRecord.requests[0] + windowMs).toISOString(),
       });
     }
 
@@ -243,19 +242,19 @@ const requireApiKey = (req, res, next) => {
       success: false,
       error: 'API key required',
       message: 'Provide API key in X-API-Key header',
-      type: 'MISSING_API_KEY'
+      type: 'MISSING_API_KEY',
     });
   }
 
   // Validate API key (should be stored in database in production)
-  const validApiKeys = (process.env.API_KEYS || '').split(',').filter(k => k);
+  const validApiKeys = (process.env.API_KEYS || '').split(',').filter((k) => k);
 
   if (!validApiKeys.includes(apiKey)) {
     return res.status(401).json({
       success: false,
       error: 'Invalid API key',
       message: 'The provided API key is not valid',
-      type: 'INVALID_API_KEY'
+      type: 'INVALID_API_KEY',
     });
   }
 
@@ -263,7 +262,7 @@ const requireApiKey = (req, res, next) => {
   req.apiKey = apiKey;
   req.user = {
     type: 'api_key',
-    role: 'user' // API keys have user-level access by default
+    role: 'user', // API keys have user-level access by default
   };
 
   return next();
@@ -279,7 +278,7 @@ const requireAuthOrApiKey = (req, res, next) => {
       id: 'dev-user',
       email: 'dev@localhost',
       role: 'user',
-      username: 'development'
+      username: 'development',
     };
     console.log('⚠️  Development mode: Authentication skipped for', req.path);
     return next();
@@ -297,7 +296,7 @@ const requireAuthOrApiKey = (req, res, next) => {
       success: false,
       error: 'Authentication required',
       message: 'Provide either Authorization header (Bearer token) or X-API-Key header',
-      type: 'NO_AUTH_PROVIDED'
+      type: 'NO_AUTH_PROVIDED',
     });
   }
 };
@@ -307,7 +306,9 @@ const requireAuthOrApiKey = (req, res, next) => {
  */
 const logAuthenticatedRequest = (req, res, next) => {
   if (req.user) {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - User: ${req.user.email || req.user.id} (${req.user.role})`);
+    console.log(
+      `[${new Date().toISOString()}] ${req.method} ${req.path} - User: ${req.user.email || req.user.id} (${req.user.role})`
+    );
   }
   next();
 };
@@ -323,5 +324,5 @@ module.exports = {
 
   // Legacy exports for compatibility
   authMiddleware: requireAuth,
-  adminMiddleware: requireAdmin
+  adminMiddleware: requireAdmin,
 };

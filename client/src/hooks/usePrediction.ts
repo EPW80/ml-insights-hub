@@ -1,9 +1,5 @@
-import { useState, useCallback } from "react";
-import {
-  apiService,
-  PredictionRequest,
-  PredictionResponse,
-} from "../services/api";
+import { useState, useCallback } from 'react';
+import { apiService, PredictionRequest, PredictionResponse } from '../services/api';
 
 export interface UsePredictionState {
   prediction: PredictionResponse | null;
@@ -33,8 +29,7 @@ export const usePrediction = () => {
       }));
       return result;
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Prediction failed";
+      const errorMessage = error instanceof Error ? error.message : 'Prediction failed';
       setState((prev) => ({
         ...prev,
         loading: false,

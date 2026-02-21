@@ -15,7 +15,7 @@ const AuthPage: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     setLocalError(null);
     clearError();
   };
@@ -71,14 +71,18 @@ const AuthPage: React.FC = () => {
           <div className="auth-tabs">
             <button
               className={`auth-tab ${isLogin ? 'active' : ''}`}
-              onClick={() => { if (!isLogin) toggleMode(); }}
+              onClick={() => {
+                if (!isLogin) toggleMode();
+              }}
               type="button"
             >
               Sign In
             </button>
             <button
               className={`auth-tab ${!isLogin ? 'active' : ''}`}
-              onClick={() => { if (isLogin) toggleMode(); }}
+              onClick={() => {
+                if (isLogin) toggleMode();
+              }}
               type="button"
             >
               Sign Up
@@ -155,11 +159,7 @@ const AuthPage: React.FC = () => {
               </div>
             )}
 
-            <button
-              type="submit"
-              className="auth-submit"
-              disabled={loading}
-            >
+            <button type="submit" className="auth-submit" disabled={loading}>
               {loading ? '⏳ Processing...' : isLogin ? 'Sign In' : 'Create Account'}
             </button>
           </form>

@@ -20,7 +20,7 @@ async function initRedisRateLimitStore() {
     await redisClient.connect();
     redisStore = new RedisStore({
       sendCommand: (...args) => redisClient.sendCommand(args),
-      prefix: 'rl:'
+      prefix: 'rl:',
     });
     logger.info('Rate limiter connected to Redis');
   } catch (err) {
@@ -39,7 +39,7 @@ const createRateLimit = (windowMs, max, message) => {
     max,
     message: {
       error: message,
-      retryAfter: Math.ceil(windowMs / 1000)
+      retryAfter: Math.ceil(windowMs / 1000),
     },
     standardHeaders: true,
     legacyHeaders: false,
@@ -90,16 +90,13 @@ const validateMLInput = [
       }
       return true;
     }),
-  
-  body('features')
-    .optional()
-    .isArray()
-    .withMessage('Features must be an array'),
-  
+
+  body('features').optional().isArray().withMessage('Features must be an array'),
+
   body('modelType')
     .isIn(['linear', 'random_forest', 'xgboost', 'neural_network', 'kmeans', 'pca'])
     .withMessage('Invalid model type'),
-  
+
   body('parameters')
     .optional()
     .isObject()
@@ -114,63 +111,62 @@ const validateMLInput = [
       }
       return true;
     }),
-  
+
   // Check validation results
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: errors.array()
+        details: errors.array(),
       });
     }
     return next();
-  }
+  },
 ];
 
 const validateDataUpload = [
   body('filename')
     .matches(/^[a-zA-Z0-9_.-]+$/)
     .withMessage('Filename contains invalid characters'),
-  
+
   body('fileType')
     .isIn(['csv', 'json', 'xlsx'])
     .withMessage('Invalid file type. Only CSV, JSON, and XLSX allowed.'),
-  
+
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: errors.array()
+        details: errors.array(),
       });
     }
     return next();
-  }
+  },
 ];
 
 const validateAuth = [
-  body('email')
-    .isEmail()
-    .normalizeEmail()
-    .withMessage('Valid email is required'),
-  
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+
   body('password')
     .isLength({ min: 8, max: 128 })
     .withMessage('Password must be between 8 and 128 characters')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-    .withMessage('Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character'),
-  
+    .withMessage(
+      'Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character'
+    ),
+
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: errors.array()
+        details: errors.array(),
       });
     }
     return next();
-  }
+  },
 ];
 
 // Security headers middleware
@@ -180,7 +176,7 @@ const securityHeaders = helmet({
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
+      imgSrc: ["'self'", 'data:', 'https:'],
       connectSrc: ["'self'"],
       fontSrc: ["'self'"],
       objectSrc: ["'none'"],
@@ -203,11 +199,11 @@ const mongoSanitizer = mongoSanitize({
 const requestSizeLimiter = (req, res, next) => {
   const maxSize = 10 * 1024 * 1024; // 10MB
   const contentLength = parseInt(req.get('content-length'));
-  
+
   if (contentLength && contentLength > maxSize) {
     return res.status(413).json({
       error: 'Request too large',
-      message: 'Maximum request size is 10MB'
+      message: 'Maximum request size is 10MB',
     });
   }
   return next();
@@ -219,7 +215,7 @@ const handleRateLimit = (error, req, res, next) => {
     return res.status(429).json({
       error: 'Rate limit exceeded',
       message: error.message,
-      retryAfter: error.retryAfter
+      retryAfter: error.retryAfter,
     });
   }
   return next(error);
@@ -236,5 +232,5 @@ module.exports = {
   securityHeaders,
   mongoSanitizer,
   requestSizeLimiter,
-  handleRateLimit
+  handleRateLimit,
 };

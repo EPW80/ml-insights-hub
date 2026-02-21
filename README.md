@@ -5,6 +5,7 @@ A comprehensive full-stack machine learning application for real estate price pr
 ## 🌟 Features
 
 **Core Functionality**
+
 - 📊 Interactive ML Dashboard with 7 chart types (bar, scatter, pie, line, radar, composed, radial)
 - 🎯 Property Price Predictions with 4 ML models and uncertainty quantification
 - 📈 Advanced Visualizations (zoom, brush, gradients, synchronized charts)
@@ -12,6 +13,7 @@ A comprehensive full-stack machine learning application for real estate price pr
 - ⚡ Real-time updates and live predictions
 
 **Security & Infrastructure**
+
 - 🔐 JWT Authentication (512-bit entropy) + API key support
 - 🛡️ Sandboxed Python execution with resource limits
 - 🚨 Security scoring system (95/100) with startup validation
@@ -61,12 +63,14 @@ A comprehensive full-stack machine learning application for real estate price pr
 ## 🚀 Quick Start
 
 ### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/EPW80/ml-insights-hub.git
 cd ml-insights-hub
 ```
 
 ### 2. Setup Python Environment
+
 ```bash
 # Create virtual environment
 python3 -m venv venv
@@ -79,6 +83,7 @@ pip install -r server/requirements.txt
 ```
 
 ### 3. Setup Backend
+
 ```bash
 cd server
 
@@ -88,7 +93,7 @@ npm install
 # 🔐 IMPORTANT: Generate secure JWT secret
 npm run generate-jwt-secret
 
-# ✅ Verify security configuration  
+# ✅ Verify security configuration
 npm run security:audit
 
 # 🧪 Test secure Python bridge
@@ -102,6 +107,7 @@ npm run db:health
 ```
 
 ### 4. Setup Frontend
+
 ```bash
 cd ../client
 
@@ -112,12 +118,14 @@ npm install
 ### 5. Run the Application
 
 #### Option A: Run All Services (Recommended)
+
 ```bash
 # From project root
 ./start.sh
 ```
 
 #### Option B: Run Services Separately
+
 ```bash
 # Terminal 1: Start Frontend
 cd client
@@ -132,12 +140,14 @@ source venv/bin/activate
 ```
 
 The application will be available at:
+
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:5000
 
 ## 🔐 Security & Database Configuration
 
 ### Database Setup (Required)
+
 Configure your MongoDB connection:
 
 ```bash
@@ -153,6 +163,7 @@ npm run db:test
 ```
 
 ### JWT Secret Setup (Required)
+
 Before running the application, you must configure a secure JWT secret:
 
 ```bash
@@ -165,6 +176,7 @@ npm run security-audit
 ```
 
 ### Security Features
+
 - **🔒 Automatic security validation** on server startup
 - **🛡️ Rate limiting** for API endpoints
 - **🔐 JWT authentication** with secure secret generation
@@ -173,6 +185,7 @@ npm run security-audit
 - **⚡ Security headers** via Helmet.js
 
 ### Security & Database Commands
+
 ```bash
 # Security commands
 npm run check-security          # Check JWT secret strength
@@ -187,6 +200,7 @@ npm run db:stats               # Display database statistics
 ```
 
 ### Health Monitoring Endpoints
+
 The application provides real-time health monitoring:
 
 ```bash
@@ -208,49 +222,53 @@ cd server
 npm run dev
 
 # Terminal 3: Activate Python Environment
+
 source venv/bin/activate
+
 ```
 
 ## 📁 Project Structure
 
 ```
+
 ml-insights-hub/
-├── .github/                   # GitHub Actions & Workflows
-│   ├── workflows/             # CI/CD Pipelines (ci.yml, docker-publish.yml)
-│   └── dependabot.yml         # Automated dependency updates
+├── .github/ # GitHub Actions & Workflows
+│ ├── workflows/ # CI/CD Pipelines (ci.yml, docker-publish.yml)
+│ └── dependabot.yml # Automated dependency updates
 │
-├── client/                    # React Frontend (TypeScript)
-│   ├── src/
-│   │   ├── components/        # UI Components (Charts, Forms, Dashboard)
-│   │   ├── services/          # API & Data Services
-│   │   └── hooks/             # Custom React Hooks
-│   ├── public/                # Static Assets
-│   ├── Dockerfile             # Client container configuration
-│   ├── nginx.conf             # Production nginx configuration
-│   └── .eslintrc.js           # ESLint configuration
+├── client/ # React Frontend (TypeScript)
+│ ├── src/
+│ │ ├── components/ # UI Components (Charts, Forms, Dashboard)
+│ │ ├── services/ # API & Data Services
+│ │ └── hooks/ # Custom React Hooks
+│ ├── public/ # Static Assets
+│ ├── Dockerfile # Client container configuration
+│ ├── nginx.conf # Production nginx configuration
+│ └── .eslintrc.js # ESLint configuration
 │
-├── server/                    # Node.js Backend
-│   ├── routes/                # API Routes & Endpoints
-│   ├── middleware/            # Security & Validation (JWT, Rate Limiting, Logging)
-│   ├── config/                # Configuration (Logger)
-│   ├── ml-services/           # ML Algorithm Services
-│   ├── python-scripts/        # Sandboxed Python ML Execution
-│   ├── scripts/               # Automation & Testing Tools
-│   ├── uploads/               # File Upload Directory
-│   ├── Dockerfile             # Server container configuration
-│   └── .eslintrc.js           # ESLint configuration
+├── server/ # Node.js Backend
+│ ├── routes/ # API Routes & Endpoints
+│ ├── middleware/ # Security & Validation (JWT, Rate Limiting, Logging)
+│ ├── config/ # Configuration (Logger)
+│ ├── ml-services/ # ML Algorithm Services
+│ ├── python-scripts/ # Sandboxed Python ML Execution
+│ ├── scripts/ # Automation & Testing Tools
+│ ├── uploads/ # File Upload Directory
+│ ├── Dockerfile # Server container configuration
+│ └── .eslintrc.js # ESLint configuration
 │
-├── venv/                      # Python Virtual Environment
+├── venv/ # Python Virtual Environment
 │
-├── docker-compose.yml         # Standard Docker orchestration
-├── docker-compose.dev.yml     # Development environment
-├── docker-compose.prod.yml    # Production environment
-├── .husky/                    # Git hooks (pre-commit)
-├── .prettierrc.json           # Prettier configuration
-├── .editorconfig              # Editor configuration
-├── .env.example               # Environment variable template
-└── package.json               # Root workspace configuration
-```
+├── docker-compose.yml # Standard Docker orchestration
+├── docker-compose.dev.yml # Development environment
+├── docker-compose.prod.yml # Production environment
+├── .husky/ # Git hooks (pre-commit)
+├── .prettierrc.json # Prettier configuration
+├── .editorconfig # Editor configuration
+├── .env.example # Environment variable template
+└── package.json # Root workspace configuration
+
+````
 
 ### Key Features by Component
 
@@ -267,9 +285,10 @@ ml-insights-hub/
 - 🔧 API Endpoints: Predictions, data management, model training
 ```bash
 npm run check-security
-```
+````
 
 #### 3. Security Checklist
+
 - ✅ JWT secret is 256+ bits (64+ hex characters)
 - ✅ Rate limiting is enabled
 - ✅ Input validation is active
@@ -305,12 +324,14 @@ MAX_FILE_SIZE=10485760  # 10MB
 ## 📊 Available ML Models
 
 ### Property Price Prediction Models
+
 - **Random Forest** - Ensemble method for robust predictions
 - **Linear Regression** - Simple linear relationship modeling
 - **Neural Network** - Deep learning for complex patterns
 - **Gradient Boosting** - Advanced ensemble technique
 
 ### Uncertainty Quantification Methods
+
 - **Bootstrap Sampling** - Statistical confidence intervals
 - **Bayesian Approaches** - Probabilistic uncertainty estimation
 - **Ensemble Variance** - Model agreement analysis
@@ -318,6 +339,7 @@ MAX_FILE_SIZE=10485760  # 10MB
 ## 🎯 API Endpoints
 
 ### Machine Learning Predictions
+
 - `POST /api/ml/predict` - Make property price predictions
   ```json
   {
@@ -333,11 +355,13 @@ MAX_FILE_SIZE=10485760  # 10MB
   ```
 
 ### Data Management
+
 - `POST /api/data/upload` - Upload property dataset files
 - `GET /api/data/properties` - Retrieve property data for visualization
 - `POST /api/data/validate` - Validate uploaded data format
 
 ### Health Monitoring
+
 - `GET /api/health/database` - Database health status
 - `GET /api/health/database/stats` - Database connection statistics
 - `GET /api/health/database/performance` - Database performance metrics
@@ -356,12 +380,14 @@ MAX_FILE_SIZE=10485760  # 10MB
 ## 🧪 Testing
 
 ### Frontend Tests
+
 ```bash
 cd client
 npm test
 ```
 
 ### Backend Tests
+
 ```bash
 cd server
 
@@ -376,6 +402,7 @@ npm run security:audit          # Test security configuration
 ```
 
 ### Python Environment Test
+
 ```bash
 source venv/bin/activate
 python -c "import pandas, numpy, sklearn; print('All ML packages installed successfully!')"
@@ -386,21 +413,25 @@ python -c "import pandas, numpy, sklearn; print('All ML packages installed succe
 ### Running with Docker Compose
 
 **Development Mode**:
+
 ```bash
 docker-compose -f docker-compose.dev.yml up
 ```
 
 **Production Mode**:
+
 ```bash
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
 **Standard Mode**:
+
 ```bash
 docker-compose up -d
 ```
 
 ### Docker Features
+
 - 🐳 Multi-stage builds for optimized images
 - 🔄 Hot reload in development mode
 - 🏗️ Production-ready nginx configuration
@@ -410,6 +441,7 @@ docker-compose up -d
 - 📊 Health checks and monitoring
 
 ### Container Architecture
+
 - **client**: React app with nginx (production) or webpack dev server (development)
 - **server**: Node.js + Python environment with ML capabilities
 - **mongodb**: Database service (optional, can use Atlas)
@@ -417,6 +449,7 @@ docker-compose up -d
 ## 🔧 Code Quality & Development Tools
 
 ### Linting & Formatting
+
 ```bash
 # Lint all code
 npm run lint
@@ -429,12 +462,14 @@ npm run format:check
 ```
 
 ### Pre-commit Hooks
+
 - Automatic ESLint checks on staged files
 - Automatic Prettier formatting
 - Husky-managed git hooks
 - Lint-staged for efficient checks
 
 ### Continuous Integration
+
 - **GitHub Actions CI**: Automated testing and linting on push/PR
 - **Docker Image Publishing**: Automated container builds
 - **Dependabot**: Automated dependency updates
@@ -443,6 +478,7 @@ npm run format:check
 ## 🚀 Deployment
 
 ### Production Build
+
 ```bash
 # Build frontend for production
 cd client
@@ -452,6 +488,7 @@ npm run build
 ```
 
 ### Docker Deployment
+
 ```bash
 # Build and deploy with Docker
 docker-compose -f docker-compose.prod.yml up -d
@@ -464,15 +501,18 @@ docker-compose up -d --scale server=3
 ```
 
 ### Production Checklist
+
 Before deploying to production, ensure:
 
 1. **Security Configuration**:
+
    ```bash
    npm run security:audit    # Should score 95/100 or higher
    npm run preproduction     # Run pre-production checks
    ```
 
 2. **Database Configuration**:
+
    ```bash
    npm run db:test          # Verify database connection
    npm run db:health        # Confirm health monitoring
@@ -520,7 +560,7 @@ This project is licensed under the ISC License.
 
 ## 👥 Authors
 
-- **Erik Williams** - *Project Creator* - [@EPW80](https://github.com/EPW80)
+- **Erik Williams** - _Project Creator_ - [@EPW80](https://github.com/EPW80)
 
 ## 🙏 Acknowledgments
 
@@ -532,6 +572,7 @@ This project is licensed under the ISC License.
 ## 📞 Support
 
 For support and questions:
+
 - 📧 Email: erikpw009@gmail.com
 - 🐛 Issues: [GitHub Issues](https://github.com/EPW80/ml-insights-hub/issues)
 - 📖 Documentation: [Project Wiki](https://github.com/EPW80/ml-insights-hub/wiki)
