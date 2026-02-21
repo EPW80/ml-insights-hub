@@ -1,6 +1,8 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import DataUploadInterface from './DataUploadInterface';
+import { apiService } from '../services/api';
 
 // Mock the api service
 jest.mock('../services/api', () => ({
@@ -20,9 +22,6 @@ jest.mock('../services/api', () => ({
     clearToken: jest.fn(),
   },
 }));
-
-import DataUploadInterface from './DataUploadInterface';
-import { apiService } from '../services/api';
 
 describe('DataUploadInterface', () => {
   beforeEach(() => {
@@ -44,10 +43,10 @@ describe('DataUploadInterface', () => {
   });
 
   it('shows error for invalid file type', async () => {
-    render(<DataUploadInterface />);
+    const { container } = render(<DataUploadInterface />);
 
     const file = new File(['invalid content'], 'test.txt', { type: 'text/plain' });
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
 
     fireEvent.change(input, { target: { files: [file] } });
 
@@ -57,13 +56,13 @@ describe('DataUploadInterface', () => {
   });
 
   it('shows error for oversized file', async () => {
-    render(<DataUploadInterface />);
+    const { container } = render(<DataUploadInterface />);
 
     // Create a mock file larger than 10MB
     const largeContent = new ArrayBuffer(11 * 1024 * 1024);
     const file = new File([largeContent], 'large.csv', { type: 'text/csv' });
 
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
     fireEvent.change(input, { target: { files: [file] } });
 
     await waitFor(() => {
@@ -83,12 +82,12 @@ describe('DataUploadInterface', () => {
       },
     });
 
-    render(<DataUploadInterface />);
+    const { container } = render(<DataUploadInterface />);
 
     const csvContent = 'bedrooms,bathrooms,sqft,actual_price\n3,2,1500,450000';
     const file = new File([csvContent], 'properties.csv', { type: 'text/csv' });
 
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
     fireEvent.change(input, { target: { files: [file] } });
 
     await waitFor(() => {
@@ -101,10 +100,10 @@ describe('DataUploadInterface', () => {
   it('shows upload error when API fails', async () => {
     (apiService.uploadData as jest.Mock).mockRejectedValue(new Error('Server error'));
 
-    render(<DataUploadInterface />);
+    const { container } = render(<DataUploadInterface />);
 
     const file = new File(['data'], 'test.csv', { type: 'text/csv' });
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
     fireEvent.change(input, { target: { files: [file] } });
 
     await waitFor(() => {
@@ -130,22 +129,19 @@ describe('DataUploadInterface', () => {
   });
 
   it('handles drag events on upload zone', () => {
-    render(<DataUploadInterface />);
+    const { container } = render(<DataUploadInterface />);
 
-    const uploadZone = screen.getByText(/drag & drop your file here/i).closest('.upload-zone') ||
-                       screen.getByText(/drag & drop your file here/i).parentElement?.parentElement;
+    const uploadZone = container.querySelector('.upload-zone') as HTMLElement;
 
-    if (uploadZone) {
-      fireEvent.dragEnter(uploadZone, {
-        dataTransfer: { files: [] },
-      });
+    fireEvent.dragEnter(uploadZone, {
+      dataTransfer: { files: [] },
+    });
 
-      // The zone should get the drag-active class
-      expect(uploadZone.closest('.upload-zone') || uploadZone).toHaveClass('drag-active');
+    // The zone should get the drag-active class
+    expect(uploadZone).toHaveClass('drag-active');
 
-      fireEvent.dragLeave(uploadZone, {
-        dataTransfer: { files: [] },
-      });
-    }
+    fireEvent.dragLeave(uploadZone, {
+      dataTransfer: { files: [] },
+    });
   });
 });

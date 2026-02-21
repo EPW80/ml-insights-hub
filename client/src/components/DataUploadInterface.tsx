@@ -2,12 +2,23 @@ import React, { useState, useRef, ChangeEvent, DragEvent } from 'react';
 import { apiService } from '../services/api';
 import './DataUploadInterface.css';
 
+interface UploadResult {
+    recordsProcessed: number;
+    fileSize: string;
+    processingTime: string;
+    validation?: {
+        validRecords: number;
+        invalidRecords: number;
+        duplicates: number;
+    };
+}
+
 interface UploadState {
     uploading: boolean;
     progress: number;
     success: boolean;
     error: string | null;
-    result: any;
+    result: UploadResult | null;
 }
 
 const DataUploadInterface: React.FC = () => {

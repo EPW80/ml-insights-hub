@@ -2,14 +2,18 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
+import { AuthProvider } from '../hooks/useAuth';
+import AuthPage from './AuthPage';
+import App from '../App';
+import { apiService, tokenManager } from '../services/api';
 
 // Mock react-router-dom to avoid JSDOM TextEncoder issue with react-router v7
 jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom') as any,
+  ...jest.requireActual('react-router-dom') as Record<string, unknown>,
   BrowserRouter: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   Routes: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   Route: () => null,
-  NavLink: ({ children, to }: any) => <a href={to}>{children}</a>,
+  NavLink: ({ children, to }: { children: React.ReactNode; to: string }) => <a href={to}>{children}</a>,
   Navigate: () => null,
   useNavigate: () => jest.fn(),
 }));
@@ -32,12 +36,6 @@ jest.mock('../services/api', () => ({
     clearToken: jest.fn(),
   },
 }));
-
-// Import after mocking
-import { AuthProvider } from '../hooks/useAuth';
-import AuthPage from './AuthPage';
-import App from '../App';
-import { apiService, tokenManager } from '../services/api';
 
 const renderWithProviders = (ui: React.ReactElement) => {
   return render(
@@ -153,12 +151,12 @@ describe('App', () => {
     jest.clearAllMocks();
   });
 
-  it('shows auth page when not authenticated', () => {
+  it('shows auth page when not authenticated', async () => {
     (tokenManager.getToken as jest.Mock).mockReturnValue(null);
     renderWithProviders(<App />);
 
     // Should show the auth page (lazy loaded)
-    waitFor(() => {
+    await waitFor(() => {
       expect(screen.getByText('ML Insights Hub', { exact: false })).toBeInTheDocument();
     });
   });
@@ -177,10 +175,10 @@ describe('App', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Dashboard', { exact: false })).toBeInTheDocument();
-      expect(screen.getByText('Predictions', { exact: false })).toBeInTheDocument();
-      expect(screen.getByText('Visualization', { exact: false })).toBeInTheDocument();
-      expect(screen.getByText('Upload Data', { exact: false })).toBeInTheDocument();
-      expect(screen.getByText('Sign Out')).toBeInTheDocument();
     });
+    expect(screen.getByText('Predictions', { exact: false })).toBeInTheDocument();
+    expect(screen.getByText('Visualization', { exact: false })).toBeInTheDocument();
+    expect(screen.getByText('Upload Data', { exact: false })).toBeInTheDocument();
+    expect(screen.getByText('Sign Out')).toBeInTheDocument();
   });
 });
