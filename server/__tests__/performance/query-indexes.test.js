@@ -9,17 +9,16 @@
  * - Query execution time benchmarks
  */
 
-const mongoose = require('mongoose');
 const Dataset = require('../../models/Dataset');
 const Property = require('../../models/Property');
 const User = require('../../models/User');
 
 // Performance thresholds (in milliseconds)
 const PERFORMANCE_THRESHOLDS = {
-  textSearch: 100,      // Text search should complete under 100ms
-  geospatial: 50,       // Geospatial queries should complete under 50ms
-  compoundIndex: 50,    // Compound index queries should complete under 50ms
-  simpleIndex: 30       // Simple index queries should complete under 30ms
+  textSearch: 100, // Text search should complete under 100ms
+  geospatial: 50, // Geospatial queries should complete under 50ms
+  compoundIndex: 50, // Compound index queries should complete under 50ms
+  simpleIndex: 30, // Simple index queries should complete under 30ms
 };
 
 describe('Query Performance with Indexes', () => {
@@ -31,7 +30,7 @@ describe('Query Performance with Indexes', () => {
       username: 'perfuser',
       email: 'perf@example.com',
       password: 'password123',
-      role: 'user'
+      role: 'user',
     });
 
     // Ensure indexes are created
@@ -53,7 +52,7 @@ describe('Query Performance with Indexes', () => {
         'sales transaction records',
         'market performance metrics',
         'price prediction features',
-        'comparative market analysis'
+        'comparative market analysis',
       ];
 
       for (let i = 0; i < 100; i++) {
@@ -64,7 +63,7 @@ describe('Query Performance with Indexes', () => {
           file_path: `/uploads/test-${i}.csv`,
           file_size: 1000 + i,
           format: 'csv',
-          uploaded_by: testUser._id
+          uploaded_by: testUser._id,
         });
       }
 
@@ -75,7 +74,7 @@ describe('Query Performance with Indexes', () => {
       const startTime = process.hrtime.bigint();
 
       const results = await Dataset.find({
-        $text: { $search: 'housing market' }
+        $text: { $search: 'housing market' },
       }).limit(10);
 
       const endTime = process.hrtime.bigint();
@@ -87,7 +86,7 @@ describe('Query Performance with Indexes', () => {
 
     it('should use text index for text search queries', async () => {
       const query = Dataset.find({
-        $text: { $search: 'property valuation' }
+        $text: { $search: 'property valuation' },
       });
 
       const explainResult = await query.explain('executionStats');
@@ -100,8 +99,8 @@ describe('Query Performance with Indexes', () => {
     it('should handle complex text search queries', async () => {
       const startTime = process.hrtime.bigint();
 
-      const results = await Dataset.find({
-        $text: { $search: 'market analysis -demographic' }
+      await Dataset.find({
+        $text: { $search: 'market analysis -demographic' },
       }).limit(10);
 
       const endTime = process.hrtime.bigint();
@@ -133,7 +132,7 @@ describe('Query Performance with Indexes', () => {
 
       // Search for common term that should match
       const results = await Dataset.find({
-        $text: { $search: 'data' }
+        $text: { $search: 'data' },
       });
 
       const endTime = process.hrtime.bigint();
@@ -153,30 +152,30 @@ describe('Query Performance with Indexes', () => {
 
       // Create test properties with varied locations
       const properties = [];
-      const baseLatitude = 40.7128;  // New York City
-      const baseLongitude = -74.0060;
+      const baseLatitude = 40.7128; // New York City
+      const baseLongitude = -74.006;
 
       for (let i = 0; i < 200; i++) {
         // Create properties in a grid pattern around NYC
-        const latOffset = (i % 20 - 10) * 0.01;
+        const latOffset = ((i % 20) - 10) * 0.01;
         const lngOffset = (Math.floor(i / 20) - 10) * 0.01;
 
         properties.push({
           address: `${i} Test Street, New York, NY`,
           coordinates: {
             lat: baseLatitude + latOffset,
-            lng: baseLongitude + lngOffset
+            lng: baseLongitude + lngOffset,
           },
           features: {
             bedrooms: 2 + (i % 4),
             bathrooms: 1 + (i % 3),
-            sqft: 1000 + (i * 10),
+            sqft: 1000 + i * 10,
             year_built: 1990 + (i % 30),
-            property_type: ['house', 'condo', 'apartment'][i % 3]
+            property_type: ['house', 'condo', 'apartment'][i % 3],
           },
-          actual_price: 300000 + (i * 5000),
-          listed_price: 310000 + (i * 5000),
-          date_listed: new Date(2024, 0, 1 + (i % 30))
+          actual_price: 300000 + i * 5000,
+          listed_price: 310000 + i * 5000,
+          date_listed: new Date(2024, 0, 1 + (i % 30)),
         });
       }
 
@@ -194,8 +193,8 @@ describe('Query Performance with Indexes', () => {
 
       // Use a simple proximity query based on coordinate ranges
       const results = await Property.find({
-        'coordinates.lat': { $gte: 40.70, $lte: 40.75 },
-        'coordinates.lng': { $gte: -74.05, $lte: -74.00 }
+        'coordinates.lat': { $gte: 40.7, $lte: 40.75 },
+        'coordinates.lng': { $gte: -74.05, $lte: -74.0 },
       }).limit(10);
 
       const endTime = process.hrtime.bigint();
@@ -218,8 +217,8 @@ describe('Query Performance with Indexes', () => {
 
       // Query properties within a coordinate range
       const results = await Property.find({
-        'coordinates.lat': { $gte: 40.70, $lte: 40.75 },
-        'coordinates.lng': { $gte: -74.05, $lte: -73.95 }
+        'coordinates.lat': { $gte: 40.7, $lte: 40.75 },
+        'coordinates.lng': { $gte: -74.05, $lte: -73.95 },
       });
 
       const endTime = process.hrtime.bigint();
@@ -234,7 +233,7 @@ describe('Query Performance with Indexes', () => {
 
       const results = await Property.find({
         'coordinates.lat': { $exists: true },
-        'coordinates.lng': { $exists: true }
+        'coordinates.lng': { $exists: true },
       })
         .sort({ 'coordinates.lat': 1 })
         .limit(20);
@@ -249,11 +248,11 @@ describe('Query Performance with Indexes', () => {
     it('should efficiently combine location with other filters', async () => {
       const startTime = process.hrtime.bigint();
 
-      const results = await Property.find({
-        'coordinates.lat': { $gte: 40.70, $lte: 40.75 },
-        'coordinates.lng': { $gte: -74.05, $lte: -74.00 },
+      await Property.find({
+        'coordinates.lat': { $gte: 40.7, $lte: 40.75 },
+        'coordinates.lng': { $gte: -74.05, $lte: -74.0 },
         'features.bedrooms': { $gte: 3 },
-        actual_price: { $lte: 500000 }
+        actual_price: { $lte: 500000 },
       }).limit(10);
 
       const endTime = process.hrtime.bigint();
@@ -266,7 +265,7 @@ describe('Query Performance with Indexes', () => {
   describe('Compound Index Performance', () => {
     it('should use compound index for user datasets query', async () => {
       const query = Dataset.find({
-        uploaded_by: testUser._id
+        uploaded_by: testUser._id,
       }).sort({ createdAt: -1 });
 
       const explainResult = await query.explain('executionStats');
@@ -283,8 +282,8 @@ describe('Query Performance with Indexes', () => {
     it('should perform user datasets query efficiently', async () => {
       const startTime = process.hrtime.bigint();
 
-      const results = await Dataset.find({
-        uploaded_by: testUser._id
+      await Dataset.find({
+        uploaded_by: testUser._id,
       })
         .sort({ createdAt: -1 })
         .limit(10);
@@ -299,7 +298,7 @@ describe('Query Performance with Indexes', () => {
       const query = Property.find({
         'features.bedrooms': 3,
         'features.bathrooms': 2,
-        actual_price: { $gte: 300000, $lte: 500000 }
+        actual_price: { $gte: 300000, $lte: 500000 },
       });
 
       const explainResult = await query.explain('executionStats');
@@ -315,10 +314,10 @@ describe('Query Performance with Indexes', () => {
     it('should perform multi-filter property queries efficiently', async () => {
       const startTime = process.hrtime.bigint();
 
-      const results = await Property.find({
+      await Property.find({
         'features.bedrooms': 3,
         'features.bathrooms': 2,
-        actual_price: { $gte: 300000, $lte: 500000 }
+        actual_price: { $gte: 300000, $lte: 500000 },
       }).limit(20);
 
       const endTime = process.hrtime.bigint();
@@ -329,15 +328,14 @@ describe('Query Performance with Indexes', () => {
 
     it('should use compound index for quality metrics query', async () => {
       const query = Dataset.find({
-        'data_quality_metrics.completeness': { $gte: 0.8 }
+        'data_quality_metrics.completeness': { $gte: 0.8 },
       }).sort({ createdAt: -1 });
 
       const explainResult = await query.explain('executionStats');
       const winningPlan = explainResult.executionStats.executionStages;
 
       // Should use the compound quality metrics index
-      const indexName = winningPlan.inputStage?.indexName ||
-                        winningPlan.indexName;
+      const indexName = winningPlan.inputStage?.indexName || winningPlan.indexName;
 
       if (indexName && indexName.includes('data_quality_metrics')) {
         expect(indexName).toContain('completeness');
@@ -347,11 +345,11 @@ describe('Query Performance with Indexes', () => {
     it('should perform complex compound queries efficiently', async () => {
       const startTime = process.hrtime.bigint();
 
-      const results = await Property.find({
+      await Property.find({
         'features.bedrooms': { $gte: 2 },
         'features.bathrooms': { $gte: 1 },
         actual_price: { $gte: 300000, $lte: 600000 },
-        'features.property_type': 'house'
+        'features.property_type': 'house',
       })
         .sort({ actual_price: 1 })
         .limit(20);
@@ -377,7 +375,7 @@ describe('Query Performance with Indexes', () => {
     it('should perform format queries efficiently', async () => {
       const startTime = process.hrtime.bigint();
 
-      const results = await Dataset.find({ format: 'csv' });
+      await Dataset.find({ format: 'csv' });
 
       const endTime = process.hrtime.bigint();
       const executionTime = Number(endTime - startTime) / 1000000;
@@ -387,7 +385,7 @@ describe('Query Performance with Indexes', () => {
 
     it('should use index for price range queries', async () => {
       const query = Property.find({
-        actual_price: { $gte: 300000, $lte: 500000 }
+        actual_price: { $gte: 300000, $lte: 500000 },
       });
 
       const explainResult = await query.explain('executionStats');
@@ -400,11 +398,11 @@ describe('Query Performance with Indexes', () => {
     it('should perform date range queries efficiently', async () => {
       const startTime = process.hrtime.bigint();
 
-      const results = await Property.find({
+      await Property.find({
         date_listed: {
           $gte: new Date(2024, 0, 1),
-          $lte: new Date(2024, 0, 31)
-        }
+          $lte: new Date(2024, 0, 31),
+        },
       }).limit(50);
 
       const endTime = process.hrtime.bigint();
@@ -425,7 +423,7 @@ describe('Query Performance with Indexes', () => {
       expect(indexNames).toContain('uploaded_by_1_createdAt_-1');
 
       // Text index
-      const textIndex = indexNames.find(name => name.includes('text'));
+      const textIndex = indexNames.find((name) => name.includes('text'));
       expect(textIndex).toBeDefined();
     });
 
@@ -438,9 +436,8 @@ describe('Query Performance with Indexes', () => {
       expect(indexNames).toContain('date_listed_-1');
 
       // Compound indexes
-      const compoundIndex = indexNames.find(name =>
-        name.includes('features.bedrooms') &&
-        name.includes('features.bathrooms')
+      const compoundIndex = indexNames.find(
+        (name) => name.includes('features.bedrooms') && name.includes('features.bathrooms')
       );
       expect(compoundIndex).toBeDefined();
     });
@@ -450,7 +447,7 @@ describe('Query Performance with Indexes', () => {
         Dataset.find({ format: 'csv' }),
         Dataset.find({ uploaded_by: testUser._id }),
         Property.find({ actual_price: { $gte: 300000 } }),
-        Property.find({ 'features.bedrooms': 3 })
+        Property.find({ 'features.bedrooms': 3 }),
       ];
 
       for (const query of queries) {
@@ -500,14 +497,16 @@ describe('Query Performance with Indexes', () => {
     it('should use efficient index selection', async () => {
       const query = Property.find({
         'features.bedrooms': 3,
-        actual_price: { $gte: 300000 }
+        actual_price: { $gte: 300000 },
       });
 
       const explainResult = await query.explain('executionStats');
       const stats = explainResult.executionStats;
 
       // Keys examined should be less than or equal to docs examined
-      expect(stats.totalKeysExamined).toBeLessThanOrEqual(stats.totalDocsExamined + stats.nReturned);
+      expect(stats.totalKeysExamined).toBeLessThanOrEqual(
+        stats.totalDocsExamined + stats.nReturned
+      );
     });
 
     it('should minimize documents scanned', async () => {

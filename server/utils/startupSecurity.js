@@ -3,13 +3,11 @@
  * Performs critical security checks on server startup
  */
 
-const crypto = require('crypto');
-
 class StartupSecurityValidator {
   constructor() {
     this.criticalErrors = [];
     this.warnings = [];
-    
+
     // Ensure environment variables are loaded
     if (!process.env.JWT_SECRET) {
       try {
@@ -22,7 +20,7 @@ class StartupSecurityValidator {
 
   validateJwtSecret() {
     const secret = process.env.JWT_SECRET;
-    
+
     if (!secret) {
       this.criticalErrors.push('JWT_SECRET is required but not set');
       return false;
@@ -33,17 +31,21 @@ class StartupSecurityValidator {
       'GENERATE_SECURE_SECRET_FOR_PRODUCTION_USE_CRYPTO_RANDOM_BYTES_64_HEX',
       'your_jwt_secret',
       'secret',
-      'jwt_secret'
+      'jwt_secret',
     ];
 
-    if (placeholders.some(placeholder => secret.toLowerCase().includes(placeholder.toLowerCase()))) {
+    if (
+      placeholders.some((placeholder) => secret.toLowerCase().includes(placeholder.toLowerCase()))
+    ) {
       this.criticalErrors.push('JWT_SECRET contains placeholder text - generate a secure secret');
       return false;
     }
 
     // Check minimum length (256 bits = 64 hex chars)
     if (secret.length < 64) {
-      this.criticalErrors.push(`JWT_SECRET too short (${secret.length} chars, minimum 64 required)`);
+      this.criticalErrors.push(
+        `JWT_SECRET too short (${secret.length} chars, minimum 64 required)`
+      );
       return false;
     }
 
@@ -77,9 +79,9 @@ class StartupSecurityValidator {
 
   validateEnvironmentVariables() {
     const required = ['PORT', 'FRONTEND_URL'];
-    const missing = required.filter(key => !process.env[key]);
-    
-    missing.forEach(key => {
+    const missing = required.filter((key) => !process.env[key]);
+
+    missing.forEach((key) => {
       this.warnings.push(`Environment variable ${key} is not set`);
     });
   }
@@ -92,13 +94,13 @@ class StartupSecurityValidator {
     return {
       isValid: this.criticalErrors.length === 0,
       criticalErrors: this.criticalErrors,
-      warnings: this.warnings
+      warnings: this.warnings,
     };
   }
 
   logResults() {
     const result = this.validate();
-    
+
     if (result.criticalErrors.length > 0) {
       console.error('\n🚨 CRITICAL SECURITY ERRORS:');
       result.criticalErrors.forEach((error, index) => {
@@ -108,7 +110,7 @@ class StartupSecurityValidator {
       console.error('   • Generate JWT secret: npm run generate-jwt-secret --update-env');
       console.error('   • Run security audit: npm run security-audit');
       console.error('   • Check documentation: README.md\n');
-      
+
       return false;
     }
 

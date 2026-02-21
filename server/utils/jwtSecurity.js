@@ -9,25 +9,27 @@ class JWTSecurity {
   // Validate that JWT secret meets security requirements
   validateJWTSecret() {
     const secret = process.env.JWT_SECRET;
-    
+
     if (!secret) {
       throw new Error('JWT_SECRET environment variable is required');
     }
-    
+
     // Check if secret is still the default placeholder
     if (secret.includes('GENERATE_SECURE_SECRET') || secret.length < 64) {
       console.error('🔴 SECURITY WARNING: JWT_SECRET is not secure!');
       console.error('Generate a secure secret using:');
       console.error("node -e \"console.log(require('crypto').randomBytes(64).toString('hex'))\"");
-      
+
       if (process.env.NODE_ENV === 'production') {
         throw new Error('Insecure JWT_SECRET detected in production environment');
       }
     }
-    
+
     // Ensure minimum entropy (256 bits = 64 hex characters)
     if (secret.length < 64) {
-      console.warn('⚠️  JWT_SECRET should be at least 64 characters (256 bits) for optimal security');
+      console.warn(
+        '⚠️  JWT_SECRET should be at least 64 characters (256 bits) for optimal security'
+      );
     }
   }
 
@@ -42,7 +44,7 @@ class JWTSecurity {
       expiresIn: process.env.JWT_EXPIRE || '7d',
       issuer: 'ml-insights-hub',
       audience: 'ml-insights-hub-users',
-      algorithm: 'HS256'
+      algorithm: 'HS256',
     };
 
     // Add security metadata
@@ -54,7 +56,7 @@ class JWTSecurity {
 
     return jwt.sign(securePayload, process.env.JWT_SECRET, {
       ...defaultOptions,
-      ...options
+      ...options,
     });
   }
 
@@ -64,7 +66,7 @@ class JWTSecurity {
       const decoded = jwt.verify(token, process.env.JWT_SECRET, {
         issuer: 'ml-insights-hub',
         audience: 'ml-insights-hub-users',
-        algorithms: ['HS256']
+        algorithms: ['HS256'],
       });
 
       // Additional security checks
@@ -89,12 +91,12 @@ class JWTSecurity {
   refreshToken(oldToken) {
     try {
       const decoded = this.verifyToken(oldToken);
-      
+
       // Remove old timestamp claims
       delete decoded.iat;
       delete decoded.exp;
       delete decoded.nbf;
-      
+
       // Generate new token with fresh JWT ID
       return this.signToken(decoded);
     } catch (error) {
@@ -109,9 +111,9 @@ const authenticateToken = (req, res, next) => {
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
   if (!token) {
-    return res.status(401).json({ 
+    return res.status(401).json({
       error: 'Access denied',
-      message: 'No token provided' 
+      message: 'No token provided',
     });
   }
 
@@ -119,16 +121,16 @@ const authenticateToken = (req, res, next) => {
     const jwtSecurity = new JWTSecurity();
     const decoded = jwtSecurity.verifyToken(token);
     req.user = decoded;
-    next();
+    return next();
   } catch (error) {
-    return res.status(403).json({ 
+    return res.status(403).json({
       error: 'Invalid token',
-      message: error.message 
+      message: error.message,
     });
   }
 };
 
 module.exports = {
   JWTSecurity,
-  authenticateToken
+  authenticateToken,
 };

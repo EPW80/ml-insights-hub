@@ -11,7 +11,6 @@
  * - Timestamps
  */
 
-const mongoose = require('mongoose');
 const Property = require('../../models/Property');
 
 describe('Property Model', () => {

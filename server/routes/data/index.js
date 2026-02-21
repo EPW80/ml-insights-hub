@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname));
-  }
+  },
 });
 
 const fileFilter = (req, file, cb) => {
@@ -31,10 +31,10 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const upload = multer({ 
+const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: MAX_FILE_SIZE }
+  limits: { fileSize: MAX_FILE_SIZE },
 });
 
 router.post('/upload', requireAuthOrApiKey, upload.single('dataset'), async (req, res) => {
@@ -52,13 +52,13 @@ router.post('/upload', requireAuthOrApiKey, upload.single('dataset'), async (req
       file_path: file.path,
       file_size: file.size,
       format: path.extname(file.originalname).slice(1),
-      uploaded_by: req.user.id
+      uploaded_by: req.user.id,
     });
 
     await dataset.save();
-    res.json({ success: true, dataset });
+    return res.json({ success: true, dataset });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 });
 

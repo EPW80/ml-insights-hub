@@ -1,8 +1,6 @@
-#!/usr/bin/env node
-
 /**
  * Database Connection Test Script
- * 
+ *
  * Tests MongoDB connection with comprehensive validation
  * Run with: npm run db:test
  */
@@ -18,7 +16,8 @@ async function testDatabaseConnection() {
   if (!process.env.MONGODB_URI) {
     console.log('❌ MONGODB_URI environment variable not set');
     console.log('💡 Add MONGODB_URI to your .env file');
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
   console.log('✅ MONGODB_URI configured');
   console.log(`   URI: ${process.env.MONGODB_URI.replace(/:[^@]*@/, ':***@')}`); // Hide password
@@ -29,7 +28,7 @@ async function testDatabaseConnection() {
     uri: process.env.MONGODB_URI,
     maxPoolSize: 5, // Smaller pool for testing
     serverSelectionTimeoutMS: 10000, // 10 seconds
-    connectTimeoutMS: 15000 // 15 seconds
+    connectTimeoutMS: 15000, // 15 seconds
   });
 
   let connectionSuccessful = false;
@@ -52,17 +51,17 @@ async function testDatabaseConnection() {
   console.log('\n3. Testing initial connection...');
   try {
     await connectionManager.connect();
-    
+
     if (connectionSuccessful) {
       console.log('✅ Initial connection test passed');
     } else {
       console.log('❌ Initial connection test failed');
-      process.exit(1);
+      process.exitCode = 1;
+      return;
     }
-
   } catch (error) {
     console.log('❌ Connection failed:', error.message);
-    
+
     // Provide helpful error messages
     if (error.message.includes('ENOTFOUND')) {
       console.log('💡 DNS resolution failed - check your MongoDB host');
@@ -73,8 +72,9 @@ async function testDatabaseConnection() {
     } else if (error.message.includes('timeout')) {
       console.log('💡 Connection timeout - check network connectivity');
     }
-    
-    process.exit(1);
+
+    process.exitCode = 1;
+    return;
   }
 
   // Test 4: Health check
@@ -92,22 +92,21 @@ async function testDatabaseConnection() {
   console.log('\n5. Testing basic database operations...');
   try {
     const mongoose = require('mongoose');
-    
+
     // Test ping
     await mongoose.connection.db.admin().ping();
     console.log('✅ Database ping successful');
-    
+
     // Test database info
     const dbStats = await mongoose.connection.db.stats();
     console.log('✅ Database stats retrieved');
     console.log(`   Database: ${mongoose.connection.db.databaseName}`);
     console.log(`   Collections: ${dbStats.collections || 0}`);
     console.log(`   Objects: ${dbStats.objects || 0}`);
-    
+
     // Test collections listing
     const collections = await mongoose.connection.db.listCollections().toArray();
     console.log(`✅ Collections listed (${collections.length} found)`);
-    
   } catch (error) {
     console.log('❌ Database operations failed:', error.message);
   }
@@ -137,20 +136,23 @@ async function testDatabaseConnection() {
   console.log('   ✅ Health monitoring working');
   console.log('   ✅ Database operations functional');
   console.log('   ✅ Graceful disconnection working');
-  
+
   console.log('\n🚀 MongoDB connection is ready for production use!');
-  
-  process.exit(0);
+
+  process.exitCode = 0;
+  return;
 }
 
 // Handle script errors
 process.on('unhandledRejection', (error) => {
   console.error('\n💥 Unhandled error:', error.message);
-  process.exit(1);
+  process.exitCode = 1;
+  return;
 });
 
 // Run the test
-testDatabaseConnection().catch(error => {
+testDatabaseConnection().catch((error) => {
   console.error('\n💥 Test failed:', error.message);
-  process.exit(1);
+  process.exitCode = 1;
+  return;
 });

@@ -43,10 +43,15 @@ jest.mock('../../../utils/securePythonBridge', () => ({
       this.name = 'PythonSecurityError';
       this.details = details;
     }
-  }
+  },
 }));
 
-const { runPythonScript, PythonExecutionError, PythonTimeoutError, PythonSecurityError } = require('../../../utils/securePythonBridge');
+const {
+  runPythonScript,
+  PythonExecutionError,
+  PythonTimeoutError,
+  PythonSecurityError,
+} = require('../../../utils/securePythonBridge');
 
 // Set up environment before loading routes
 process.env.JWT_SECRET = 'test-secret-key-for-ml-routes';
@@ -75,7 +80,7 @@ describe('ML Training Routes', () => {
     testUser = await User.create({
       username: 'trainer',
       email: 'trainer@example.com',
-      password: 'password123'
+      password: 'password123',
     });
 
     // Create test dataset
@@ -86,15 +91,13 @@ describe('ML Training Routes', () => {
       row_count: 1000,
       feature_columns: ['bedrooms', 'bathrooms', 'sqft'],
       target_column: 'price',
-      uploaded_by: testUser._id
+      uploaded_by: testUser._id,
     });
 
     // Generate valid JWT token
-    validToken = jwt.sign(
-      { id: testUser._id, email: testUser.email },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    );
+    validToken = jwt.sign({ id: testUser._id, email: testUser.email }, process.env.JWT_SECRET, {
+      expiresIn: '1h',
+    });
 
     // Set up default mock for runPythonScript
     runPythonScript.mockResolvedValue({
@@ -103,13 +106,13 @@ describe('ML Training Routes', () => {
         r2_score: 0.85,
         mse: 1200,
         mae: 850,
-        rmse: 1095
+        rmse: 1095,
       },
       training_time: 45.2,
       model_path: '/models/test_model.pkl',
       features: ['bedrooms', 'bathrooms', 'sqft'],
       target_variable: 'price',
-      sample_size: 800
+      sample_size: 800,
     });
   });
 
@@ -119,7 +122,7 @@ describe('ML Training Routes', () => {
         .post('/api/ml/train')
         .send({
           modelType: 'linear_regression',
-          datasetId: testDataset._id.toString()
+          datasetId: testDataset._id.toString(),
         })
         .expect(401);
 
@@ -133,7 +136,7 @@ describe('ML Training Routes', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .send({
           modelType: 'linear_regression',
-          datasetId: testDataset._id.toString()
+          datasetId: testDataset._id.toString(),
         })
         .expect(200);
 
@@ -146,7 +149,7 @@ describe('ML Training Routes', () => {
         .set('Authorization', 'Bearer invalid-token')
         .send({
           modelType: 'linear_regression',
-          datasetId: testDataset._id.toString()
+          datasetId: testDataset._id.toString(),
         })
         .expect(401);
 
@@ -160,7 +163,7 @@ describe('ML Training Routes', () => {
         .post('/api/ml/train')
         .set('Authorization', `Bearer ${validToken}`)
         .send({
-          datasetId: testDataset._id.toString()
+          datasetId: testDataset._id.toString(),
         })
         .expect(400);
 
@@ -172,7 +175,7 @@ describe('ML Training Routes', () => {
         .post('/api/ml/train')
         .set('Authorization', `Bearer ${validToken}`)
         .send({
-          modelType: 'linear_regression'
+          modelType: 'linear_regression',
         })
         .expect(400);
 
@@ -185,7 +188,7 @@ describe('ML Training Routes', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .send({
           modelType: 'invalid_model',
-          datasetId: testDataset._id.toString()
+          datasetId: testDataset._id.toString(),
         })
         .expect(400);
 
@@ -199,7 +202,7 @@ describe('ML Training Routes', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .send({
           modelType: 'linear_regression',
-          datasetId: testDataset._id.toString()
+          datasetId: testDataset._id.toString(),
         })
         .expect(200);
 
@@ -213,7 +216,7 @@ describe('ML Training Routes', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .send({
           modelType: 'random_forest',
-          datasetId: testDataset._id.toString()
+          datasetId: testDataset._id.toString(),
         })
         .expect(200);
 
@@ -227,7 +230,7 @@ describe('ML Training Routes', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .send({
           modelType: 'gradient_boosting',
-          datasetId: testDataset._id.toString()
+          datasetId: testDataset._id.toString(),
         })
         .expect(200);
 
@@ -241,7 +244,7 @@ describe('ML Training Routes', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .send({
           modelType: 'neural_network',
-          datasetId: testDataset._id.toString()
+          datasetId: testDataset._id.toString(),
         })
         .expect(200);
 
@@ -254,7 +257,7 @@ describe('ML Training Routes', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .send({
           modelType: 'linear_regression',
-          datasetId: 'invalid-id'
+          datasetId: 'invalid-id',
         })
         .expect(400);
 
@@ -269,7 +272,7 @@ describe('ML Training Routes', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .send({
           modelType: 'linear_regression',
-          datasetId: nonExistentId.toString()
+          datasetId: nonExistentId.toString(),
         })
         .expect(404);
 
@@ -284,7 +287,7 @@ describe('ML Training Routes', () => {
         model_path: '/models/test_model.pkl',
         features: ['bedrooms', 'bathrooms', 'sqft'],
         target_variable: 'price',
-        sample_size: 800
+        sample_size: 800,
       });
 
       const response = await request(app)
@@ -296,8 +299,8 @@ describe('ML Training Routes', () => {
           hyperparameters: {
             n_estimators: 100,
             max_depth: 10,
-            min_samples_split: 2
-          }
+            min_samples_split: 2,
+          },
         })
         .expect(200);
 
@@ -308,7 +311,7 @@ describe('ML Training Routes', () => {
       expect(callArgs[1].hyperparameters).toEqual({
         n_estimators: 100,
         max_depth: 10,
-        min_samples_split: 2
+        min_samples_split: 2,
       });
     });
 
@@ -319,7 +322,7 @@ describe('ML Training Routes', () => {
         .send({
           modelType: 'linear_regression',
           datasetId: testDataset._id.toString(),
-          hyperparameters: 'invalid'
+          hyperparameters: 'invalid',
         })
         .expect(400);
 
@@ -334,7 +337,7 @@ describe('ML Training Routes', () => {
         .send({
           modelType: 'linear_regression',
           datasetId: testDataset._id.toString(),
-          stream: false
+          stream: false,
         })
         .expect(200);
 
@@ -349,7 +352,7 @@ describe('ML Training Routes', () => {
         r2_score: 0.87,
         mse: 1500,
         mae: 900,
-        rmse: 1224
+        rmse: 1224,
       };
 
       runPythonScript.mockResolvedValue({
@@ -362,8 +365,8 @@ describe('ML Training Routes', () => {
         sample_size: 800,
         feature_importance: [
           { feature: 'sqft', importance: 0.5 },
-          { feature: 'bedrooms', importance: 0.3 }
-        ]
+          { feature: 'bedrooms', importance: 0.3 },
+        ],
       });
 
       const response = await request(app)
@@ -371,7 +374,7 @@ describe('ML Training Routes', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .send({
           modelType: 'linear_regression',
-          datasetId: testDataset._id.toString()
+          datasetId: testDataset._id.toString(),
         })
         .expect(200);
 
@@ -395,7 +398,7 @@ describe('ML Training Routes', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .send({
           modelType: 'random_forest',
-          datasetId: testDataset._id.toString()
+          datasetId: testDataset._id.toString(),
         })
         .expect(200);
 
@@ -406,7 +409,7 @@ describe('ML Training Routes', () => {
     it('should store hyperparameters in model document', async () => {
       const hyperparameters = {
         n_estimators: 150,
-        max_depth: 12
+        max_depth: 12,
       };
 
       runPythonScript.mockResolvedValue({
@@ -417,7 +420,7 @@ describe('ML Training Routes', () => {
         features: ['bedrooms', 'bathrooms', 'sqft'],
         target_variable: 'price',
         sample_size: 800,
-        hyperparameters: hyperparameters
+        hyperparameters: hyperparameters,
       });
 
       await request(app)
@@ -426,7 +429,7 @@ describe('ML Training Routes', () => {
         .send({
           modelType: 'random_forest',
           datasetId: testDataset._id.toString(),
-          hyperparameters: hyperparameters
+          hyperparameters: hyperparameters,
         })
         .expect(200);
 
@@ -441,7 +444,7 @@ describe('ML Training Routes', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .send({
           modelType: 'linear_regression',
-          datasetId: testDataset._id.toString()
+          datasetId: testDataset._id.toString(),
         })
         .expect(200);
 
@@ -455,7 +458,7 @@ describe('ML Training Routes', () => {
         metrics: {
           r2_score: 0.93,
           mse: 800,
-          mae: 600
+          mae: 600,
         },
         training_time: 45.2,
         model_path: '/models/test_model.pkl',
@@ -465,8 +468,8 @@ describe('ML Training Routes', () => {
         feature_importance: [
           { feature: 'sqft', importance: 0.6 },
           { feature: 'bedrooms', importance: 0.25 },
-          { feature: 'bathrooms', importance: 0.15 }
-        ]
+          { feature: 'bathrooms', importance: 0.15 },
+        ],
       });
 
       const response = await request(app)
@@ -474,7 +477,7 @@ describe('ML Training Routes', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .send({
           modelType: 'gradient_boosting',
-          datasetId: testDataset._id.toString()
+          datasetId: testDataset._id.toString(),
         })
         .expect(200);
 
@@ -493,7 +496,7 @@ describe('ML Training Routes', () => {
       runPythonScript.mockRejectedValue(
         new PythonExecutionError('Training failed: Invalid data format', {
           exitCode: 1,
-          stderr: 'ValueError: Invalid data format'
+          stderr: 'ValueError: Invalid data format',
         })
       );
 
@@ -502,7 +505,7 @@ describe('ML Training Routes', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .send({
           modelType: 'linear_regression',
-          datasetId: testDataset._id.toString()
+          datasetId: testDataset._id.toString(),
         })
         .expect(422);
 
@@ -513,7 +516,7 @@ describe('ML Training Routes', () => {
     it('should handle Python timeout errors', async () => {
       runPythonScript.mockRejectedValue(
         new PythonTimeoutError('Training execution timed out', {
-          timeout: 120000
+          timeout: 120000,
         })
       );
 
@@ -522,7 +525,7 @@ describe('ML Training Routes', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .send({
           modelType: 'neural_network',
-          datasetId: testDataset._id.toString()
+          datasetId: testDataset._id.toString(),
         })
         .expect(408);
 
@@ -533,7 +536,7 @@ describe('ML Training Routes', () => {
     it('should handle Python security errors', async () => {
       runPythonScript.mockRejectedValue(
         new PythonSecurityError('Security validation failed: Unauthorized file access', {
-          violation: 'file_access'
+          violation: 'file_access',
         })
       );
 
@@ -542,7 +545,7 @@ describe('ML Training Routes', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .send({
           modelType: 'linear_regression',
-          datasetId: testDataset._id.toString()
+          datasetId: testDataset._id.toString(),
         })
         .expect(403);
 
@@ -558,7 +561,7 @@ describe('ML Training Routes', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .send({
           modelType: 'linear_regression',
-          datasetId: testDataset._id.toString()
+          datasetId: testDataset._id.toString(),
         })
         .expect(500);
 
@@ -571,7 +574,6 @@ describe('ML Training Routes', () => {
       // Uses default mock from beforeEach
 
       // Mock Model constructor to throw an error
-      const originalModel = Model;
       jest.spyOn(Model.prototype, 'save').mockRejectedValueOnce(new Error('Database error'));
 
       const response = await request(app)
@@ -579,7 +581,7 @@ describe('ML Training Routes', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .send({
           modelType: 'linear_regression',
-          datasetId: testDataset._id.toString()
+          datasetId: testDataset._id.toString(),
         })
         .expect(500);
 
@@ -604,12 +606,12 @@ describe('ML Training Routes', () => {
           sample_size: 1000,
           features: ['bedrooms', 'bathrooms', 'sqft'],
           target_variable: 'price',
-          train_test_split: 0.2
+          train_test_split: 0.2,
         },
         performance_metrics: {
-          r2_score: 0.88
+          r2_score: 0.88,
         },
-        is_active: true
+        is_active: true,
       });
     });
 
@@ -672,7 +674,7 @@ describe('ML Training Routes', () => {
         metrics: {
           r2_score: 0.91,
           mse: 950,
-          mae: 700
+          mae: 700,
         },
         training_time: 52.3,
         model_path: '/models/test_model.pkl',
@@ -682,8 +684,8 @@ describe('ML Training Routes', () => {
         feature_importance: [
           { feature: 'sqft', importance: 0.55 },
           { feature: 'bedrooms', importance: 0.28 },
-          { feature: 'bathrooms', importance: 0.17 }
-        ]
+          { feature: 'bathrooms', importance: 0.17 },
+        ],
       });
 
       const trainResponse = await request(app)
@@ -694,8 +696,8 @@ describe('ML Training Routes', () => {
           datasetId: testDataset._id.toString(),
           hyperparameters: {
             n_estimators: 100,
-            max_depth: 10
-          }
+            max_depth: 10,
+          },
         })
         .expect(200);
 

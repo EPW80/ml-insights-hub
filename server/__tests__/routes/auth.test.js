@@ -50,13 +50,10 @@ describe('Authentication Routes', () => {
         const userData = {
           username: 'testuser',
           email: 'test@example.com',
-          password: 'P@ssw0rd123'
+          password: 'P@ssw0rd123',
         };
 
-        const response = await request(app)
-          .post('/api/auth/register')
-          .send(userData)
-          .expect(200);
+        const response = await request(app).post('/api/auth/register').send(userData).expect(200);
 
         expect(response.body).toHaveProperty('token');
         expect(response.body).toHaveProperty('user');
@@ -71,13 +68,10 @@ describe('Authentication Routes', () => {
         const userData = {
           username: 'jwtuser',
           email: 'jwt@example.com',
-          password: 'P@ssw0rd123'
+          password: 'P@ssw0rd123',
         };
 
-        const response = await request(app)
-          .post('/api/auth/register')
-          .send(userData)
-          .expect(200);
+        const response = await request(app).post('/api/auth/register').send(userData).expect(200);
 
         const { token } = response.body;
         expect(token).toBeDefined();
@@ -92,13 +86,10 @@ describe('Authentication Routes', () => {
         const userData = {
           username: 'hashtest',
           email: 'hash@example.com',
-          password: 'P@ssw0rd123'
+          password: 'P@ssw0rd123',
         };
 
-        await request(app)
-          .post('/api/auth/register')
-          .send(userData)
-          .expect(200);
+        await request(app).post('/api/auth/register').send(userData).expect(200);
 
         const user = await User.findOne({ email: userData.email });
         expect(user.password).not.toBe(userData.password);
@@ -111,7 +102,7 @@ describe('Authentication Routes', () => {
         await User.create({
           username: 'existinguser',
           email: 'existing@example.com',
-          password: 'password123'
+          password: 'password123',
         });
       });
 
@@ -119,13 +110,10 @@ describe('Authentication Routes', () => {
         const userData = {
           username: 'newuser',
           email: 'existing@example.com',
-          password: 'P@ssw0rd123'
+          password: 'P@ssw0rd123',
         };
 
-        const response = await request(app)
-          .post('/api/auth/register')
-          .send(userData)
-          .expect(400);
+        const response = await request(app).post('/api/auth/register').send(userData).expect(400);
 
         expect(response.body).toHaveProperty('error');
         expect(response.body.error).toBe('User already exists');
@@ -135,13 +123,10 @@ describe('Authentication Routes', () => {
         const userData = {
           username: 'existinguser',
           email: 'newemail@example.com',
-          password: 'P@ssw0rd123'
+          password: 'P@ssw0rd123',
         };
 
-        const response = await request(app)
-          .post('/api/auth/register')
-          .send(userData)
-          .expect(400);
+        const response = await request(app).post('/api/auth/register').send(userData).expect(400);
 
         expect(response.body).toHaveProperty('error');
         expect(response.body.error).toBe('User already exists');
@@ -151,13 +136,10 @@ describe('Authentication Routes', () => {
         const userData = {
           username: 'existinguser',
           email: 'existing@example.com',
-          password: 'P@ssw0rd123'
+          password: 'P@ssw0rd123',
         };
 
-        const response = await request(app)
-          .post('/api/auth/register')
-          .send(userData)
-          .expect(400);
+        const response = await request(app).post('/api/auth/register').send(userData).expect(400);
 
         expect(response.body.error).toBe('User already exists');
       });
@@ -167,13 +149,10 @@ describe('Authentication Routes', () => {
       it('should handle missing username', async () => {
         const userData = {
           email: 'test@example.com',
-          password: 'P@ssw0rd123'
+          password: 'P@ssw0rd123',
         };
 
-        const response = await request(app)
-          .post('/api/auth/register')
-          .send(userData)
-          .expect(400);
+        const response = await request(app).post('/api/auth/register').send(userData).expect(400);
 
         expect(response.body).toHaveProperty('error');
       });
@@ -181,13 +160,10 @@ describe('Authentication Routes', () => {
       it('should handle missing email', async () => {
         const userData = {
           username: 'testuser',
-          password: 'P@ssw0rd123'
+          password: 'P@ssw0rd123',
         };
 
-        const response = await request(app)
-          .post('/api/auth/register')
-          .send(userData)
-          .expect(400);
+        const response = await request(app).post('/api/auth/register').send(userData).expect(400);
 
         expect(response.body).toHaveProperty('error');
       });
@@ -195,13 +171,10 @@ describe('Authentication Routes', () => {
       it('should handle missing password', async () => {
         const userData = {
           username: 'testuser',
-          email: 'test@example.com'
+          email: 'test@example.com',
         };
 
-        const response = await request(app)
-          .post('/api/auth/register')
-          .send(userData)
-          .expect(400);
+        const response = await request(app).post('/api/auth/register').send(userData).expect(400);
 
         expect(response.body).toHaveProperty('error');
       });
@@ -216,7 +189,7 @@ describe('Authentication Routes', () => {
       testUser = await User.create({
         username: 'loginuser',
         email: 'login@example.com',
-        password: plainPassword
+        password: plainPassword,
       });
     });
 
@@ -224,13 +197,10 @@ describe('Authentication Routes', () => {
       it('should login with valid credentials', async () => {
         const credentials = {
           email: 'login@example.com',
-          password: plainPassword
+          password: plainPassword,
         };
 
-        const response = await request(app)
-          .post('/api/auth/login')
-          .send(credentials)
-          .expect(200);
+        const response = await request(app).post('/api/auth/login').send(credentials).expect(200);
 
         expect(response.body).toHaveProperty('token');
         expect(response.body).toHaveProperty('user');
@@ -241,13 +211,10 @@ describe('Authentication Routes', () => {
       it('should return valid JWT token on login', async () => {
         const credentials = {
           email: 'login@example.com',
-          password: plainPassword
+          password: plainPassword,
         };
 
-        const response = await request(app)
-          .post('/api/auth/login')
-          .send(credentials)
-          .expect(200);
+        const response = await request(app).post('/api/auth/login').send(credentials).expect(200);
 
         const { token } = response.body;
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -259,13 +226,10 @@ describe('Authentication Routes', () => {
       it('should include user role in response', async () => {
         const credentials = {
           email: 'login@example.com',
-          password: plainPassword
+          password: plainPassword,
         };
 
-        const response = await request(app)
-          .post('/api/auth/login')
-          .send(credentials)
-          .expect(200);
+        const response = await request(app).post('/api/auth/login').send(credentials).expect(200);
 
         expect(response.body.user.role).toBeDefined();
         expect(response.body.user.role).toBe('user');
@@ -276,13 +240,10 @@ describe('Authentication Routes', () => {
       it('should reject login with incorrect password', async () => {
         const credentials = {
           email: 'login@example.com',
-          password: 'wrongpassword'
+          password: 'wrongpassword',
         };
 
-        const response = await request(app)
-          .post('/api/auth/login')
-          .send(credentials)
-          .expect(401);
+        const response = await request(app).post('/api/auth/login').send(credentials).expect(401);
 
         expect(response.body).toHaveProperty('error');
         expect(response.body.error).toBe('Invalid credentials');
@@ -291,13 +252,10 @@ describe('Authentication Routes', () => {
       it('should reject login with non-existent email', async () => {
         const credentials = {
           email: 'nonexistent@example.com',
-          password: plainPassword
+          password: plainPassword,
         };
 
-        const response = await request(app)
-          .post('/api/auth/login')
-          .send(credentials)
-          .expect(401);
+        const response = await request(app).post('/api/auth/login').send(credentials).expect(401);
 
         expect(response.body.error).toBe('Invalid credentials');
       });
@@ -305,13 +263,10 @@ describe('Authentication Routes', () => {
       it('should be case-sensitive for password', async () => {
         const credentials = {
           email: 'login@example.com',
-          password: 'PASSWORD123'
+          password: 'PASSWORD123',
         };
 
-        const response = await request(app)
-          .post('/api/auth/login')
-          .send(credentials)
-          .expect(401);
+        const response = await request(app).post('/api/auth/login').send(credentials).expect(401);
 
         expect(response.body.error).toBe('Invalid credentials');
       });
@@ -319,13 +274,10 @@ describe('Authentication Routes', () => {
       it('should handle empty password', async () => {
         const credentials = {
           email: 'login@example.com',
-          password: ''
+          password: '',
         };
 
-        const response = await request(app)
-          .post('/api/auth/login')
-          .send(credentials)
-          .expect(400);
+        const response = await request(app).post('/api/auth/login').send(credentials).expect(400);
 
         expect(response.body.error).toBe('Validation failed');
       });
@@ -334,26 +286,20 @@ describe('Authentication Routes', () => {
     describe('Validation Errors', () => {
       it('should handle missing email', async () => {
         const credentials = {
-          password: plainPassword
+          password: plainPassword,
         };
 
-        const response = await request(app)
-          .post('/api/auth/login')
-          .send(credentials)
-          .expect(400);
+        const response = await request(app).post('/api/auth/login').send(credentials).expect(400);
 
         expect(response.body).toHaveProperty('error');
       });
 
       it('should handle missing password', async () => {
         const credentials = {
-          email: 'login@example.com'
+          email: 'login@example.com',
         };
 
-        const response = await request(app)
-          .post('/api/auth/login')
-          .send(credentials)
-          .expect(400);
+        const response = await request(app).post('/api/auth/login').send(credentials).expect(400);
 
         expect(response.body).toHaveProperty('error');
       });
@@ -368,13 +314,10 @@ describe('Authentication Routes', () => {
       testUser = await User.create({
         username: 'tokenuser',
         email: 'token@example.com',
-        password: 'password123'
+        password: 'password123',
       });
 
-      validToken = jwt.sign(
-        { id: testUser._id, role: testUser.role },
-        process.env.JWT_SECRET
-      );
+      validToken = jwt.sign({ id: testUser._id, role: testUser.role }, process.env.JWT_SECRET);
     });
 
     describe('Valid Token Access', () => {
@@ -411,9 +354,7 @@ describe('Authentication Routes', () => {
 
     describe('Invalid Token Handling', () => {
       it('should reject request without token', async () => {
-        const response = await request(app)
-          .get('/api/protected')
-          .expect(401);
+        const response = await request(app).get('/api/protected').expect(401);
 
         expect(response.body).toHaveProperty('error');
         expect(response.body.error).toBe('No token, authorization denied');
@@ -437,7 +378,7 @@ describe('Authentication Routes', () => {
         );
 
         // Wait for token to expire
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         const response = await request(app)
           .get('/api/protected')
@@ -448,10 +389,7 @@ describe('Authentication Routes', () => {
       });
 
       it('should reject token with wrong secret', async () => {
-        const wrongToken = jwt.sign(
-          { id: testUser._id, role: testUser.role },
-          'wrong-secret'
-        );
+        const wrongToken = jwt.sign({ id: testUser._id, role: testUser.role }, 'wrong-secret');
 
         const response = await request(app)
           .get('/api/protected')
@@ -485,25 +423,19 @@ describe('Authentication Routes', () => {
         username: 'regularuser',
         email: 'user@example.com',
         password: 'password123',
-        role: 'user'
+        role: 'user',
       });
 
       adminUser = await User.create({
         username: 'adminuser',
         email: 'admin@example.com',
         password: 'password123',
-        role: 'admin'
+        role: 'admin',
       });
 
-      userToken = jwt.sign(
-        { id: regularUser._id, role: regularUser.role },
-        process.env.JWT_SECRET
-      );
+      userToken = jwt.sign({ id: regularUser._id, role: regularUser.role }, process.env.JWT_SECRET);
 
-      adminToken = jwt.sign(
-        { id: adminUser._id, role: adminUser.role },
-        process.env.JWT_SECRET
-      );
+      adminToken = jwt.sign({ id: adminUser._id, role: adminUser.role }, process.env.JWT_SECRET);
     });
 
     describe('Admin Middleware', () => {
@@ -552,7 +484,7 @@ describe('Authentication Routes', () => {
           username: 'scientist',
           email: 'scientist@example.com',
           password: 'password123',
-          role: 'data_scientist'
+          role: 'data_scientist',
         });
 
         const scientistToken = jwt.sign(
@@ -591,7 +523,7 @@ describe('Authentication Routes', () => {
           .send({
             username: 'errortest',
             email: 'error@example.com',
-            password: 'P@ssw0rd123'
+            password: 'P@ssw0rd123',
           })
           .expect(500);
 
@@ -609,7 +541,7 @@ describe('Authentication Routes', () => {
           .post('/api/auth/login')
           .send({
             email: 'error@example.com',
-            password: 'password123'
+            password: 'password123',
           })
           .expect(500);
 
@@ -621,25 +553,19 @@ describe('Authentication Routes', () => {
 
     describe('Invalid Requests', () => {
       it('should handle empty request body for registration', async () => {
-        const response = await request(app)
-          .post('/api/auth/register')
-          .send({})
-          .expect(400);
+        const response = await request(app).post('/api/auth/register').send({}).expect(400);
 
         expect(response.body).toHaveProperty('error');
       });
 
       it('should handle empty request body for login', async () => {
-        const response = await request(app)
-          .post('/api/auth/login')
-          .send({})
-          .expect(400);
+        const response = await request(app).post('/api/auth/login').send({}).expect(400);
 
         expect(response.body).toHaveProperty('error');
       });
 
       it('should handle malformed JSON', async () => {
-        const response = await request(app)
+        await request(app)
           .post('/api/auth/register')
           .set('Content-Type', 'application/json')
           .send('invalid json')
@@ -654,7 +580,7 @@ describe('Authentication Routes', () => {
       const userData = {
         username: 'flowtest',
         email: 'flow@example.com',
-        password: 'P@ssw0rd123'
+        password: 'P@ssw0rd123',
       };
 
       const registerResponse = await request(app)
@@ -669,7 +595,7 @@ describe('Authentication Routes', () => {
         .post('/api/auth/login')
         .send({
           email: userData.email,
-          password: userData.password
+          password: userData.password,
         })
         .expect(200);
 
@@ -689,13 +615,10 @@ describe('Authentication Routes', () => {
       const user = await User.create({
         username: 'sessiontest',
         email: 'session@example.com',
-        password: 'password123'
+        password: 'password123',
       });
 
-      const token = jwt.sign(
-        { id: user._id, role: user.role },
-        process.env.JWT_SECRET
-      );
+      const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET);
 
       // First request
       const response1 = await request(app)

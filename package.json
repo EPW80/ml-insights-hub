@@ -32,7 +32,7 @@
   },
   "lint-staged": {
     "server/**/*.js": [
-      "eslint --fix",
+      "./server/node_modules/.bin/eslint --fix",
       "prettier --write"
     ],
     "client/src/**/*.{js,jsx,ts,tsx}": [

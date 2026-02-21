@@ -13,7 +13,6 @@
  * - Timestamps
  */
 
-const mongoose = require('mongoose');
 const Model = require('../../models/Model');
 const User = require('../../models/User');
 

@@ -3,7 +3,12 @@
  * This replaces the existing pythonBridge.js with secure execution
  */
 
-const { SecurePythonExecutor, PythonSecurityError, PythonExecutionError, PythonTimeoutError } = require('./securePythonExecutor');
+const {
+  SecurePythonExecutor,
+  PythonSecurityError,
+  PythonExecutionError,
+  PythonTimeoutError,
+} = require('./securePythonExecutor');
 const path = require('path');
 
 // Initialize secure executor
@@ -16,11 +21,10 @@ async function runPythonScript(scriptPath, inputData, options = {}) {
     if (!path.isAbsolute(scriptPath)) {
       scriptPath = path.resolve(__dirname, '../python-scripts', scriptPath);
     }
-    
+
     // Execute with security
     const result = await secureExecutor.executeSecure(scriptPath, inputData, options);
     return result.data;
-    
   } catch (error) {
     // Log security violations
     if (error instanceof PythonSecurityError) {
@@ -28,40 +32,44 @@ async function runPythonScript(scriptPath, inputData, options = {}) {
         type: error.type,
         timestamp: error.timestamp,
         scriptPath,
-        inputSize: JSON.stringify(inputData || {}).length
+        inputSize: JSON.stringify(inputData || {}).length,
       });
     }
-    
+
     throw error;
   }
 }
 
 // Enhanced ML prediction execution
-async function executeMlPrediction(features, modelType = 'random_forest', uncertaintyMethod = 'bootstrap') {
+async function executeMlPrediction(
+  features,
+  modelType = 'random_forest',
+  uncertaintyMethod = 'bootstrap'
+) {
   const inputData = {
     action: 'predict',
     features,
     model_type: modelType,
-    uncertainty_method: uncertaintyMethod
+    uncertainty_method: uncertaintyMethod,
   };
-  
+
   try {
     const result = await secureExecutor.executeSecure(
       path.resolve(__dirname, '../python-scripts/predict_with_uncertainty.py'),
       inputData,
       {
         timeout: 30000, // 30 seconds for ML operations
-        maxRetries: 1
+        maxRetries: 1,
       }
     );
-    
+
     return result.data;
   } catch (error) {
     console.error('ML Prediction failed:', {
       error: error.message,
       features,
       modelType,
-      uncertaintyMethod
+      uncertaintyMethod,
     });
     throw error;
   }
@@ -72,25 +80,25 @@ async function executeModelTraining(trainingData, modelConfig) {
   const inputData = {
     action: 'train',
     training_data: trainingData,
-    model_config: modelConfig
+    model_config: modelConfig,
   };
-  
+
   try {
     const result = await secureExecutor.executeSecure(
       path.resolve(__dirname, '../python-scripts/train_model.py'),
       inputData,
       {
         timeout: 120000, // 2 minutes for training
-        maxRetries: 0
+        maxRetries: 0,
       }
     );
-    
+
     return result.data;
   } catch (error) {
     console.error('Model Training failed:', {
       error: error.message,
       dataSize: trainingData ? trainingData.length : 0,
-      modelConfig
+      modelConfig,
     });
     throw error;
   }
@@ -100,24 +108,24 @@ async function executeModelTraining(trainingData, modelConfig) {
 async function executeDataValidation(data) {
   const inputData = {
     action: 'validate',
-    data: data
+    data: data,
   };
-  
+
   try {
     const result = await secureExecutor.executeSecure(
       path.resolve(__dirname, '../python-scripts/validate_data.py'),
       inputData,
       {
         timeout: 15000, // 15 seconds for validation
-        maxRetries: 0
+        maxRetries: 0,
       }
     );
-    
+
     return result.data;
   } catch (error) {
     console.error('Data Validation failed:', {
       error: error.message,
-      dataSize: data ? JSON.stringify(data).length : 0
+      dataSize: data ? JSON.stringify(data).length : 0,
     });
     throw error;
   }
@@ -131,10 +139,10 @@ async function testPythonConnection() {
       {},
       {
         timeout: 10000, // 10 seconds
-        maxRetries: 0
+        maxRetries: 0,
       }
     );
-    
+
     return result.data;
   } catch (error) {
     console.error('Python Connection Test failed:', error.message);
@@ -163,11 +171,7 @@ function sanitizeInput(inputData) {
  * for path validation, input sanitization, and concurrent execution limits.
  */
 async function streamPythonScript(scriptPath, inputData, onData, options = {}) {
-  const {
-    timeout = 120000,
-    maxRetries = 0,
-    onProgress = null
-  } = options;
+  const { timeout = 120000, maxRetries = 0 } = options;
 
   // Convert relative path to absolute if needed
   if (!path.isAbsolute(scriptPath)) {
@@ -206,17 +210,17 @@ module.exports = {
   executeDataValidation,
   testPythonConnection,
   streamPythonScript,
-  
+
   // Utility functions
   getExecutionStats,
   validateScript,
   sanitizeInput,
-  
+
   // Error classes
   PythonSecurityError,
   PythonExecutionError,
   PythonTimeoutError,
-  
+
   // Legacy compatibility
-  PythonParseError: PythonExecutionError // For backward compatibility
+  PythonParseError: PythonExecutionError, // For backward compatibility
 };

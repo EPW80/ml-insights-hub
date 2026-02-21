@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 
 const authMiddleware = (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
-  
+
   if (!token) {
     return res.status(401).json({ error: 'No token, authorization denied' });
   }
@@ -10,9 +10,9 @@ const authMiddleware = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
-    next();
+    return next();
   } catch (error) {
-    res.status(401).json({ error: 'Token is not valid' });
+    return res.status(401).json({ error: 'Token is not valid' });
   }
 };
 
@@ -20,7 +20,7 @@ const adminMiddleware = (req, res, next) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Admin access required' });
   }
-  next();
+  return next();
 };
 
 module.exports = { authMiddleware, adminMiddleware };

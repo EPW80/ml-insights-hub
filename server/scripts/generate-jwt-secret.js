@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * JWT Secret Generator
  * Generates cryptographically secure JWT secrets for production use
@@ -17,42 +15,36 @@ function generateSecureSecret() {
 function validateSecretStrength(secret) {
   const minLength = 64; // 256 bits in hex
   const hasGoodEntropy = /^[a-f0-9]+$/i.test(secret); // Only hex chars
-  
+
   return {
     isSecure: secret.length >= minLength && hasGoodEntropy,
     length: secret.length,
-    entropyBits: secret.length * 4 // Each hex char = 4 bits
+    entropyBits: secret.length * 4, // Each hex char = 4 bits
   };
 }
 
 function updateEnvFile(secret) {
   const envPath = path.join(__dirname, '.env');
   const envExamplePath = path.join(__dirname, '.env.example');
-  
+
   try {
     // Update .env if it exists
     if (fs.existsSync(envPath)) {
       let envContent = fs.readFileSync(envPath, 'utf8');
-      
+
       if (envContent.includes('JWT_SECRET=')) {
-        envContent = envContent.replace(
-          /JWT_SECRET=.*/,
-          `JWT_SECRET=${secret}`
-        );
+        envContent = envContent.replace(/JWT_SECRET=.*/, `JWT_SECRET=${secret}`);
       } else {
         envContent += `\nJWT_SECRET=${secret}\n`;
       }
-      
+
       fs.writeFileSync(envPath, envContent);
       console.log('✅ Updated .env file with new JWT secret');
     } else {
       // Create .env from .env.example
       if (fs.existsSync(envExamplePath)) {
         let envContent = fs.readFileSync(envExamplePath, 'utf8');
-        envContent = envContent.replace(
-          /JWT_SECRET=.*/,
-          `JWT_SECRET=${secret}`
-        );
+        envContent = envContent.replace(/JWT_SECRET=.*/, `JWT_SECRET=${secret}`);
         fs.writeFileSync(envPath, envContent);
         console.log('✅ Created .env file with secure JWT secret');
       }
@@ -64,7 +56,7 @@ function updateEnvFile(secret) {
 
 function main() {
   const args = process.argv.slice(2);
-  
+
   if (args.includes('--help') || args.includes('-h')) {
     console.log(`
 JWT Secret Generator
@@ -84,16 +76,16 @@ Examples:
     `);
     return;
   }
-  
+
   if (args.includes('--check-env')) {
     require('dotenv').config();
     const currentSecret = process.env.JWT_SECRET;
-    
+
     if (!currentSecret) {
       console.log('❌ No JWT_SECRET found in environment');
       return;
     }
-    
+
     const validation = validateSecretStrength(currentSecret);
     console.log(`
 Current JWT Secret Analysis:
@@ -101,17 +93,19 @@ Current JWT Secret Analysis:
   Entropy: ${validation.entropyBits} bits
   Security: ${validation.isSecure ? '✅ SECURE' : '❌ INSECURE'}
   
-${validation.isSecure ? 
-  'Your JWT secret meets security requirements.' : 
-  'Your JWT secret is too weak. Generate a new one with this script.'}
+${
+  validation.isSecure
+    ? 'Your JWT secret meets security requirements.'
+    : 'Your JWT secret is too weak. Generate a new one with this script.'
+}
     `);
     return;
   }
-  
+
   // Generate new secret
   const newSecret = generateSecureSecret();
   const validation = validateSecretStrength(newSecret);
-  
+
   console.log(`
 🔐 Generated Secure JWT Secret:
 ${newSecret}
@@ -127,7 +121,7 @@ Security Details:
 3. Use different secrets for different environments
 4. Rotate secrets periodically in production
   `);
-  
+
   if (args.includes('--update-env')) {
     updateEnvFile(newSecret);
     console.log(`
@@ -152,5 +146,5 @@ if (require.main === module) {
 
 module.exports = {
   generateSecureSecret,
-  validateSecretStrength
+  validateSecretStrength,
 };

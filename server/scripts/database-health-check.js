@@ -1,8 +1,6 @@
-#!/usr/bin/env node
-
 /**
  * Database Health Check Script
- * 
+ *
  * Performs comprehensive health check of MongoDB connection
  * Run with: npm run db:health
  */
@@ -16,7 +14,7 @@ async function performHealthCheck() {
 
   const connectionManager = new MongoDBConnectionManager({
     uri: process.env.MONGODB_URI,
-    healthCheckInterval: 5000 // 5 seconds for testing
+    healthCheckInterval: 5000, // 5 seconds for testing
   });
 
   let healthChecksPassed = 0;
@@ -40,12 +38,11 @@ async function performHealthCheck() {
 
     // Wait for a few health checks
     console.log('⏳ Monitoring health checks for 15 seconds...\n');
-    
-    const startTime = Date.now();
+
     const monitorDuration = 15000; // 15 seconds
 
     // Wait and monitor
-    await new Promise(resolve => setTimeout(resolve, monitorDuration));
+    await new Promise((resolve) => setTimeout(resolve, monitorDuration));
 
     // Get final statistics
     const stats = connectionManager.getStats();
@@ -64,7 +61,7 @@ async function performHealthCheck() {
     if (mongoose.connection.readyState === 1) {
       const db = mongoose.connection.db;
       const dbStats = await db.stats();
-      
+
       console.log(`   Database Name: ${db.databaseName}`);
       console.log(`   Collections: ${dbStats.collections || 0}`);
       console.log(`   Objects: ${dbStats.objects || 0}`);
@@ -118,10 +115,9 @@ async function performHealthCheck() {
     // Disconnect
     await connectionManager.disconnect();
     console.log('\n✅ Health check completed successfully');
-
   } catch (error) {
     console.error('\n❌ Health check failed:', error.message);
-    
+
     // Provide specific guidance based on error
     if (error.message.includes('ECONNREFUSED')) {
       console.log('💡 MongoDB server appears to be down or unreachable');
@@ -137,18 +133,19 @@ async function performHealthCheck() {
       console.log('   - Check network connectivity');
       console.log('   - Verify MongoDB server is responsive');
     }
-    
-    process.exit(1);
+
+    process.exitCode = 1;
+    return;
   }
 }
 
 function formatBytes(bytes) {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
@@ -167,11 +164,13 @@ function formatDuration(ms) {
 // Handle errors
 process.on('unhandledRejection', (error) => {
   console.error('\n💥 Unhandled error during health check:', error.message);
-  process.exit(1);
+  process.exitCode = 1;
+  return;
 });
 
 // Run health check
-performHealthCheck().catch(error => {
+performHealthCheck().catch((error) => {
   console.error('\n💥 Health check script failed:', error.message);
-  process.exit(1);
+  process.exitCode = 1;
+  return;
 });

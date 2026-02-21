@@ -10,7 +10,6 @@
  * - Timestamps
  */
 
-const mongoose = require('mongoose');
 const Prediction = require('../../models/Prediction');
 const Model = require('../../models/Model');
 const Property = require('../../models/Property');

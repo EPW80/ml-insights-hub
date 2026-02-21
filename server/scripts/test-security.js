@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Security Testing Script
  * Tests authentication, input validation, and Python security
@@ -12,10 +11,10 @@ process.env.JWT_SECRET = 'test_secret_key_for_testing_only_minimum_64_characters
 process.env.MONGODB_URI = 'mongodb://localhost:27017/ml-insights-test';
 
 const jwt = require('jsonwebtoken');
-const { SecurePythonExecutor, PythonSecurityError } = require('../utils/securePythonExecutor');
+const { SecurePythonExecutor } = require('../utils/securePythonExecutor');
 
 console.log('🔒 Security Testing Suite\n');
-console.log('=' .repeat(60));
+console.log('='.repeat(60));
 
 let passed = 0;
 let failed = 0;
@@ -30,19 +29,6 @@ function test(name, fn) {
     console.log(`   Error: ${error.message}`);
     failed++;
   }
-}
-
-function testAsync(name, fn) {
-  return fn()
-    .then(() => {
-      console.log(`✅ PASS: ${name}`);
-      passed++;
-    })
-    .catch((error) => {
-      console.log(`❌ FAIL: ${name}`);
-      console.log(`   Error: ${error.message}`);
-      failed++;
-    });
 }
 
 // Test 1: JWT Token Generation
@@ -60,11 +46,9 @@ test('Generate valid JWT token', () => {
 });
 
 test('Verify JWT token', () => {
-  const token = jwt.sign(
-    { id: 'test123', email: 'test@example.com' },
-    process.env.JWT_SECRET,
-    { expiresIn: '1h' }
-  );
+  const token = jwt.sign({ id: 'test123', email: 'test@example.com' }, process.env.JWT_SECRET, {
+    expiresIn: '1h',
+  });
 
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
@@ -102,7 +86,7 @@ test('Validate script path - invalid path traversal', () => {
     throw new Error('Should reject path traversal');
   }
 
-  if (!result.errors.some(e => e.includes('path traversal') || e.includes('directory'))) {
+  if (!result.errors.some((e) => e.includes('path traversal') || e.includes('directory'))) {
     throw new Error('Should detect path traversal');
   }
 });
@@ -155,7 +139,7 @@ test('Sanitize input - size limit', () => {
 // Test 4: Authentication Middleware
 console.log('\n🔑 Testing Authentication Middleware...');
 
-const { requireAuth, requireAdmin, optionalAuth } = require('../middleware/mlAuth');
+const { requireAuth, optionalAuth } = require('../middleware/mlAuth');
 
 test('requireAuth - missing header', () => {
   const req = { header: () => null };
@@ -163,7 +147,7 @@ test('requireAuth - missing header', () => {
     status: (code) => {
       if (code !== 401) throw new Error('Expected 401 status');
       return { json: () => {} };
-    }
+    },
   };
 
   requireAuth(req, res, () => {
@@ -177,7 +161,7 @@ test('requireAuth - invalid format', () => {
     status: (code) => {
       if (code !== 401) throw new Error('Expected 401 status');
       return { json: () => {} };
-    }
+    },
   };
 
   requireAuth(req, res, () => {
@@ -210,7 +194,10 @@ test('JWT_SECRET is configured', () => {
     throw new Error('JWT_SECRET not configured');
   }
 
-  if (process.env.JWT_SECRET === 'GENERATE_SECURE_SECRET_FOR_PRODUCTION_USE_CRYPTO_RANDOM_BYTES_64_HEX') {
+  if (
+    process.env.JWT_SECRET ===
+    'GENERATE_SECURE_SECRET_FOR_PRODUCTION_USE_CRYPTO_RANDOM_BYTES_64_HEX'
+  ) {
     throw new Error('JWT_SECRET using placeholder value');
   }
 });
@@ -249,8 +236,8 @@ console.log(`   Total: ${passed + failed}`);
 
 if (failed === 0) {
   console.log('\n🎉 All security tests passed!');
-  process.exit(0);
+  process.exitCode = 0;
 } else {
   console.log('\n⚠️  Some security tests failed. Please review the errors above.');
-  process.exit(1);
+  process.exitCode = 1;
 }

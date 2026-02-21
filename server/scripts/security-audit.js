@@ -1,11 +1,8 @@
-#!/usr/bin/env node
-
 /**
  * Security Audit Script for ML Insights Hub
  * Comprehensive security validation and recommendations
  */
 
-const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
@@ -24,13 +21,13 @@ class SecurityAuditor {
   // Check JWT secret security
   auditJwtSecret() {
     console.log('🔐 Auditing JWT Secret Configuration...');
-    
+
     const secret = process.env.JWT_SECRET;
-    
+
     if (!secret) {
       this.addIssue('CRITICAL', 'No JWT_SECRET found in environment', [
         'Generate a secure JWT secret using: npm run generate-jwt-secret --update-env',
-        'Never commit real secrets to version control'
+        'Never commit real secrets to version control',
       ]);
       return;
     }
@@ -42,11 +39,11 @@ class SecurityAuditor {
 
     if (secret.length < minLength) {
       this.addIssue('HIGH', `JWT secret too short (${secret.length} chars, minimum ${minLength})`, [
-        'Generate a new secure secret: npm run generate-jwt-secret --update-env'
+        'Generate a new secure secret: npm run generate-jwt-secret --update-env',
       ]);
     } else if (!isHex) {
       this.addWarning('JWT secret is not hexadecimal format', [
-        'Consider using hex format for better entropy distribution'
+        'Consider using hex format for better entropy distribution',
       ]);
     } else {
       console.log(`✅ JWT Secret: SECURE (${secret.length} chars, ${entropyBits} bits entropy)`);
@@ -59,12 +56,12 @@ class SecurityAuditor {
       'your_jwt_secret',
       '123456',
       'password',
-      'GENERATE_SECURE_SECRET_FOR_PRODUCTION_USE_CRYPTO_RANDOM_BYTES_64_HEX'
+      'GENERATE_SECURE_SECRET_FOR_PRODUCTION_USE_CRYPTO_RANDOM_BYTES_64_HEX',
     ];
 
-    if (weakSecrets.some(weak => secret.toLowerCase().includes(weak.toLowerCase()))) {
+    if (weakSecrets.some((weak) => secret.toLowerCase().includes(weak.toLowerCase()))) {
       this.addIssue('CRITICAL', 'JWT secret contains weak or placeholder text', [
-        'Generate a new cryptographically secure secret immediately'
+        'Generate a new cryptographically secure secret immediately',
       ]);
     }
   }
@@ -79,9 +76,7 @@ class SecurityAuditor {
 
     // Check NODE_ENV
     if (!nodeEnv) {
-      this.addWarning('NODE_ENV not set', [
-        'Set NODE_ENV=production for production deployments'
-      ]);
+      this.addWarning('NODE_ENV not set', ['Set NODE_ENV=production for production deployments']);
     } else if (nodeEnv === 'production') {
       console.log('✅ NODE_ENV: Production mode detected');
       this.auditProductionSecurity();
@@ -91,20 +86,18 @@ class SecurityAuditor {
 
     // Check port configuration
     if (!port) {
-      this.addWarning('PORT not specified', [
-        'Explicitly set PORT environment variable'
-      ]);
+      this.addWarning('PORT not specified', ['Explicitly set PORT environment variable']);
     }
 
     // Check CORS configuration
     if (!frontendUrl) {
       this.addWarning('FRONTEND_URL not specified', [
-        'Set specific frontend URL for CORS security'
+        'Set specific frontend URL for CORS security',
       ]);
     } else if (frontendUrl.includes('*') || frontendUrl === 'http://localhost:3000') {
       if (nodeEnv === 'production') {
         this.addIssue('HIGH', 'Insecure CORS configuration in production', [
-          'Set specific domain for FRONTEND_URL in production'
+          'Set specific domain for FRONTEND_URL in production',
         ]);
       }
     }
@@ -118,7 +111,7 @@ class SecurityAuditor {
     const frontendUrl = process.env.FRONTEND_URL;
     if (frontendUrl && !frontendUrl.startsWith('https://')) {
       this.addIssue('HIGH', 'Frontend URL not using HTTPS in production', [
-        'Use HTTPS URLs in production: https://yourdomain.com'
+        'Use HTTPS URLs in production: https://yourdomain.com',
       ]);
     }
 
@@ -127,7 +120,7 @@ class SecurityAuditor {
       const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
       if (packageJson.dependencies && packageJson.dependencies.nodemon) {
         this.addWarning('Development dependencies in production build', [
-          'Move nodemon to devDependencies'
+          'Move nodemon to devDependencies',
         ]);
       }
     } catch (error) {
@@ -136,9 +129,7 @@ class SecurityAuditor {
 
     // Check for debug configurations
     if (process.env.DEBUG) {
-      this.addWarning('DEBUG mode enabled in production', [
-        'Disable debug logging in production'
-      ]);
+      this.addWarning('DEBUG mode enabled in production', ['Disable debug logging in production']);
     }
   }
 
@@ -146,22 +137,18 @@ class SecurityAuditor {
   auditFilePermissions() {
     console.log('📁 Auditing File Permissions...');
 
-    const sensitiveFiles = [
-      '.env',
-      'scripts/generate-jwt-secret.js',
-      'config/'
-    ];
+    const sensitiveFiles = ['.env', 'scripts/generate-jwt-secret.js', 'config/'];
 
-    sensitiveFiles.forEach(file => {
+    sensitiveFiles.forEach((file) => {
       const filePath = path.join(process.cwd(), file);
       if (fs.existsSync(filePath)) {
         try {
           const stats = fs.statSync(filePath);
           const mode = (stats.mode & parseInt('777', 8)).toString(8);
-          
+
           if (file === '.env' && mode !== '600') {
             this.addWarning(`Insecure permissions on ${file} (${mode})`, [
-              `Set secure permissions: chmod 600 ${file}`
+              `Set secure permissions: chmod 600 ${file}`,
             ]);
           }
         } catch (error) {
@@ -192,20 +179,20 @@ class SecurityAuditor {
           if (critical > 0) {
             this.addIssue('CRITICAL', `${critical} critical vulnerabilities found`, [
               'Run: npm audit fix',
-              'Review and update vulnerable packages'
+              'Review and update vulnerable packages',
             ]);
           }
 
           if (high > 0) {
             this.addIssue('HIGH', `${high} high severity vulnerabilities found`, [
               'Run: npm audit fix',
-              'Consider updating vulnerable packages'
+              'Consider updating vulnerable packages',
             ]);
           }
 
           if (moderate > 0) {
             this.addWarning(`${moderate} moderate vulnerabilities found`, [
-              'Run: npm audit fix when convenient'
+              'Run: npm audit fix when convenient',
             ]);
           }
         } else {
@@ -213,19 +200,17 @@ class SecurityAuditor {
         }
       }
     } catch (error) {
-      this.addWarning('Could not run dependency audit', [
-        'Manually run: npm audit'
-      ]);
+      this.addWarning('Could not run dependency audit', ['Manually run: npm audit']);
     }
   }
 
   // Helper methods
   addIssue(severity, message, recommendations) {
     this.issues.push({ severity, message, recommendations });
-    
+
     // Deduct points based on severity
     const deductions = { CRITICAL: 30, HIGH: 20, MEDIUM: 10 };
-    this.score -= (deductions[severity] || 5);
+    this.score -= deductions[severity] || 5;
   }
 
   addWarning(message, recommendations) {
@@ -247,13 +232,13 @@ class SecurityAuditor {
     if (this.issues.length > 0) {
       console.log('🚨 SECURITY ISSUES:');
       this.issues.forEach((issue, index) => {
-        const emoji = issue.severity === 'CRITICAL' ? '🔴' : 
-                     issue.severity === 'HIGH' ? '🟠' : '🟡';
+        const emoji =
+          issue.severity === 'CRITICAL' ? '🔴' : issue.severity === 'HIGH' ? '🟠' : '🟡';
         console.log(`${index + 1}. ${emoji} [${issue.severity}] ${issue.message}`);
-        
+
         if (issue.recommendations.length > 0) {
           console.log('   Solutions:');
-          issue.recommendations.forEach(rec => {
+          issue.recommendations.forEach((rec) => {
             console.log(`   • ${rec}`);
           });
         }
@@ -266,10 +251,10 @@ class SecurityAuditor {
       console.log('⚠️  WARNINGS:');
       this.warnings.forEach((warning, index) => {
         console.log(`${index + 1}. 🟡 ${warning.message}`);
-        
+
         if (warning.recommendations.length > 0) {
           console.log('   Recommendations:');
-          warning.recommendations.forEach(rec => {
+          warning.recommendations.forEach((rec) => {
             console.log(`   • ${rec}`);
           });
         }
@@ -288,12 +273,12 @@ class SecurityAuditor {
     }
 
     console.log('\n' + '='.repeat(60));
-    
+
     return {
       score: Math.max(0, this.score),
       issues: this.issues,
       warnings: this.warnings,
-      passed: this.score >= 70
+      passed: this.score >= 70,
     };
   }
 
@@ -313,16 +298,19 @@ class SecurityAuditor {
 // Main execution
 if (require.main === module) {
   const auditor = new SecurityAuditor();
-  
-  auditor.runAudit()
-    .then(result => {
+
+  auditor
+    .runAudit()
+    .then((result) => {
       if (!result.passed) {
-        process.exit(1);
+        process.exitCode = 1;
+        return;
       }
     })
-    .catch(error => {
+    .catch((error) => {
       console.error('❌ Security audit failed:', error.message);
-      process.exit(1);
+      process.exitCode = 1;
+      return;
     });
 }
 

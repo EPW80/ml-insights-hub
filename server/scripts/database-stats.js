@@ -1,8 +1,6 @@
-#!/usr/bin/env node
-
 /**
  * Database Statistics Script
- * 
+ *
  * Displays detailed MongoDB connection and database statistics
  * Run with: npm run db:stats
  */
@@ -15,7 +13,7 @@ async function displayDatabaseStats() {
   console.log('📊 MongoDB Database Statistics\n');
 
   const connectionManager = new MongoDBConnectionManager({
-    uri: process.env.MONGODB_URI
+    uri: process.env.MONGODB_URI,
   });
 
   try {
@@ -62,12 +60,12 @@ async function displayDatabaseStats() {
       console.log('\n📋 Collection Information:');
       try {
         const collections = await db.listCollections().toArray();
-        
+
         if (collections.length === 0) {
           console.log('   No collections found');
         } else {
           console.log(`   Found ${collections.length} collections:`);
-          
+
           for (const collection of collections) {
             try {
               const collectionStats = await db.collection(collection.name).stats();
@@ -78,7 +76,7 @@ async function displayDatabaseStats() {
               console.log(`      Storage Size: ${formatBytes(collectionStats.storageSize || 0)}`);
               console.log(`      Indexes: ${collectionStats.nindexes || 0}`);
               console.log(`      Index Size: ${formatBytes(collectionStats.totalIndexSize || 0)}`);
-              
+
               if (collectionStats.avgObjSize) {
                 console.log(`      Avg Object Size: ${formatBytes(collectionStats.avgObjSize)}`);
               }
@@ -99,13 +97,13 @@ async function displayDatabaseStats() {
         console.log(`   Process ID: ${serverStatus.pid}`);
         console.log(`   Uptime: ${formatDuration(serverStatus.uptime * 1000)}`);
         console.log(`   Local Time: ${serverStatus.localTime}`);
-        
+
         if (serverStatus.connections) {
           console.log(`   Current Connections: ${serverStatus.connections.current}`);
           console.log(`   Available Connections: ${serverStatus.connections.available}`);
           console.log(`   Total Created: ${serverStatus.connections.totalCreated}`);
         }
-        
+
         if (serverStatus.network) {
           console.log(`   Bytes In: ${formatBytes(serverStatus.network.bytesIn)}`);
           console.log(`   Bytes Out: ${formatBytes(serverStatus.network.bytesOut)}`);
@@ -120,7 +118,6 @@ async function displayDatabaseStats() {
           console.log(`      Delete: ${serverStatus.opcounters.delete}`);
           console.log(`      Command: ${serverStatus.opcounters.command}`);
         }
-
       } catch (error) {
         console.log(`   ❌ Server status not available: ${error.message}`);
         console.log('   💡 This might be due to insufficient permissions');
@@ -153,7 +150,6 @@ async function displayDatabaseStats() {
           const queryTime = Number(queryEnd - queryStart) / 1000000;
           console.log(`   Sample Query Time (${testCollection}): ${queryTime.toFixed(2)}ms`);
         }
-
       } catch (error) {
         console.log(`   ❌ Performance test failed: ${error.message}`);
       }
@@ -169,13 +165,14 @@ async function displayDatabaseStats() {
           try {
             const indexes = await db.collection(collection.name).indexes();
             const stats = await db.collection(collection.name).stats();
-            
+
             totalIndexes += indexes.length;
             totalIndexSize += stats.totalIndexSize || 0;
 
-            if (indexes.length > 1) { // More than just _id index
+            if (indexes.length > 1) {
+              // More than just _id index
               console.log(`   ${collection.name}: ${indexes.length} indexes`);
-              indexes.forEach(index => {
+              indexes.forEach((index) => {
                 if (index.name !== '_id_') {
                   console.log(`      - ${index.name}: ${JSON.stringify(index.key)}`);
                 }
@@ -188,7 +185,6 @@ async function displayDatabaseStats() {
 
         console.log(`   Total Indexes: ${totalIndexes}`);
         console.log(`   Total Index Size: ${formatBytes(totalIndexSize)}`);
-
       } catch (error) {
         console.log(`   ❌ Index analysis failed: ${error.message}`);
       }
@@ -197,19 +193,19 @@ async function displayDatabaseStats() {
     // Recommendations
     console.log('\n💡 Recommendations:');
     const stats = connectionManager.getStats();
-    
+
     if (stats.healthCheckFailures > 0) {
       console.log('   ⚠️  Health check failures detected - monitor connection stability');
     }
-    
+
     if (stats.reconnectionAttempts > 0) {
       console.log('   ⚠️  Reconnection attempts occurred - check network stability');
     }
-    
+
     if (parseFloat(stats.healthCheckSuccessRate.replace('%', '')) < 95) {
       console.log('   ⚠️  Health success rate below 95% - investigate connection issues');
     }
-    
+
     if (stats.healthCheckFailures === 0 && stats.reconnectionAttempts === 0) {
       console.log('   ✅ Connection stability is excellent');
     }
@@ -217,26 +213,26 @@ async function displayDatabaseStats() {
     // Cleanup
     await connectionManager.disconnect();
     console.log('\n✅ Statistics collection completed');
-
   } catch (error) {
     console.error(`\n❌ Failed to collect statistics: ${error.message}`);
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 }
 
 function formatBytes(bytes) {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 function formatDuration(ms) {
   if (!ms) return '0s';
-  
+
   const seconds = Math.floor(ms / 1000);
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
@@ -251,11 +247,13 @@ function formatDuration(ms) {
 // Handle errors
 process.on('unhandledRejection', (error) => {
   console.error('\n💥 Unhandled error:', error.message);
-  process.exit(1);
+  process.exitCode = 1;
+  return;
 });
 
 // Run statistics collection
-displayDatabaseStats().catch(error => {
+displayDatabaseStats().catch((error) => {
   console.error('\n💥 Statistics script failed:', error.message);
-  process.exit(1);
+  process.exitCode = 1;
+  return;
 });

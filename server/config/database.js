@@ -1,6 +1,6 @@
 /**
  * Enhanced MongoDB Connection Manager
- * 
+ *
  * Provides comprehensive database connection handling with:
  * - Robust error handling and recovery
  * - Connection health monitoring
@@ -16,7 +16,7 @@ const EventEmitter = require('events');
 class MongoDBConnectionManager extends EventEmitter {
   constructor(options = {}) {
     super();
-    
+
     this.connectionString = options.uri || process.env.MONGODB_URI;
     this.options = this._buildConnectionOptions(options);
     this.isConnected = false;
@@ -26,7 +26,7 @@ class MongoDBConnectionManager extends EventEmitter {
     this.reconnectInterval = options.reconnectInterval || 5000; // 5 seconds
     this.healthCheckInterval = options.healthCheckInterval || 30000; // 30 seconds
     this.connectionTimeout = options.connectionTimeout || 10000; // 10 seconds
-    
+
     // Connection statistics
     this.stats = {
       connectionAttempts: 0,
@@ -35,13 +35,13 @@ class MongoDBConnectionManager extends EventEmitter {
       lastConnectionTime: null,
       lastDisconnectionTime: null,
       healthChecks: 0,
-      healthCheckFailures: 0
+      healthCheckFailures: 0,
     };
-    
+
     // Health check timer
     this.healthCheckTimer = null;
     this.connectionStartTime = null;
-    
+
     this._setupEventHandlers();
   }
 
@@ -53,26 +53,26 @@ class MongoDBConnectionManager extends EventEmitter {
       // Connection pool settings
       maxPoolSize: userOptions.maxPoolSize || 10,
       minPoolSize: userOptions.minPoolSize || 2,
-      
+
       // Timeout settings
       serverSelectionTimeoutMS: userOptions.serverSelectionTimeoutMS || 5000,
       socketTimeoutMS: userOptions.socketTimeoutMS || 45000,
       connectTimeoutMS: userOptions.connectTimeoutMS || 10000,
-      
+
       // Retry and buffering
       maxIdleTimeMS: userOptions.maxIdleTimeMS || 30000,
       waitQueueTimeoutMS: userOptions.waitQueueTimeoutMS || 2000,
-      
+
       // Production settings
       retryWrites: true,
       retryReads: true,
       w: userOptions.w || 'majority',
       readPreference: userOptions.readPreference || 'primary',
       readConcern: { level: userOptions.readConcernLevel || 'majority' },
-      
+
       // Monitoring
       heartbeatFrequencyMS: userOptions.heartbeatFrequencyMS || 10000,
-      
+
       // Security
       authSource: userOptions.authSource || 'admin',
     };
@@ -80,13 +80,23 @@ class MongoDBConnectionManager extends EventEmitter {
     // Filter out custom options that aren't for mongoose
     const filteredUserOptions = {};
     const supportedOptions = [
-      'maxPoolSize', 'minPoolSize', 'serverSelectionTimeoutMS', 'socketTimeoutMS',
-      'connectTimeoutMS', 'maxIdleTimeMS', 'waitQueueTimeoutMS', 'retryWrites',
-      'retryReads', 'w', 'readPreference', 'readConcern', 'heartbeatFrequencyMS',
-      'authSource'
+      'maxPoolSize',
+      'minPoolSize',
+      'serverSelectionTimeoutMS',
+      'socketTimeoutMS',
+      'connectTimeoutMS',
+      'maxIdleTimeMS',
+      'waitQueueTimeoutMS',
+      'retryWrites',
+      'retryReads',
+      'w',
+      'readPreference',
+      'readConcern',
+      'heartbeatFrequencyMS',
+      'authSource',
     ];
 
-    Object.keys(userOptions).forEach(key => {
+    Object.keys(userOptions).forEach((key) => {
       if (supportedOptions.includes(key)) {
         filteredUserOptions[key] = userOptions[key];
       }
@@ -106,11 +116,11 @@ class MongoDBConnectionManager extends EventEmitter {
       this.reconnectAttempts = 0;
       this.connectionStartTime = new Date();
       this.stats.lastConnectionTime = new Date();
-      
+
       console.log(`✅ [${new Date().toISOString()}] MongoDB connected successfully`);
       console.log(`📊 Connection pool size: ${this.options.maxPoolSize}`);
       console.log(`🔗 Database: ${this._getDatabaseName()}`);
-      
+
       this.emit('connected');
       this._startHealthCheck();
     });
@@ -121,9 +131,9 @@ class MongoDBConnectionManager extends EventEmitter {
         error: error.message,
         code: error.code,
         codeName: error.codeName,
-        connectionAttempt: this.stats.connectionAttempts
+        connectionAttempt: this.stats.connectionAttempts,
       });
-      
+
       this.emit('error', error);
       this._handleConnectionError(error);
     });
@@ -132,16 +142,16 @@ class MongoDBConnectionManager extends EventEmitter {
     mongoose.connection.on('disconnected', () => {
       this.isConnected = false;
       this.stats.lastDisconnectionTime = new Date();
-      
+
       if (this.connectionStartTime) {
         this.stats.totalUptime += new Date() - this.connectionStartTime;
         this.connectionStartTime = null;
       }
-      
+
       console.warn(`⚠️  [${new Date().toISOString()}] MongoDB disconnected`);
       this.emit('disconnected');
       this._stopHealthCheck();
-      
+
       // Attempt reconnection if not intentionally disconnected
       if (!this.isConnecting && this.reconnectAttempts < this.maxReconnectAttempts) {
         this._attemptReconnection();
@@ -156,7 +166,10 @@ class MongoDBConnectionManager extends EventEmitter {
 
     // MongoDB server selection error
     mongoose.connection.on('serverSelectionError', (error) => {
-      console.error(`🚨 [${new Date().toISOString()}] MongoDB server selection error:`, error.message);
+      console.error(
+        `🚨 [${new Date().toISOString()}] MongoDB server selection error:`,
+        error.message
+      );
       this.emit('serverSelectionError', error);
     });
 
@@ -185,24 +198,25 @@ class MongoDBConnectionManager extends EventEmitter {
     try {
       console.log(`🔌 [${new Date().toISOString()}] Attempting MongoDB connection...`);
       console.log(`🏠 Host: ${this._getHostInfo()}`);
-      console.log(`⚙️  Options: Pool(${this.options.maxPoolSize}), Timeout(${this.options.serverSelectionTimeoutMS}ms)`);
+      console.log(
+        `⚙️  Options: Pool(${this.options.maxPoolSize}), Timeout(${this.options.serverSelectionTimeoutMS}ms)`
+      );
 
       // Connect with timeout
       await Promise.race([
         mongoose.connect(this.connectionString, this.options),
-        new Promise((_, reject) => 
+        new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Connection timeout')), this.connectionTimeout)
-        )
+        ),
       ]);
 
       return true;
-
     } catch (error) {
       this.isConnecting = false;
       console.error(`💥 [${new Date().toISOString()}] MongoDB connection failed:`, {
         error: error.message,
         attempt: this.stats.connectionAttempts,
-        willRetry: this.reconnectAttempts < this.maxReconnectAttempts
+        willRetry: this.reconnectAttempts < this.maxReconnectAttempts,
       });
 
       this.emit('connectionFailed', error);
@@ -219,16 +233,19 @@ class MongoDBConnectionManager extends EventEmitter {
       'authentication failed',
       'not authorized',
       'invalid credentials',
-      'access denied'
+      'access denied',
     ];
 
-    const isCritical = criticalErrors.some(criticalError => 
+    const isCritical = criticalErrors.some((criticalError) =>
       error.message.toLowerCase().includes(criticalError)
     );
 
     if (isCritical) {
-      console.error(`🛑 [${new Date().toISOString()}] Critical MongoDB error - stopping application`);
-      process.exit(1);
+      console.error(
+        `🛑 [${new Date().toISOString()}] Critical MongoDB error - stopping application`
+      );
+      process.exitCode = 1;
+      return;
     }
 
     // Handle specific error types
@@ -246,7 +263,9 @@ class MongoDBConnectionManager extends EventEmitter {
    */
   async _attemptReconnection() {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error(`🛑 [${new Date().toISOString()}] Max reconnection attempts (${this.maxReconnectAttempts}) reached`);
+      console.error(
+        `🛑 [${new Date().toISOString()}] Max reconnection attempts (${this.maxReconnectAttempts}) reached`
+      );
       this.emit('maxReconnectAttemptsReached');
       return;
     }
@@ -256,8 +275,10 @@ class MongoDBConnectionManager extends EventEmitter {
 
     // Exponential backoff: 5s, 10s, 20s, 40s, 80s
     const delay = this.reconnectInterval * Math.pow(2, this.reconnectAttempts - 1);
-    
-    console.log(`🔄 [${new Date().toISOString()}] Reconnection attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts} in ${delay}ms`);
+
+    console.log(
+      `🔄 [${new Date().toISOString()}] Reconnection attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts} in ${delay}ms`
+    );
 
     setTimeout(async () => {
       try {
@@ -281,7 +302,9 @@ class MongoDBConnectionManager extends EventEmitter {
       this._performHealthCheck();
     }, this.healthCheckInterval);
 
-    console.log(`💓 [${new Date().toISOString()}] MongoDB health monitoring started (${this.healthCheckInterval}ms interval)`);
+    console.log(
+      `💓 [${new Date().toISOString()}] MongoDB health monitoring started (${this.healthCheckInterval}ms interval)`
+    );
   }
 
   /**
@@ -304,15 +327,15 @@ class MongoDBConnectionManager extends EventEmitter {
     try {
       // Simple ping to check connection
       await mongoose.connection.db.admin().ping();
-      
+
       // Check connection state
       const state = mongoose.connection.readyState;
-      if (state !== 1) { // 1 = connected
+      if (state !== 1) {
+        // 1 = connected
         throw new Error(`Connection state: ${this._getConnectionStateName(state)}`);
       }
 
       this.emit('healthCheckPassed');
-
     } catch (error) {
       this.stats.healthCheckFailures++;
       console.warn(`⚠️  [${new Date().toISOString()}] MongoDB health check failed:`, error.message);
@@ -328,7 +351,7 @@ class MongoDBConnectionManager extends EventEmitter {
       0: 'disconnected',
       1: 'connected',
       2: 'connecting',
-      3: 'disconnecting'
+      3: 'disconnecting',
     };
     return states[state] || 'unknown';
   }
@@ -337,16 +360,21 @@ class MongoDBConnectionManager extends EventEmitter {
    * Graceful shutdown
    */
   async _gracefulShutdown(signal) {
-    console.log(`🔄 [${new Date().toISOString()}] ${signal} received - starting graceful MongoDB shutdown`);
-    
+    console.log(
+      `🔄 [${new Date().toISOString()}] ${signal} received - starting graceful MongoDB shutdown`
+    );
+
     this._stopHealthCheck();
-    
+
     if (this.isConnected) {
       try {
         await mongoose.connection.close();
         console.log(`✅ [${new Date().toISOString()}] MongoDB connection closed gracefully`);
       } catch (error) {
-        console.error(`❌ [${new Date().toISOString()}] Error during MongoDB shutdown:`, error.message);
+        console.error(
+          `❌ [${new Date().toISOString()}] Error during MongoDB shutdown:`,
+          error.message
+        );
       }
     }
 
@@ -362,9 +390,10 @@ class MongoDBConnectionManager extends EventEmitter {
    * Get connection statistics
    */
   getStats() {
-    const uptime = this.isConnected && this.connectionStartTime 
-      ? new Date() - this.connectionStartTime + this.stats.totalUptime
-      : this.stats.totalUptime;
+    const uptime =
+      this.isConnected && this.connectionStartTime
+        ? new Date() - this.connectionStartTime + this.stats.totalUptime
+        : this.stats.totalUptime;
 
     return {
       ...this.stats,
@@ -374,9 +403,14 @@ class MongoDBConnectionManager extends EventEmitter {
       currentUptime: uptime,
       connectionState: this._getConnectionStateName(mongoose.connection.readyState),
       poolSize: mongoose.connection.db?.serverConfig?.poolSize || 0,
-      healthCheckSuccessRate: this.stats.healthChecks > 0 
-        ? ((this.stats.healthChecks - this.stats.healthCheckFailures) / this.stats.healthChecks * 100).toFixed(2) + '%'
-        : 'N/A'
+      healthCheckSuccessRate:
+        this.stats.healthChecks > 0
+          ? (
+              ((this.stats.healthChecks - this.stats.healthCheckFailures) /
+                this.stats.healthChecks) *
+              100
+            ).toFixed(2) + '%'
+          : 'N/A',
     };
   }
 
@@ -434,7 +468,7 @@ class MongoDBConnectionManager extends EventEmitter {
    */
   getHealthStatus() {
     const stats = this.getStats();
-    
+
     return {
       status: this.isHealthy() ? 'healthy' : 'unhealthy',
       database: 'mongodb',
@@ -443,7 +477,7 @@ class MongoDBConnectionManager extends EventEmitter {
       healthCheckSuccessRate: stats.healthCheckSuccessRate,
       lastConnectionTime: stats.lastConnectionTime,
       connectionAttempts: stats.connectionAttempts,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 }

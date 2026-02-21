@@ -11,7 +11,6 @@
  * - Timestamps
  */
 
-const mongoose = require('mongoose');
 const Dataset = require('../../models/Dataset');
 const User = require('../../models/User');
 
