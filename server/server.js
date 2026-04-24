@@ -28,7 +28,6 @@ const {
   generalLimiter,
   mlLimiter,
   authLimiter,
-  uploadLimiter,
   securityHeaders,
   mongoSanitizer,
   requestSizeLimiter,
@@ -143,7 +142,7 @@ app.use('/api/ml/versions', mlLimiter, require('./routes/ml/versioning'));
 app.use('/api/ml/ab-test', mlLimiter, require('./routes/ml/ab-testing'));
 app.use('/api/ml/auto-retrain', mlLimiter, require('./routes/ml/auto-retrain'));
 app.use('/api/ml/explainability', mlLimiter, require('./routes/ml/explainability'));
-app.use('/api/data', uploadLimiter, require('./routes/data'));
+app.use('/api/data', require('./routes/data'));
 app.use('/api/auth', authLimiter, require('./routes/auth'));
 app.use('/api/health', require('./routes/health/database')); // Database health monitoring
 
@@ -182,98 +181,8 @@ async function initializeDatabase() {
 // Error handling middleware (must be after routes)
 app.use(handleRateLimit);
 
-// Enhanced global error handler with comprehensive error categorization
-app.use((error, req, res, _next) => {
-  const timestamp = new Date().toISOString();
-  const requestId = req.headers['x-request-id'] || `req_${Date.now()}`;
-
-  // Enhanced error logging with context
-  logger.error({
-    timestamp,
-    requestId,
-    message: error.message,
-    stack: error.stack,
-    url: req.url,
-    method: req.method,
-    ip: req.ip,
-    userAgent: req.get('User-Agent'),
-    userId: req.user?.id || 'anonymous',
-  });
-
-  // Error categorization and appropriate responses
-  let statusCode = 500;
-  let errorType = 'internal_server_error';
-  let message = error.message;
-
-  // Handle specific error types
-  if (error.name === 'ValidationError') {
-    statusCode = 400;
-    errorType = 'validation_error';
-    message = 'Request validation failed';
-  } else if (error.name === 'CastError') {
-    statusCode = 400;
-    errorType = 'cast_error';
-    message = 'Invalid data format';
-  } else if (error.name === 'MongoError' || error.name === 'MongoServerError') {
-    statusCode = 503;
-    errorType = 'database_error';
-    message = 'Database operation failed';
-  } else if (error.message === 'Invalid JSON') {
-    statusCode = 400;
-    errorType = 'json_parse_error';
-    message = 'Request body contains invalid JSON';
-  } else if (error.name === 'MulterError') {
-    statusCode = 400;
-    errorType = 'file_upload_error';
-    message = 'File upload failed';
-  } else if (error.code === 'ENOENT') {
-    statusCode = 404;
-    errorType = 'file_not_found';
-    message = 'Requested resource not found';
-  } else if (error.code === 'EACCES') {
-    statusCode = 403;
-    errorType = 'permission_denied';
-    message = 'Access denied';
-  } else if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED') {
-    statusCode = 503;
-    errorType = 'service_unavailable';
-    message = 'External service unavailable';
-  }
-
-  // Create error response
-  const errorResponse = {
-    success: false,
-    error: {
-      type: errorType,
-      message:
-        process.env.NODE_ENV === 'production' && statusCode === 500
-          ? 'Internal server error'
-          : message,
-      timestamp: timestamp,
-      requestId: requestId,
-    },
-  };
-
-  // Add additional error details in development
-  if (process.env.NODE_ENV !== 'production') {
-    errorResponse.error.details = {
-      name: error.name,
-      stack: error.stack,
-      url: req.url,
-      method: req.method,
-    };
-  }
-
-  // Add validation errors if present
-  if (error.errors) {
-    errorResponse.error.validation_errors = Object.keys(error.errors).map((field) => ({
-      field: field,
-      message: error.errors[field].message,
-    }));
-  }
-
-  res.status(statusCode).json(errorResponse);
-});
+// Centralized error handler (see middleware/errorHandler.js)
+app.use(require('./middleware/errorHandler'));
 
 // Handle 404 errors for undefined routes
 app.use('*', (req, res) => {

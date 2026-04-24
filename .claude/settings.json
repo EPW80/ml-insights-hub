@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wait %1)",
+      "Read(//usr/bin/**)",
+      "Bash(bash /home/erikwilliams/dev/ml-insights-hub/start.sh)",
+      "Bash(pkill -f \"nodemon server.js\")",
+      "Bash(pkill -f \"node server.js\")",
+      "Bash(pkill -f \"react-scripts\")",
+      "mcp__MongoDB__list-databases",
+      "mcp__MongoDB__connect"
+    ]
+  }
+}

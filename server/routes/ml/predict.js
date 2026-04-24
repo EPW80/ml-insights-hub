@@ -1,12 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Prediction = require('../../models/Prediction');
-const {
-  executeMlPrediction,
-  PythonExecutionError,
-  PythonTimeoutError,
-  PythonSecurityError,
-} = require('../../utils/securePythonBridge');
+const { executeMlPrediction } = require('../../utils/securePythonBridge');
+const { sendRouteError, PythonParseError } = require('../../utils/sendRouteError');
 
 // Import authentication middleware
 const { requireAuthOrApiKey, logAuthenticatedRequest } = require('../../middleware/mlAuth');
@@ -15,68 +11,7 @@ const { requireAuthOrApiKey, logAuthenticatedRequest } = require('../../middlewa
 router.use(requireAuthOrApiKey);
 router.use(logAuthenticatedRequest);
 
-// Legacy alias for backward compatibility
-const PythonParseError = PythonExecutionError;
-
-// Enhanced error response helper
-function sendErrorResponse(res, error, statusCode = 500, req = null) {
-  const errorResponse = {
-    success: false,
-    error: error.message || 'An unexpected error occurred',
-    timestamp: new Date().toISOString(),
-  };
-
-  // Add specific error details based on error type
-  if (error instanceof PythonExecutionError) {
-    errorResponse.type = 'python_execution_error';
-    errorResponse.details = {
-      exitCode: error.details?.exitCode,
-      executionTime: error.details?.executionTime,
-    };
-    statusCode = 422; // Unprocessable Entity
-  } else if (error instanceof PythonTimeoutError) {
-    errorResponse.type = 'timeout_error';
-    errorResponse.details = {
-      timeout: error.details?.timeout,
-      retryCount: error.details?.retryCount,
-    };
-    statusCode = 408; // Request Timeout
-  } else if (error instanceof PythonSecurityError) {
-    errorResponse.type = 'security_error';
-    errorResponse.details = {
-      securityViolation: error.type,
-      timestamp: error.timestamp,
-    };
-    statusCode = 403; // Forbidden
-    // Log security incident
-    console.error('🚨 SECURITY VIOLATION in ML Prediction:', {
-      error: error.message,
-      type: error.type,
-      timestamp: error.timestamp,
-      userAgent: req ? req.get('User-Agent') : 'unknown',
-      ip: req ? req.ip : 'unknown',
-    });
-  } else if (error instanceof PythonParseError) {
-    errorResponse.type = 'validation_error';
-    statusCode = 400; // Bad Request
-  } else if (error.name === 'ValidationError') {
-    errorResponse.type = 'database_validation_error';
-    errorResponse.details = Object.keys(error.errors || {});
-    statusCode = 400;
-  } else if (error.name === 'MongoError' || error.name === 'MongoServerError') {
-    errorResponse.type = 'database_error';
-    statusCode = 503; // Service Unavailable
-  }
-
-  console.error(`[${new Date().toISOString()}] Prediction API Error:`, {
-    type: errorResponse.type,
-    message: error.message,
-    stack: error.stack,
-    details: error.details,
-  });
-
-  res.status(statusCode).json(errorResponse);
-}
+const sendErrorResponse = sendRouteError;
 
 router.get('/', async (req, res) => {
   try {

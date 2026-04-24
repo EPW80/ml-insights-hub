@@ -6,6 +6,7 @@ const Dataset = require('../../models/Dataset');
 const Property = require('../../models/Property');
 const Prediction = require('../../models/Prediction');
 const { requireAuthOrApiKey } = require('../../middleware/mlAuth');
+const { uploadLimiter } = require('../../middleware/security');
 
 // Consistent file size limit (10MB — aligns with requestSizeLimiter middleware)
 const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE, 10) || 10 * 1024 * 1024;
@@ -37,30 +38,36 @@ const upload = multer({
   limits: { fileSize: MAX_FILE_SIZE },
 });
 
-router.post('/upload', requireAuthOrApiKey, upload.single('dataset'), async (req, res) => {
-  try {
-    const { name, description } = req.body;
-    const file = req.file;
+router.post(
+  '/upload',
+  requireAuthOrApiKey,
+  uploadLimiter,
+  upload.single('dataset'),
+  async (req, res) => {
+    try {
+      const { name, description } = req.body;
+      const file = req.file;
 
-    if (!file) {
-      return res.status(400).json({ error: 'No file provided' });
+      if (!file) {
+        return res.status(400).json({ error: 'No file provided' });
+      }
+
+      const dataset = new Dataset({
+        name,
+        description,
+        file_path: file.path,
+        file_size: file.size,
+        format: path.extname(file.originalname).slice(1),
+        uploaded_by: req.user.id,
+      });
+
+      await dataset.save();
+      return res.json({ success: true, dataset });
+    } catch (error) {
+      return res.status(500).json({ error: error.message });
     }
-
-    const dataset = new Dataset({
-      name,
-      description,
-      file_path: file.path,
-      file_size: file.size,
-      format: path.extname(file.originalname).slice(1),
-      uploaded_by: req.user.id,
-    });
-
-    await dataset.save();
-    return res.json({ success: true, dataset });
-  } catch (error) {
-    return res.status(500).json({ error: error.message });
   }
-});
+);
 
 router.get('/summary', requireAuthOrApiKey, async (req, res) => {
   try {

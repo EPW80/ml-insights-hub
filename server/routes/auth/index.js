@@ -56,7 +56,7 @@ const validateLogin = [
   },
 ];
 
-router.post('/register', validateRegister, async (req, res) => {
+router.post('/register', validateRegister, async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
 
@@ -73,11 +73,11 @@ router.post('/register', validateRegister, async (req, res) => {
     });
     return res.json({ token, user: { id: user._id, username, email, role: user.role } });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return next(error);
   }
 });
 
-router.post('/login', validateLogin, async (req, res) => {
+router.post('/login', validateLogin, async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -94,7 +94,7 @@ router.post('/login', validateLogin, async (req, res) => {
       user: { id: user._id, username: user.username, email, role: user.role },
     });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return next(error);
   }
 });
 

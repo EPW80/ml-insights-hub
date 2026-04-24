@@ -55,23 +55,9 @@ const requireAuth = (req, res, next) => {
       });
     }
 
-    // Verify JWT token
-    const jwtSecret = process.env.JWT_SECRET;
-
-    if (
-      !jwtSecret ||
-      jwtSecret === 'GENERATE_SECURE_SECRET_FOR_PRODUCTION_USE_CRYPTO_RANDOM_BYTES_64_HEX'
-    ) {
-      console.error('🚨 CRITICAL SECURITY ERROR: JWT_SECRET not properly configured!');
-      return res.status(500).json({
-        success: false,
-        error: 'Server authentication not configured',
-        message: 'Contact system administrator',
-        type: 'SERVER_CONFIG_ERROR',
-      });
-    }
-
-    const decoded = jwt.verify(token, jwtSecret);
+    // Verify JWT token. JWT_SECRET is validated at boot in
+    // utils/startupSecurity.js, so we can trust it exists here.
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // Attach user info to request
     req.user = {

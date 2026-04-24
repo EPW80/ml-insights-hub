@@ -7,66 +7,11 @@ const { requireAuthOrApiKey, logAuthenticatedRequest } = require('../../middlewa
 router.use(requireAuthOrApiKey);
 router.use(logAuthenticatedRequest);
 
-const {
-  runPythonScript,
-  PythonExecutionError,
-  PythonTimeoutError,
-  PythonSecurityError,
-} = require('../../utils/securePythonBridge');
-
-// Legacy alias for backward compatibility
-const PythonParseError = PythonExecutionError;
+const { runPythonScript } = require('../../utils/securePythonBridge');
+const { sendRouteError, PythonParseError } = require('../../utils/sendRouteError');
 const path = require('path');
 
-// Enhanced error response helper
-function sendErrorResponse(res, error, statusCode = 500) {
-  const errorResponse = {
-    success: false,
-    error: error.message || 'An unexpected error occurred',
-    timestamp: new Date().toISOString(),
-  };
-
-  if (error instanceof PythonExecutionError) {
-    errorResponse.type = 'python_execution_error';
-    errorResponse.details = {
-      exitCode: error.details?.exitCode,
-      executionTime: error.details?.executionTime,
-    };
-    statusCode = 422;
-  } else if (error instanceof PythonTimeoutError) {
-    errorResponse.type = 'timeout_error';
-    errorResponse.details = {
-      timeout: error.details?.timeout,
-      retryCount: error.details?.retryCount,
-    };
-    statusCode = 408;
-  } else if (error instanceof PythonSecurityError) {
-    errorResponse.type = 'security_error';
-    errorResponse.details = {
-      securityViolation: error.type,
-      timestamp: error.timestamp,
-    };
-    statusCode = 403;
-    // Log security incident
-    console.error('🚨 SECURITY VIOLATION in Data Analysis:', {
-      error: error.message,
-      type: error.type,
-      timestamp: error.timestamp,
-    });
-  } else if (error instanceof PythonParseError) {
-    errorResponse.type = 'validation_error';
-    statusCode = 400;
-  }
-
-  console.error(`[${new Date().toISOString()}] Analysis API Error:`, {
-    type: errorResponse.type,
-    message: error.message,
-    stack: error.stack,
-    details: error.details,
-  });
-
-  res.status(statusCode).json(errorResponse);
-}
+const sendErrorResponse = sendRouteError;
 
 // Clustering analysis endpoint
 router.post('/cluster', async (req, res) => {

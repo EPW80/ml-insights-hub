@@ -15,6 +15,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../../models/User');
 const authRoutes = require('../../routes/auth');
+const errorHandler = require('../../middleware/errorHandler');
 const { authMiddleware, adminMiddleware } = require('../../middleware/auth');
 const { requireAuth, requireAdmin } = require('../../middleware/mlAuth');
 
@@ -39,6 +40,9 @@ app.get('/api/ml/protected', requireAuth, (req, res) => {
 app.get('/api/ml/admin', requireAuth, requireAdmin, (req, res) => {
   res.json({ message: 'ML admin route accessed', user: req.user });
 });
+
+// Mount centralized error handler (production parity)
+app.use(errorHandler);
 
 // Set JWT secret for tests
 process.env.JWT_SECRET = 'test-secret-key-for-testing';
@@ -528,7 +532,9 @@ describe('Authentication Routes', () => {
           .expect(500);
 
         expect(response.body).toHaveProperty('error');
-        expect(response.body.error).toBe('Database error');
+        // Error shape is now the canonical { error: { type, message, ... } } produced
+        // by the centralized error handler (middleware/errorHandler.js).
+        expect(response.body.error).toHaveProperty('message', 'Database error');
 
         User.findOne = originalFindOne;
       });

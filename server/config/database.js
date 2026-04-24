@@ -430,18 +430,26 @@ class MongoDBConnectionManager extends EventEmitter {
   }
 
   /**
-   * Get host information from connection string
+   * Get host information from connection string.
+   * Strips `user:password@` so credentials never reach logs.
    */
   _getHostInfo() {
     try {
+      let rest;
+      let fallback;
       if (this.connectionString.startsWith('mongodb://')) {
-        const hostPart = this.connectionString.replace('mongodb://', '').split('/')[0];
-        return hostPart || 'Unknown';
+        rest = this.connectionString.slice('mongodb://'.length);
+        fallback = 'Unknown';
       } else if (this.connectionString.startsWith('mongodb+srv://')) {
-        const hostPart = this.connectionString.replace('mongodb+srv://', '').split('/')[0];
-        return hostPart || 'MongoDB Atlas';
+        rest = this.connectionString.slice('mongodb+srv://'.length);
+        fallback = 'MongoDB Atlas';
+      } else {
+        return 'Unknown';
       }
-      return 'Unknown';
+      const hostPart = rest.split('/')[0];
+      const atIndex = hostPart.lastIndexOf('@');
+      const hostOnly = atIndex >= 0 ? hostPart.slice(atIndex + 1) : hostPart;
+      return hostOnly || fallback;
     } catch {
       return 'Unknown';
     }
