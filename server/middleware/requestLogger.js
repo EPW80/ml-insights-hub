@@ -6,8 +6,8 @@ const crypto = require('crypto');
  * Adds request ID and logs HTTP requests with duration
  */
 const requestLogger = (req, res, next) => {
-  // Generate unique request ID
-  const requestId = crypto.randomUUID();
+  // Honor upstream correlation ID or generate a new one
+  const requestId = req.headers['x-request-id'] || crypto.randomUUID();
   req.requestId = requestId;
 
   // Add request ID to response headers for tracking

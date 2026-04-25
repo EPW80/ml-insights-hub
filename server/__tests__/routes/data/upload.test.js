@@ -12,12 +12,24 @@
 
 const request = require('supertest');
 const express = require('express');
-const path = require('path');
-const fs = require('fs').promises;
 const Dataset = require('../../../models/Dataset');
 const User = require('../../../models/User');
-const dataRoutes = require('../../../routes/data');
 const jwt = require('jsonwebtoken');
+
+// Uploads now stream to S3; stub the storage layer so tests don't need real AWS creds.
+jest.mock('../../../utils/s3Storage', () => ({
+  isConfigured: jest.fn(() => true),
+  buildKey: jest.fn(
+    (originalName, userId) =>
+      `datasets/${userId}/${Date.now()}-${Math.random().toString(16).slice(2)}-${originalName}`
+  ),
+  uploadBuffer: jest.fn(async () => undefined),
+  getObjectBuffer: jest.fn(),
+  deleteObject: jest.fn(),
+}));
+
+const s3Storage = require('../../../utils/s3Storage');
+const dataRoutes = require('../../../routes/data');
 
 // Setup Express app for testing
 const app = express();
@@ -30,7 +42,6 @@ process.env.JWT_SECRET = 'test-secret-key-for-testing';
 describe('Dataset Upload Routes', () => {
   let authToken;
   let testUser;
-  const testUploadDir = path.join(__dirname, '../../../uploads');
 
   beforeAll(async () => {
     // Create test user
@@ -43,41 +54,12 @@ describe('Dataset Upload Routes', () => {
 
     // Generate auth token
     authToken = jwt.sign({ id: testUser._id, role: testUser.role }, process.env.JWT_SECRET);
-
-    // Ensure uploads directory exists
-    try {
-      await fs.mkdir(testUploadDir, { recursive: true });
-    } catch (error) {
-      // Directory might already exist
-    }
   });
 
-  afterAll(async () => {
-    // Clean up test uploads
-    try {
-      const files = await fs.readdir(testUploadDir);
-      for (const file of files) {
-        if (file.startsWith('test-')) {
-          await fs.unlink(path.join(testUploadDir, file));
-        }
-      }
-    } catch (error) {
-      // Ignore cleanup errors
-    }
-  });
-
-  afterEach(async () => {
-    // Clean up uploaded files after each test
-    const datasets = await Dataset.find({});
-    for (const dataset of datasets) {
-      if (dataset.file_path) {
-        try {
-          await fs.unlink(dataset.file_path);
-        } catch (error) {
-          // File might not exist
-        }
-      }
-    }
+  afterEach(() => {
+    s3Storage.isConfigured.mockReturnValue(true);
+    s3Storage.uploadBuffer.mockClear();
+    s3Storage.buildKey.mockClear();
   });
 
   describe('POST /api/data/upload', () => {
@@ -140,24 +122,37 @@ describe('Dataset Upload Routes', () => {
         expect(savedDataset.file_size).toBeGreaterThan(0);
       });
 
-      it('should save file to disk', async () => {
+      it('should stream the file buffer to S3', async () => {
         const csvContent = 'x,y,z\n1,2,3\n4,5,6';
         const testFile = Buffer.from(csvContent);
 
         const response = await request(app)
           .post('/api/data/upload')
           .set('Authorization', `Bearer ${authToken}`)
-          .attach('dataset', testFile, 'disk-test.csv')
-          .field('name', 'Disk Test')
+          .attach('dataset', testFile, 's3-test.csv')
+          .field('name', 'S3 Test')
           .expect(200);
 
-        const filePath = response.body.dataset.file_path;
-        const fileExists = await fs
-          .access(filePath)
-          .then(() => true)
-          .catch(() => false);
+        expect(s3Storage.uploadBuffer).toHaveBeenCalledTimes(1);
+        const uploadArgs = s3Storage.uploadBuffer.mock.calls[0][0];
+        expect(Buffer.isBuffer(uploadArgs.buffer)).toBe(true);
+        expect(uploadArgs.buffer.toString()).toBe(csvContent);
+        expect(uploadArgs.key).toBe(response.body.dataset.file_path);
+      });
 
-        expect(fileExists).toBe(true);
+      it('should return 503 when S3 is not configured', async () => {
+        s3Storage.isConfigured.mockReturnValueOnce(false);
+        const testFile = Buffer.from('a,b\n1,2');
+
+        const response = await request(app)
+          .post('/api/data/upload')
+          .set('Authorization', `Bearer ${authToken}`)
+          .attach('dataset', testFile, 'no-s3.csv')
+          .field('name', 'No S3')
+          .expect(503);
+
+        expect(response.body.error).toBeDefined();
+        expect(s3Storage.uploadBuffer).not.toHaveBeenCalled();
       });
     });
 

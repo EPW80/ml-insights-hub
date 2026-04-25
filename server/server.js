@@ -21,7 +21,9 @@ if (!securityValidator.logResults()) {
 }
 
 // Configure Python environment for ML scripts
-process.env.PYTHON_PATH = path.join(__dirname, '../venv/bin/python');
+if (!process.env.PYTHON_PATH) {
+  process.env.PYTHON_PATH = path.join(__dirname, 'venv/bin/python');
+}
 
 // Import security middleware
 const {
@@ -39,9 +41,12 @@ const MongoDBConnectionManager = require('./config/database');
 
 const app = express();
 const server = require('http').createServer(app);
+const frontendOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
+  .split(',')
+  .map((s) => s.trim());
 const io = require('socket.io')(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: frontendOrigins.length === 1 ? frontendOrigins[0] : frontendOrigins,
     methods: ['GET', 'POST'],
     credentials: true,
   },

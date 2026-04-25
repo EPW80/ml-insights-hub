@@ -61,7 +61,7 @@ const generalLimiter = createRateLimit(
 // Strict rate limit for ML endpoints (computationally expensive)
 const mlLimiter = createRateLimit(
   5 * 60 * 1000, // 5 minutes
-  10, // limit each IP to 10 ML requests per 5 minutes
+  30, // limit each IP to 30 ML requests per 5 minutes
   'Too many ML requests from this IP. ML operations are resource-intensive, please wait before trying again.'
 );
 

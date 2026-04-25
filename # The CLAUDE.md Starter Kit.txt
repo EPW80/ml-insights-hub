@@ -1,0 +1,156 @@
+# The CLAUDE.md Starter Kit
+
+> Get better output from Claude Code in 5 minutes. No plugins, no MCP servers, no configuration — just markdown files in the right places.
+
+---
+
+## The 3-Level Hierarchy
+
+Claude Code reads instructions from three locations. Each has a different scope:
+
+```
+~/.claude/CLAUDE.md          -> Global: your personal preferences (every project)
+.claude/CLAUDE.md            -> Project: shared with your team (committed to git)
+.claude/local.md             -> Local: your personal overrides (gitignored)
+```
+
+**Global** = rules you'd repeat across every project ("always run tests," "prefer simple code").
+**Project** = context your whole team benefits from (stack, structure, commands, conventions).
+**Local** = stuff only you need (your terminal, your MCP servers, your editor quirks).
+
+## Quick Start
+
+### 1. Create your global file (~2 min)
+
+```bash
+mkdir -p ~/.claude
+cp global/CLAUDE.md ~/.claude/CLAUDE.md
+```
+
+Edit it with your personal preferences. Keep it under 15 lines.
+
+### 2. Create your project file (~3 min)
+
+```bash
+mkdir -p .claude
+# Pick the template closest to your stack:
+cp project/nextjs-typescript.md .claude/CLAUDE.md   # Next.js / React / TypeScript
+cp project/python-fastapi.md .claude/CLAUDE.md      # Python / FastAPI
+cp project/generic.md .claude/CLAUDE.md              # Anything else
+```
+
+Fill in the blanks. Commit it to git so your team gets the same behavior.
+
+### 3. Create your local overrides (~1 min)
+
+```bash
+cp local/local.md .claude/local.md
+echo ".claude/local.md" >> .gitignore
+```
+
+Add your personal setup. This file is never shared.
+
+## How It Works
+
+Claude Code automatically reads these files at the start of every session. The more specific file wins — project rules override global rules, local rules override project rules.
+
+**Important:** Claude Code's system prompt already contains ~50 instructions. That's a third of the ~150-200 instruction limit frontier models can reliably follow. Your CLAUDE.md must be lean. Every line competes for attention.
+
+## The Self-Improvement Loop
+
+This is the single most impactful habit you can build:
+
+After every correction you give Claude, end with:
+
+> "Update CLAUDE.md so you don't make that mistake again."
+
+Claude is good at writing rules for itself. Over time, your CLAUDE.md becomes a living document that gets smarter with every session.
+
+## What Goes Where (Decision Guide)
+
+| Rule | Where it goes | Why |
+|------|--------------|-----|
+| "Run tests after changes" | Global | You want this everywhere |
+| "Use shadcn/ui components" | Project | Team convention |
+| "I use Ghostty terminal" | Local | Only you need this |
+| "Never use `any` in TypeScript" | Project | Team standard |
+| "Ask before committing" | Global | Personal preference |
+| "I have Context7 MCP configured" | Local | Your setup, not theirs |
+| "Prices are in src/lib/config" | Project | Domain knowledge |
+| "Keep code simple" | Global | Universal preference |
+
+## Common Mistakes
+
+**Too long.** If your project CLAUDE.md is over 80 lines, Claude starts ignoring parts of it. HumanLayer keeps theirs under 60 lines. That's a good benchmark.
+
+**Personality instructions.** "Be a senior engineer" or "Think step by step" wastes tokens. Claude Code already has strong system-level instructions.
+
+**@-mentioning docs.** Writing `@docs/api-guide.md` embeds the entire file into context every single session. Instead, *pitch* Claude on when to read it: "For Stripe integration issues, see docs/stripe-guide.md."
+
+**Formatting rules.** "Use 2-space indentation" or "always add trailing commas" — use a linter/formatter for this. Never send an LLM to do a linter's job.
+
+**Duplicate rules.** If your global file says "run tests" and your project file also says "run tests," you've wasted tokens saying the same thing twice.
+
+## Scaling Up: Module-Specific Files
+
+For larger codebases, you can place CLAUDE.md files in subdirectories:
+
+```
+.claude/CLAUDE.md              -> Project root (always loaded)
+src/auth/CLAUDE.md             -> Auth module (loaded when working in src/auth/)
+src/api/CLAUDE.md              -> API module (loaded when working in src/api/)
+```
+
+Claude Code loads these **on demand** — only when working in that directory. This keeps your root file lean while giving Claude deep context where it matters.
+
+Use this when your root CLAUDE.md pushes past 80 lines, or when different parts of the codebase have different conventions.
+
+## Included Files
+
+| File | What it is | When to use it |
+|------|-----------|---------------|
+| `global/CLAUDE.md` | Personal preferences template | Copy to `~/.claude/CLAUDE.md` |
+| `project/nextjs-typescript.md` | Next.js/React/TS project template | Copy to `.claude/CLAUDE.md` |
+| `project/python-fastapi.md` | Python/FastAPI project template | Copy to `.claude/CLAUDE.md` |
+| `project/generic.md` | Fill-in-the-blank for any stack | Copy to `.claude/CLAUDE.md` |
+| `local/local.md` | Personal overrides template | Copy to `.claude/local.md` |
+| `workflows/self-improvement-rules.md` | Structured rules for planning, verification, self-correction | Paste sections into your CLAUDE.md |
+| `workflows/prompting-patterns.md` | 11 copy-paste prompts from the Claude Code team | Use directly in your sessions |
+| `cheatsheet.md` | One-page reference card | Bookmark or print |
+| `principles.md` | The full research — why these patterns work | Read when you want to go deeper |
+
+## The Principles (Go Deeper)
+
+**`principles.md`** contains everything we know about writing effective CLAUDE.md files:
+
+- The attention budget (why less is more)
+- Anthropic's official include/exclude table
+- Emphasis keywords that actually work (`IMPORTANT`, `YOU MUST`)
+- Module-specific CLAUDE.md files for scaling
+- Progressive disclosure patterns
+- Architecture diagrams (HumanLayer's pattern)
+- The "Don't X, Do Y" rule
+- Matt Pocock's plan loop
+- Real-world benchmarks from HumanLayer, Boris Cherny, Cloudflare, ChrisWiles
+- Skill activation mapping
+- TODO priority systems
+- Every anti-pattern and what to do instead
+
+If you only read one file in this kit besides the templates, read that one.
+
+## Sources
+
+This starter kit is based on:
+- [Anthropic — "Claude Code Best Practices"](https://code.claude.com/docs/en/best-practices) — Official guidance, include/exclude table
+- [Anthropic — "Effective Context Engineering"](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) — Context rot, attention budget, just-in-time context
+- [Boris Cherny's team tips](https://x.com/bcherny/status/2017742741636321619) — 10 tips from the Claude Code team (Jan 31, 2026)
+- [Boris Cherny's personal setup](https://x.com/bcherny/status/2007179832300581177) — How the creator uses Claude Code (Jan 2, 2026)
+- [HumanLayer — "Writing a Good CLAUDE.md"](https://www.humanlayer.dev/blog/writing-a-good-claude-md) — Instruction limits, progressive disclosure, leverage diagram
+- [Matt Pocock — "My AGENTS.md file"](https://www.aihero.dev/my-agents-md-file-for-building-plans-you-actually-read) — Plan loop rules
+- [josix/awesome-claude-md](https://github.com/josix/awesome-claude-md) — Curated collection of real CLAUDE.md files from open-source projects
+- [hesreallyhim/awesome-claude-code](https://github.com/hesreallyhim/awesome-claude-code) — The main awesome list for Claude Code resources
+- Real CLAUDE.md files from [HumanLayer](https://github.com/humanlayer/humanlayer/blob/main/CLAUDE.md), [Cloudflare](https://github.com/cloudflare/templates/blob/main/CLAUDE.md), [ChrisWiles](https://github.com/ChrisWiles/claude-code-showcase) (5.2k stars), and the community
+
+---
+
+*Built by [Claude Code Camp](https://claudecodecamp.com) — a weekly newsletter teaching developers how to get 10x more from Claude Code.*

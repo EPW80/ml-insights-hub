@@ -7,21 +7,14 @@ const Property = require('../../models/Property');
 const Prediction = require('../../models/Prediction');
 const { requireAuthOrApiKey } = require('../../middleware/mlAuth');
 const { uploadLimiter } = require('../../middleware/security');
+const s3Storage = require('../../utils/s3Storage');
+const logger = require('../../config/logger');
 
 // Consistent file size limit (10MB — aligns with requestSizeLimiter middleware)
 const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE, 10) || 10 * 1024 * 1024;
 
 // Allowed file extensions for dataset uploads
 const ALLOWED_EXTENSIONS = ['.csv', '.json', '.xlsx', '.xls'];
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
 
 const fileFilter = (req, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase();
@@ -33,7 +26,7 @@ const fileFilter = (req, file, cb) => {
 };
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   fileFilter,
   limits: { fileSize: MAX_FILE_SIZE },
 });
@@ -52,10 +45,25 @@ router.post(
         return res.status(400).json({ error: 'No file provided' });
       }
 
+      if (!s3Storage.isConfigured()) {
+        logger.error('Dataset upload rejected — S3 not configured');
+        return res.status(503).json({
+          error:
+            'File storage is not configured. Set AWS_S3_BUCKET, AWS_REGION, AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY.',
+        });
+      }
+
+      const key = s3Storage.buildKey(file.originalname, req.user.id);
+      await s3Storage.uploadBuffer({
+        buffer: file.buffer,
+        key,
+        contentType: file.mimetype,
+      });
+
       const dataset = new Dataset({
         name,
         description,
-        file_path: file.path,
+        file_path: key,
         file_size: file.size,
         format: path.extname(file.originalname).slice(1),
         uploaded_by: req.user.id,
@@ -64,6 +72,7 @@ router.post(
       await dataset.save();
       return res.json({ success: true, dataset });
     } catch (error) {
+      logger.error('Dataset upload failed', { message: error.message });
       return res.status(500).json({ error: error.message });
     }
   }
