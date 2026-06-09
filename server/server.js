@@ -203,10 +203,10 @@ app.use('*', (req, res) => {
 
 // Process-level error handlers
 process.on('uncaughtException', (error) => {
-  console.error('========== UNCAUGHT EXCEPTION ==========');
-  console.error('Message:', error.message);
-  console.error('Stack:', error.stack);
-  console.error('========================================');
+  logger.error('========== UNCAUGHT EXCEPTION ==========');
+  logger.error('Message:', error.message);
+  logger.error('Stack:', error.stack);
+  logger.error('========================================');
   logger.error({ message: 'Uncaught Exception', error: error.message, stack: error.stack });
   // Throw error to let Node.js handle the exit
   throw error;

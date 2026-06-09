@@ -8,21 +8,25 @@ router.use(requireAuthOrApiKey);
 router.use(logAuthenticatedRequest);
 
 const { runPythonScript } = require('../../utils/securePythonBridge');
+const { sendRouteError } = require('../../utils/sendRouteError');
+const { validateIdentifiers } = require('../../utils/validateMlParams');
 const path = require('path');
+
+const SCRIPT_PATH = path.join(__dirname, '../../python-scripts/model_explainability.py');
 
 // Generate SHAP explanations
 router.post('/shap', async (req, res) => {
   try {
     const { model_path, data, num_samples, feature_names } = req.body;
 
-    if (!model_path || !data) {
-      return res.status(400).json({
-        success: false,
-        error: 'model_path and data are required',
-      });
+    const validationError = validateIdentifiers({ model_path });
+    if (validationError) {
+      return res.status(400).json({ success: false, error: validationError });
+    }
+    if (!data) {
+      return res.status(400).json({ success: false, error: 'data is required' });
     }
 
-    const scriptPath = path.join(__dirname, '../../python-scripts/model_explainability.py');
     const inputData = {
       action: 'shap_explain',
       model_path,
@@ -31,17 +35,13 @@ router.post('/shap', async (req, res) => {
       feature_names,
     };
 
-    const result = await runPythonScript(scriptPath, inputData, {
+    const result = await runPythonScript(SCRIPT_PATH, inputData, {
       timeout: 120000, // 2 minutes - SHAP can be slow
     });
 
     return res.json(result);
   } catch (error) {
-    console.error('SHAP explanation error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    return sendRouteError(res, error, 500, req);
   }
 });
 
@@ -50,14 +50,14 @@ router.post('/lime', async (req, res) => {
   try {
     const { model_path, data, instance_index, num_features, feature_names } = req.body;
 
-    if (!model_path || !data) {
-      return res.status(400).json({
-        success: false,
-        error: 'model_path and data are required',
-      });
+    const validationError = validateIdentifiers({ model_path });
+    if (validationError) {
+      return res.status(400).json({ success: false, error: validationError });
+    }
+    if (!data) {
+      return res.status(400).json({ success: false, error: 'data is required' });
     }
 
-    const scriptPath = path.join(__dirname, '../../python-scripts/model_explainability.py');
     const inputData = {
       action: 'lime_explain',
       model_path,
@@ -67,17 +67,13 @@ router.post('/lime', async (req, res) => {
       feature_names,
     };
 
-    const result = await runPythonScript(scriptPath, inputData, {
+    const result = await runPythonScript(SCRIPT_PATH, inputData, {
       timeout: 60000, // 1 minute
     });
 
     return res.json(result);
   } catch (error) {
-    console.error('LIME explanation error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    return sendRouteError(res, error, 500, req);
   }
 });
 
@@ -86,14 +82,14 @@ router.post('/importance-comparison', async (req, res) => {
   try {
     const { model_path, data, feature_names } = req.body;
 
-    if (!model_path || !data) {
-      return res.status(400).json({
-        success: false,
-        error: 'model_path and data are required',
-      });
+    const validationError = validateIdentifiers({ model_path });
+    if (validationError) {
+      return res.status(400).json({ success: false, error: validationError });
+    }
+    if (!data) {
+      return res.status(400).json({ success: false, error: 'data is required' });
     }
 
-    const scriptPath = path.join(__dirname, '../../python-scripts/model_explainability.py');
     const inputData = {
       action: 'compare_importance',
       model_path,
@@ -101,17 +97,13 @@ router.post('/importance-comparison', async (req, res) => {
       feature_names,
     };
 
-    const result = await runPythonScript(scriptPath, inputData, {
+    const result = await runPythonScript(SCRIPT_PATH, inputData, {
       timeout: 120000, // 2 minutes
     });
 
     return res.json(result);
   } catch (error) {
-    console.error('Feature importance comparison error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    return sendRouteError(res, error, 500, req);
   }
 });
 

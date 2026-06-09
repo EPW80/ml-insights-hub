@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const logger = require('../config/logger');
 
 class JWTSecurity {
   constructor() {
@@ -16,9 +17,9 @@ class JWTSecurity {
 
     // Check if secret is still the default placeholder
     if (secret.includes('GENERATE_SECURE_SECRET') || secret.length < 64) {
-      console.error('🔴 SECURITY WARNING: JWT_SECRET is not secure!');
-      console.error('Generate a secure secret using:');
-      console.error("node -e \"console.log(require('crypto').randomBytes(64).toString('hex'))\"");
+      logger.error('🔴 SECURITY WARNING: JWT_SECRET is not secure!');
+      logger.error('Generate a secure secret using:');
+      logger.error("node -e \"console.log(require('crypto').randomBytes(64).toString('hex'))\"");
 
       if (process.env.NODE_ENV === 'production') {
         throw new Error('Insecure JWT_SECRET detected in production environment');
@@ -27,7 +28,7 @@ class JWTSecurity {
 
     // Ensure minimum entropy (256 bits = 64 hex characters)
     if (secret.length < 64) {
-      console.warn(
+      logger.warn(
         '⚠️  JWT_SECRET should be at least 64 characters (256 bits) for optimal security'
       );
     }

@@ -8,6 +8,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const logger = require('../../config/logger');
 
 /**
  * Database health check endpoint
@@ -42,7 +43,7 @@ router.get('/database', async (req, res) => {
     const statusCode = healthStatus.status === 'healthy' ? 200 : 503;
     return res.status(statusCode).json(response);
   } catch (error) {
-    console.error('Health check failed:', error);
+    logger.error('Health check failed:', error);
     return res.status(500).json({
       status: 'error',
       message: 'Health check failed',
@@ -75,7 +76,7 @@ router.get('/database/stats', async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Stats retrieval failed:', error);
+    logger.error('Stats retrieval failed:', error);
     return res.status(500).json({
       error: 'Failed to retrieve database statistics',
       message: error.message,
@@ -120,7 +121,7 @@ router.get('/database/performance', async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Performance test failed:', error);
+    logger.error('Performance test failed:', error);
     return res.status(500).json({
       status: 'error',
       error: 'Performance test failed',
@@ -144,7 +145,7 @@ router.post('/database/reconnect', async (req, res) => {
       });
     }
 
-    console.log('🔄 Manual reconnection requested');
+    logger.info('🔄 Manual reconnection requested');
 
     // Disconnect and reconnect
     await connectionManager.disconnect();
@@ -157,7 +158,7 @@ router.post('/database/reconnect', async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Reconnection failed:', error);
+    logger.error('Reconnection failed:', error);
     return res.status(500).json({
       status: 'error',
       error: 'Reconnection failed',
@@ -189,7 +190,7 @@ async function getDatabaseMetrics() {
       serverStatus = await db.admin().serverStatus();
     } catch (error) {
       // Server status might not be available depending on permissions
-      console.warn('Could not retrieve server status:', error.message);
+      logger.warn('Could not retrieve server status:', error.message);
     }
 
     // Get collection information
@@ -218,7 +219,7 @@ async function getDatabaseMetrics() {
       },
     };
   } catch (error) {
-    console.error('Error getting database metrics:', error);
+    logger.error('Error getting database metrics:', error);
     return {
       error: 'Could not retrieve database metrics',
       message: error.message,

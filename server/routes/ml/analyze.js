@@ -9,6 +9,7 @@ router.use(logAuthenticatedRequest);
 
 const { runPythonScript } = require('../../utils/securePythonBridge');
 const { sendRouteError, PythonParseError } = require('../../utils/sendRouteError');
+const logger = require('../../config/logger');
 const path = require('path');
 
 const sendErrorResponse = sendRouteError;
@@ -62,7 +63,7 @@ router.post('/cluster', async (req, res) => {
       timeout: 120000, // 2 minutes for clustering
       maxRetries: 2,
       onProgress: (progress) => {
-        console.log('Clustering progress:', progress);
+        logger.info('Clustering progress:', progress);
       },
     });
 
@@ -294,7 +295,7 @@ router.post('/feature-engineering', async (req, res) => {
       timeout: 120000, // 2 minutes for feature engineering
       maxRetries: 2,
       onProgress: (progress) => {
-        console.log('Feature engineering progress:', progress);
+        logger.info('Feature engineering progress:', progress);
       },
     });
 
@@ -493,7 +494,7 @@ router.post('/ensemble', async (req, res) => {
       timeout: 300000, // 5 minutes for ensemble training
       maxRetries: 2,
       onProgress: (progress) => {
-        console.log('Ensemble training progress:', progress);
+        logger.info('Ensemble training progress:', progress);
       },
     });
 
@@ -608,7 +609,7 @@ router.post('/cross-validation', async (req, res) => {
       timeout: 180000, // 3 minutes for cross-validation
       maxRetries: 2,
       onProgress: (progress) => {
-        console.log('Cross-validation progress:', progress);
+        logger.info('Cross-validation progress:', progress);
       },
     });
 

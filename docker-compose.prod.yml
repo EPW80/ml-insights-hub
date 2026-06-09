@@ -75,25 +75,3 @@ services:
       options:
         max-size: '10m'
         max-file: '3'
-
-  # Nginx reverse proxy (optional, for production)
-  nginx-proxy:
-    image: nginx:alpine
-    container_name: ml-insights-nginx-proxy
-    restart: unless-stopped
-    ports:
-      - '80:80'
-      - '443:443'
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro # SSL certificates
-    depends_on:
-      - frontend
-      - backend
-    networks:
-      - ml-insights-network
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M

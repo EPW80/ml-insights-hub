@@ -3,6 +3,7 @@ const router = express.Router();
 const Prediction = require('../../models/Prediction');
 const { executeMlPrediction } = require('../../utils/securePythonBridge');
 const { sendRouteError, PythonParseError } = require('../../utils/sendRouteError');
+const logger = require('../../config/logger');
 
 // Import authentication middleware
 const { requireAuthOrApiKey, logAuthenticatedRequest } = require('../../middleware/mlAuth');
@@ -125,7 +126,7 @@ router.post('/', async (req, res) => {
 
       await prediction.save();
     } catch (dbError) {
-      console.error('Database save error:', dbError);
+      logger.error('Database save error:', dbError);
       throw dbError;
     }
 

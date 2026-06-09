@@ -24,11 +24,11 @@ A comprehensive full-stack machine learning application for real estate price pr
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   React App     │    │   Express API   │    │    File System  │
-│  (Port 3000)    │◄──►│  (Port 5000)    │◄──►│  CSV/JSON Data  │
+│   React App     │    │   Express API   │    │   AWS S3        │
+│  (Port 3000)    │◄──►│  (Port 5000)    │◄──►│  File Storage   │
 │                 │    │                 │    │                 │
-│ • TypeScript    │    │ • REST APIs     │    │ • Property Data │
-│ • Modern CSS    │    │ • ML Services   │    │ • ML Models     │
+│ • TypeScript    │    │ • REST APIs     │    │ • CSV/JSON Data │
+│ • Modern CSS    │    │ • ML Services   │    │ • Uploads       │
 │ • Recharts      │    │ • Security Layer│    │ • Datasets      │
 │ • Health UI     │    │ • Health Monitor│    │                 │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
@@ -47,7 +47,7 @@ A comprehensive full-stack machine learning application for real estate price pr
 
 **Frontend**: React 19, TypeScript, Recharts, Modern CSS (glassmorphism), React Router, Axios
 
-**Backend**: Node.js, Express.js, MongoDB, JWT, Multer, CORS, Security Middleware, Winston Logger
+**Backend**: Node.js, Express.js, MongoDB Atlas, JWT, Multer (memory storage), AWS S3, CORS, Security Middleware, Winston Logger, Socket.IO
 
 **Machine Learning**: Python, scikit-learn, pandas, numpy (Random Forest, Linear Regression, Neural Networks, Gradient Boosting)
 
@@ -253,7 +253,7 @@ ml-insights-hub/
 │ ├── ml-services/ # ML Algorithm Services
 │ ├── python-scripts/ # Sandboxed Python ML Execution
 │ ├── scripts/ # Automation & Testing Tools
-│ ├── uploads/ # File Upload Directory
+│ ├── utils/ # Helpers (S3 storage, Python executor)
 │ ├── Dockerfile # Server container configuration
 │ └── .eslintrc.js # ESLint configuration
 │
@@ -306,18 +306,26 @@ PORT=5000
 NODE_ENV=development
 
 # Database
-MONGODB_URI=mongodb://localhost:27017/ml-insights-hub
+MONGODB_URI=mongodb+srv://<user>:<pass>@cluster.mongodb.net/ml-insights-hub
 
 # JWT Authentication (CRITICAL - Generate secure secret!)
 # Use: npm run generate-jwt-secret
 JWT_SECRET=GENERATE_SECURE_SECRET_FOR_PRODUCTION_USE_CRYPTO_RANDOM_BYTES_64_HEX
 JWT_EXPIRE=7d
 
-# Python
-PYTHON_PATH=../venv/bin/python
+# Python (optional — defaults to venv/bin/python inside container)
+# PYTHON_PATH=/custom/path/to/python
+
+# AWS S3 (required for file uploads)
+AWS_S3_BUCKET=your-bucket-name
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your-access-key-id
+AWS_SECRET_ACCESS_KEY=your-secret-access-key
+
+# Frontend origin(s) — comma-separated for multi-domain Socket.IO CORS
+FRONTEND_URL=http://localhost:3000
 
 # File Upload
-UPLOAD_PATH=./uploads
 MAX_FILE_SIZE=10485760  # 10MB
 ```
 
@@ -520,29 +528,37 @@ Before deploying to production, ensure:
 
 3. **Environment Setup**:
    - Set `NODE_ENV=production`
-   - Configure secure JWT secret
-   - Set up MongoDB connection (local or Atlas)
+   - Configure secure JWT secret (`npm run generate-jwt-secret`)
+   - Set `MONGODB_URI` to your MongoDB Atlas connection string
+   - Set `AWS_S3_BUCKET`, `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+   - Set `FRONTEND_URL` (comma-separated for multiple domains)
    - Configure HTTPS
-   - Set appropriate file upload limits
+   - **Do NOT set** `ENABLE_FILE_LOGGING=true`, `SKIP_AUTH=true`, or `MONGO_ROOT_USER`/`MONGO_ROOT_PASSWORD`
 
 4. **Monitoring Setup**:
    - Health endpoints: `/api/health/database`
    - Error logging and monitoring
    - Performance metrics collection
 
-## 🚀 Latest Integrations
+## 🚀 Latest Updates
 
-**🔐 Security**: 95/100 score, sandboxed Python, JWT (512-bit), input validation, real-time monitoring
+**☁️ AWS S3 File Storage**: File uploads now stream directly to S3 via `memoryStorage` — no ephemeral disk dependency. Requires `AWS_S3_BUCKET`, `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`.
 
-**🗄️ Database**: Auto-reconnect (5s→80s), 30s health checks, connection pool (2-10), graceful shutdown
+**🔐 Security**: 95/100 score, sandboxed Python, JWT (512-bit), input validation, Content-Security-Policy header on all nginx responses
+
+**🌐 Multi-Origin CORS**: `FRONTEND_URL` accepts comma-separated domains — no code changes needed for Railway custom domains
+
+**📋 Request Correlation**: Every HTTP request carries an `X-Request-ID` header (generated or forwarded from upstream) propagated through all Winston log entries for end-to-end traceability
+
+**📦 Pinned Python Dependencies**: All ML packages locked to exact versions (`==`) for reproducible Railway builds
+
+**🗄️ Database**: MongoDB Atlas; auto-reconnect (5s→80s), 30s health checks, connection pool (2-10), graceful shutdown
 
 **💓 Monitoring**: `/api/health/*` endpoints, performance metrics, admin tools, Winston logging
 
-**🐳 DevOps**: Docker multi-stage builds, Docker Compose (dev/prod), GitHub Actions CI/CD, Dependabot
+**🐳 DevOps**: Docker multi-stage builds, Docker Compose (dev/prod), GitHub Actions CI/CD (GHCR on `v*.*.*` tags), Dependabot
 
 **🔧 Code Quality**: ESLint, Prettier, Husky pre-commit hooks, automated formatting/linting
-
-**📊 Logging**: Winston logger with file rotation, request logging middleware, structured logs
 
 **🛠️ Commands**: `npm run db:test`, `npm run db:health`, `npm run security:audit`, `npm run lint`, `npm run format`
 

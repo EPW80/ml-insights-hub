@@ -8,21 +8,22 @@ router.use(requireAuthOrApiKey);
 router.use(logAuthenticatedRequest);
 
 const { runPythonScript } = require('../../utils/securePythonBridge');
+const { sendRouteError } = require('../../utils/sendRouteError');
+const { validateIdentifiers } = require('../../utils/validateMlParams');
 const path = require('path');
+
+const SCRIPT_PATH = path.join(__dirname, '../../python-scripts/model_versioning.py');
 
 // Create a new version of a model
 router.post('/create', async (req, res) => {
   try {
     const { model_id, model_path, version_tag, metadata } = req.body;
 
-    if (!model_id || !model_path) {
-      return res.status(400).json({
-        success: false,
-        error: 'model_id and model_path are required',
-      });
+    const validationError = validateIdentifiers({ model_id, model_path });
+    if (validationError) {
+      return res.status(400).json({ success: false, error: validationError });
     }
 
-    const scriptPath = path.join(__dirname, '../../python-scripts/model_versioning.py');
     const inputData = {
       action: 'create_version',
       model_id,
@@ -31,17 +32,13 @@ router.post('/create', async (req, res) => {
       metadata,
     };
 
-    const result = await runPythonScript(scriptPath, inputData, {
+    const result = await runPythonScript(SCRIPT_PATH, inputData, {
       timeout: 30000,
     });
 
     return res.json(result);
   } catch (error) {
-    console.error('Version creation error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    return sendRouteError(res, error, 500, req);
   }
 });
 
@@ -50,23 +47,23 @@ router.get('/list/:model_id', async (req, res) => {
   try {
     const { model_id } = req.params;
 
-    const scriptPath = path.join(__dirname, '../../python-scripts/model_versioning.py');
+    const validationError = validateIdentifiers({ model_id });
+    if (validationError) {
+      return res.status(400).json({ success: false, error: validationError });
+    }
+
     const inputData = {
       action: 'list_versions',
       model_id,
     };
 
-    const result = await runPythonScript(scriptPath, inputData, {
+    const result = await runPythonScript(SCRIPT_PATH, inputData, {
       timeout: 15000,
     });
 
     return res.json(result);
   } catch (error) {
-    console.error('List versions error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    return sendRouteError(res, error, 500, req);
   }
 });
 
@@ -75,24 +72,24 @@ router.get('/get/:model_id/:version_id', async (req, res) => {
   try {
     const { model_id, version_id } = req.params;
 
-    const scriptPath = path.join(__dirname, '../../python-scripts/model_versioning.py');
+    const validationError = validateIdentifiers({ model_id, version_id });
+    if (validationError) {
+      return res.status(400).json({ success: false, error: validationError });
+    }
+
     const inputData = {
       action: 'get_version',
       model_id,
       version_id,
     };
 
-    const result = await runPythonScript(scriptPath, inputData, {
+    const result = await runPythonScript(SCRIPT_PATH, inputData, {
       timeout: 15000,
     });
 
     return res.json(result);
   } catch (error) {
-    console.error('Get version error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    return sendRouteError(res, error, 500, req);
   }
 });
 
@@ -101,31 +98,24 @@ router.post('/rollback', async (req, res) => {
   try {
     const { model_id, version_id } = req.body;
 
-    if (!model_id || !version_id) {
-      return res.status(400).json({
-        success: false,
-        error: 'model_id and version_id are required',
-      });
+    const validationError = validateIdentifiers({ model_id, version_id });
+    if (validationError) {
+      return res.status(400).json({ success: false, error: validationError });
     }
 
-    const scriptPath = path.join(__dirname, '../../python-scripts/model_versioning.py');
     const inputData = {
       action: 'rollback',
       model_id,
       version_id,
     };
 
-    const result = await runPythonScript(scriptPath, inputData, {
+    const result = await runPythonScript(SCRIPT_PATH, inputData, {
       timeout: 30000,
     });
 
     return res.json(result);
   } catch (error) {
-    console.error('Rollback error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    return sendRouteError(res, error, 500, req);
   }
 });
 
@@ -134,14 +124,11 @@ router.post('/compare', async (req, res) => {
   try {
     const { model_id, version_id_1, version_id_2 } = req.body;
 
-    if (!model_id || !version_id_1 || !version_id_2) {
-      return res.status(400).json({
-        success: false,
-        error: 'model_id, version_id_1, and version_id_2 are required',
-      });
+    const validationError = validateIdentifiers({ model_id, version_id_1, version_id_2 });
+    if (validationError) {
+      return res.status(400).json({ success: false, error: validationError });
     }
 
-    const scriptPath = path.join(__dirname, '../../python-scripts/model_versioning.py');
     const inputData = {
       action: 'compare_versions',
       model_id,
@@ -149,17 +136,13 @@ router.post('/compare', async (req, res) => {
       version_id_2,
     };
 
-    const result = await runPythonScript(scriptPath, inputData, {
+    const result = await runPythonScript(SCRIPT_PATH, inputData, {
       timeout: 30000,
     });
 
     return res.json(result);
   } catch (error) {
-    console.error('Compare versions error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    return sendRouteError(res, error, 500, req);
   }
 });
 
@@ -168,24 +151,24 @@ router.delete('/:model_id/:version_id', async (req, res) => {
   try {
     const { model_id, version_id } = req.params;
 
-    const scriptPath = path.join(__dirname, '../../python-scripts/model_versioning.py');
+    const validationError = validateIdentifiers({ model_id, version_id });
+    if (validationError) {
+      return res.status(400).json({ success: false, error: validationError });
+    }
+
     const inputData = {
       action: 'delete_version',
       model_id,
       version_id,
     };
 
-    const result = await runPythonScript(scriptPath, inputData, {
+    const result = await runPythonScript(SCRIPT_PATH, inputData, {
       timeout: 15000,
     });
 
-    res.json(result);
+    return res.json(result);
   } catch (error) {
-    console.error('Delete version error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    return sendRouteError(res, error, 500, req);
   }
 });
 

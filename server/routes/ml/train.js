@@ -10,6 +10,7 @@ router.use(logAuthenticatedRequest);
 
 const Model = require('../../models/Model');
 const Dataset = require('../../models/Dataset');
+const logger = require('../../config/logger');
 const {
   runPythonScript,
   streamPythonScript,
@@ -53,7 +54,7 @@ function sendErrorResponse(res, error, statusCode = 500) {
     };
     statusCode = 403;
     // Log security incident
-    console.error('🚨 SECURITY VIOLATION in Model Training:', {
+    logger.error('🚨 SECURITY VIOLATION in Model Training:', {
       error: error.message,
       type: error.type,
       timestamp: error.timestamp,
@@ -63,7 +64,7 @@ function sendErrorResponse(res, error, statusCode = 500) {
     statusCode = 400;
   }
 
-  console.error(`[${new Date().toISOString()}] Training API Error:`, {
+  logger.error(`[${new Date().toISOString()}] Training API Error:`, {
     type: errorResponse.type,
     message: error.message,
     stack: error.stack,
@@ -180,7 +181,7 @@ router.post('/', async (req, res) => {
         timeout: 300000, // 5 minutes for training
         maxRetries: 1,
         onProgress: (progress) => {
-          console.log('Training progress:', progress);
+          logger.info('Training progress:', progress);
         },
       });
 
@@ -222,7 +223,7 @@ router.post('/', async (req, res) => {
 
         await model.save();
       } catch (dbError) {
-        console.error('Database save error:', dbError);
+        logger.error('Database save error:', dbError);
         throw dbError;
       }
 

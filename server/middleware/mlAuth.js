@@ -4,6 +4,7 @@
  */
 
 const jwt = require('jsonwebtoken');
+const logger = require('../config/logger');
 
 /**
  * Enhanced authentication middleware with detailed error messages
@@ -69,7 +70,7 @@ const requireAuth = (req, res, next) => {
 
     // Log authentication success (in development)
     if (process.env.NODE_ENV !== 'production') {
-      console.log(`✅ User authenticated: ${req.user.email} (${req.user.role})`);
+      logger.info(`✅ User authenticated: ${req.user.email} (${req.user.role})`);
     }
 
     return next();
@@ -104,7 +105,7 @@ const requireAuth = (req, res, next) => {
     }
 
     // Generic error
-    console.error('Authentication error:', error);
+    logger.error('Authentication error:', error);
     return res.status(401).json({
       success: false,
       error: 'Authentication failed',
@@ -266,7 +267,7 @@ const requireAuthOrApiKey = (req, res, next) => {
       role: 'user',
       username: 'development',
     };
-    console.log('⚠️  Development mode: Authentication skipped for', req.path);
+    logger.info('⚠️  Development mode: Authentication skipped for', req.path);
     return next();
   }
 
@@ -292,7 +293,7 @@ const requireAuthOrApiKey = (req, res, next) => {
  */
 const logAuthenticatedRequest = (req, res, next) => {
   if (req.user) {
-    console.log(
+    logger.info(
       `[${new Date().toISOString()}] ${req.method} ${req.path} - User: ${req.user.email || req.user.id} (${req.user.role})`
     );
   }

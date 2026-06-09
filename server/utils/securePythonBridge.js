@@ -10,6 +10,7 @@ const {
   PythonTimeoutError,
 } = require('./securePythonExecutor');
 const path = require('path');
+const logger = require('../config/logger');
 
 // Initialize secure executor
 const secureExecutor = new SecurePythonExecutor();
@@ -28,7 +29,7 @@ async function runPythonScript(scriptPath, inputData, options = {}) {
   } catch (error) {
     // Log security violations
     if (error instanceof PythonSecurityError) {
-      console.error(`🚨 Python Security Violation: ${error.message}`, {
+      logger.error(`🚨 Python Security Violation: ${error.message}`, {
         type: error.type,
         timestamp: error.timestamp,
         scriptPath,
@@ -65,7 +66,7 @@ async function executeMlPrediction(
 
     return result.data;
   } catch (error) {
-    console.error('ML Prediction failed:', {
+    logger.error('ML Prediction failed:', {
       error: error.message,
       features,
       modelType,
@@ -95,7 +96,7 @@ async function executeModelTraining(trainingData, modelConfig) {
 
     return result.data;
   } catch (error) {
-    console.error('Model Training failed:', {
+    logger.error('Model Training failed:', {
       error: error.message,
       dataSize: trainingData ? trainingData.length : 0,
       modelConfig,
@@ -123,7 +124,7 @@ async function executeDataValidation(data) {
 
     return result.data;
   } catch (error) {
-    console.error('Data Validation failed:', {
+    logger.error('Data Validation failed:', {
       error: error.message,
       dataSize: data ? JSON.stringify(data).length : 0,
     });
@@ -145,7 +146,7 @@ async function testPythonConnection() {
 
     return result.data;
   } catch (error) {
-    console.error('Python Connection Test failed:', error.message);
+    logger.error('Python Connection Test failed:', error.message);
     throw error;
   }
 }

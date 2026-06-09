@@ -8,21 +8,25 @@ router.use(requireAuthOrApiKey);
 router.use(logAuthenticatedRequest);
 
 const { runPythonScript } = require('../../utils/securePythonBridge');
+const { sendRouteError } = require('../../utils/sendRouteError');
+const { validateIdentifiers } = require('../../utils/validateMlParams');
 const path = require('path');
+
+const SCRIPT_PATH = path.join(__dirname, '../../python-scripts/auto_retrain.py');
 
 // Configure monitoring for a model
 router.post('/configure', async (req, res) => {
   try {
     const { model_id, thresholds, monitoring_config } = req.body;
 
-    if (!model_id || !thresholds) {
-      return res.status(400).json({
-        success: false,
-        error: 'model_id and thresholds are required',
-      });
+    const validationError = validateIdentifiers({ model_id });
+    if (validationError) {
+      return res.status(400).json({ success: false, error: validationError });
+    }
+    if (!thresholds) {
+      return res.status(400).json({ success: false, error: 'thresholds are required' });
     }
 
-    const scriptPath = path.join(__dirname, '../../python-scripts/auto_retrain.py');
     const inputData = {
       action: 'configure',
       model_id,
@@ -30,17 +34,13 @@ router.post('/configure', async (req, res) => {
       monitoring_config,
     };
 
-    const result = await runPythonScript(scriptPath, inputData, {
+    const result = await runPythonScript(SCRIPT_PATH, inputData, {
       timeout: 30000,
     });
 
     return res.json(result);
   } catch (error) {
-    console.error('Configure monitoring error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    return sendRouteError(res, error, 500, req);
   }
 });
 
@@ -49,14 +49,14 @@ router.post('/check-performance', async (req, res) => {
   try {
     const { model_id, current_metrics, baseline_metrics } = req.body;
 
-    if (!model_id || !current_metrics) {
-      return res.status(400).json({
-        success: false,
-        error: 'model_id and current_metrics are required',
-      });
+    const validationError = validateIdentifiers({ model_id });
+    if (validationError) {
+      return res.status(400).json({ success: false, error: validationError });
+    }
+    if (!current_metrics) {
+      return res.status(400).json({ success: false, error: 'current_metrics are required' });
     }
 
-    const scriptPath = path.join(__dirname, '../../python-scripts/auto_retrain.py');
     const inputData = {
       action: 'check_performance',
       model_id,
@@ -64,17 +64,13 @@ router.post('/check-performance', async (req, res) => {
       baseline_metrics,
     };
 
-    const result = await runPythonScript(scriptPath, inputData, {
+    const result = await runPythonScript(SCRIPT_PATH, inputData, {
       timeout: 30000,
     });
 
     return res.json(result);
   } catch (error) {
-    console.error('Check performance error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    return sendRouteError(res, error, 500, req);
   }
 });
 
@@ -83,31 +79,24 @@ router.post('/trigger', async (req, res) => {
   try {
     const { model_id, retrain_params } = req.body;
 
-    if (!model_id) {
-      return res.status(400).json({
-        success: false,
-        error: 'model_id is required',
-      });
+    const validationError = validateIdentifiers({ model_id });
+    if (validationError) {
+      return res.status(400).json({ success: false, error: validationError });
     }
 
-    const scriptPath = path.join(__dirname, '../../python-scripts/auto_retrain.py');
     const inputData = {
       action: 'trigger_retrain',
       model_id,
       retrain_params,
     };
 
-    const result = await runPythonScript(scriptPath, inputData, {
+    const result = await runPythonScript(SCRIPT_PATH, inputData, {
       timeout: 30000,
     });
 
     return res.json(result);
   } catch (error) {
-    console.error('Trigger retrain error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    return sendRouteError(res, error, 500, req);
   }
 });
 
@@ -116,23 +105,23 @@ router.get('/status/:model_id', async (req, res) => {
   try {
     const { model_id } = req.params;
 
-    const scriptPath = path.join(__dirname, '../../python-scripts/auto_retrain.py');
+    const validationError = validateIdentifiers({ model_id });
+    if (validationError) {
+      return res.status(400).json({ success: false, error: validationError });
+    }
+
     const inputData = {
       action: 'get_status',
       model_id,
     };
 
-    const result = await runPythonScript(scriptPath, inputData, {
+    const result = await runPythonScript(SCRIPT_PATH, inputData, {
       timeout: 15000,
     });
 
     return res.json(result);
   } catch (error) {
-    console.error('Get status error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    return sendRouteError(res, error, 500, req);
   }
 });
 
@@ -142,53 +131,44 @@ router.patch('/config/:model_id', async (req, res) => {
     const { model_id } = req.params;
     const { updates } = req.body;
 
+    const validationError = validateIdentifiers({ model_id });
+    if (validationError) {
+      return res.status(400).json({ success: false, error: validationError });
+    }
     if (!updates) {
-      return res.status(400).json({
-        success: false,
-        error: 'updates object is required',
-      });
+      return res.status(400).json({ success: false, error: 'updates object is required' });
     }
 
-    const scriptPath = path.join(__dirname, '../../python-scripts/auto_retrain.py');
     const inputData = {
       action: 'update_config',
       model_id,
       updates,
     };
 
-    const result = await runPythonScript(scriptPath, inputData, {
+    const result = await runPythonScript(SCRIPT_PATH, inputData, {
       timeout: 15000,
     });
 
     return res.json(result);
   } catch (error) {
-    console.error('Update config error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    return sendRouteError(res, error, 500, req);
   }
 });
 
 // List all monitored models
 router.get('/list', async (req, res) => {
   try {
-    const scriptPath = path.join(__dirname, '../../python-scripts/auto_retrain.py');
     const inputData = {
       action: 'list_models',
     };
 
-    const result = await runPythonScript(scriptPath, inputData, {
+    const result = await runPythonScript(SCRIPT_PATH, inputData, {
       timeout: 15000,
     });
 
     return res.json(result);
   } catch (error) {
-    console.error('List models error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    return sendRouteError(res, error, 500, req);
   }
 });
 
