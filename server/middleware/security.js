@@ -11,12 +11,24 @@ let redisClient = null;
 let redisStore = null;
 
 async function initRedisRateLimitStore() {
+  const redisUrl = process.env.REDIS_URL;
+  if (!redisUrl) {
+    logger.info('REDIS_URL not configured. Rate limiter using in-memory store.');
+    return;
+  }
+
   try {
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
     redisClient = createClient({ url: redisUrl });
+
+    // Log only the first error to avoid log spam during reconnect attempts
+    let errorLogged = false;
     redisClient.on('error', (err) => {
-      logger.warn(`Redis rate-limit store error: ${err.message}. Falling back to memory store.`);
+      if (!errorLogged) {
+        errorLogged = true;
+        logger.warn(`Redis connection error: ${err.message}. Rate limiter using in-memory store.`);
+      }
     });
+
     await redisClient.connect();
     redisStore = new RedisStore({
       sendCommand: (...args) => redisClient.sendCommand(args),
@@ -25,6 +37,11 @@ async function initRedisRateLimitStore() {
     logger.info('Rate limiter connected to Redis');
   } catch (err) {
     logger.warn(`Redis unavailable (${err.message}). Rate limiter using in-memory store.`);
+    // Disconnect to stop the client retrying and emitting repeated error events
+    if (redisClient) {
+      redisClient.disconnect();
+      redisClient = null;
+    }
     redisStore = null;
   }
 }
@@ -32,23 +49,29 @@ async function initRedisRateLimitStore() {
 // Initialize Redis connection (non-blocking)
 initRedisRateLimitStore();
 
-// Rate limiting configurations
+// Rate limiting configurations — limiters are created lazily on first request so
+// that redisStore has time to resolve from the async init above before being read.
 const createRateLimit = (windowMs, max, message) => {
-  const opts = {
-    windowMs,
-    max,
-    message: {
-      error: message,
-      retryAfter: Math.ceil(windowMs / 1000),
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
+  let limiter = null;
+  return (req, res, next) => {
+    if (!limiter) {
+      const opts = {
+        windowMs,
+        max,
+        message: {
+          error: message,
+          retryAfter: Math.ceil(windowMs / 1000),
+        },
+        standardHeaders: true,
+        legacyHeaders: false,
+      };
+      if (redisStore) {
+        opts.store = redisStore;
+      }
+      limiter = rateLimit(opts);
+    }
+    return limiter(req, res, next);
   };
-  // Use Redis store if available, otherwise fall back to memory
-  if (redisStore) {
-    opts.store = redisStore;
-  }
-  return rateLimit(opts);
 };
 
 // General API rate limit
