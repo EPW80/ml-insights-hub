@@ -34,6 +34,9 @@ MANIFEST
 .env.test.local
 .env.production.local
 
+# Vercel project credentials
+.vercel/
+
 # IDE and Editor files
 .vscode/
 .idea/
