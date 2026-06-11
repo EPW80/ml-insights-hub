@@ -36,7 +36,7 @@
       "prettier --write"
     ],
     "client/src/**/*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
+      "./client/node_modules/.bin/eslint --fix",
       "prettier --write"
     ],
     "*.{json,md,yml,yaml}": [

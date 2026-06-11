@@ -68,19 +68,24 @@ export interface PredictionRequest {
   uncertaintyMethod?: 'ensemble' | 'bootstrap' | 'quantile' | 'bayesian';
 }
 
+export interface FeatureImportance {
+  feature: string;
+  importance: number;
+}
+
 export interface PredictionResponse {
   success: boolean;
   prediction: {
-    property_features: any;
+    property_features: Record<string, number>;
     model_type: string;
     prediction: {
       point_estimate: number;
       lower_bound: number;
       upper_bound: number;
       confidence_level: number;
-      uncertainty_metrics: any;
+      uncertainty_metrics: Record<string, number>;
     };
-    feature_importance: any[];
+    feature_importance: FeatureImportance[];
     _id: string;
     createdAt: string;
     updatedAt: string;
@@ -164,7 +169,7 @@ export const apiService = {
   },
 
   // Data Upload
-  async uploadData(file: File): Promise<any> {
+  async uploadData(file: File): Promise<Record<string, unknown>> {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -197,7 +202,7 @@ export const apiService = {
   },
 
   // Get prediction history
-  async getPredictionHistory(limit: number = 50): Promise<any[]> {
+  async getPredictionHistory(limit: number = 50): Promise<Record<string, unknown>[]> {
     const response = await fetch(`${API_BASE_URL}/api/ml/predictions?limit=${limit}`, {
       headers: getAuthHeaders(),
     });
@@ -211,7 +216,7 @@ export const apiService = {
   },
 
   // Get data summary statistics
-  async getDataSummary(): Promise<any> {
+  async getDataSummary(): Promise<Record<string, unknown>> {
     const response = await fetch(`${API_BASE_URL}/api/data/summary`, {
       headers: getAuthHeaders(),
     });

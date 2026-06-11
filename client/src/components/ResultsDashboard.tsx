@@ -24,6 +24,27 @@ import { usePrediction } from '../hooks/usePrediction';
 import { apiService } from '../services/api';
 import './ResultsDashboard.css';
 
+interface RawApiPrediction {
+  _id?: string;
+  createdAt?: string;
+  model_type?: string;
+  prediction?: { point_estimate?: number; confidence_level?: number };
+  predicted_price?: number;
+  property_features?: Record<string, number>;
+}
+
+interface TooltipPayloadEntry {
+  name: string;
+  value: number | string;
+  color: string;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+  label?: string | number;
+}
+
 interface DashboardData {
   predictions: Array<{
     id: string;
@@ -31,7 +52,7 @@ interface DashboardData {
     modelType: string;
     prediction: number;
     confidence: number;
-    features: any;
+    features: Record<string, number>;
   }>;
   summary: {
     totalPredictions: number;
@@ -62,15 +83,15 @@ const ResultsDashboard: React.FC = () => {
     const now = new Date();
 
     // Try fetching real data from the API
-    let apiPredictions: any[] = [];
-    let apiSummary: any = null;
+    let apiPredictions: RawApiPrediction[] = [];
+    let apiSummary: Record<string, unknown> | null = null;
 
     try {
       const [predictions, summary] = await Promise.all([
         apiService.getPredictionHistory(20),
         apiService.getDataSummary(),
       ]);
-      apiPredictions = predictions;
+      apiPredictions = predictions as RawApiPrediction[];
       apiSummary = summary;
     } catch {
       // API unavailable — will fall back to demo data
@@ -79,7 +100,7 @@ const ResultsDashboard: React.FC = () => {
     // Build dashboard data from API results or demo data
     const hasPredictions = apiPredictions.length > 0 || history.length > 0;
 
-    const mappedApiPredictions = apiPredictions.map((pred: any, i: number) => ({
+    const mappedApiPredictions = apiPredictions.map((pred: RawApiPrediction, i: number) => ({
       id: pred._id || `api_${i}`,
       timestamp: pred.createdAt || new Date(now.getTime() - i * 3600000).toISOString(),
       modelType: pred.model_type || 'random_forest',
@@ -213,12 +234,12 @@ const ResultsDashboard: React.FC = () => {
   };
 
   // New: Custom tooltip component
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="custom-tooltip">
           <p className="tooltip-label">{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: TooltipPayloadEntry, index: number) => (
             <p key={index} className="tooltip-entry" style={{ color: entry.color }}>
               <span className="tooltip-name">{entry.name}:</span>{' '}
               <span className="tooltip-value">

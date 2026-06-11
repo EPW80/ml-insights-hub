@@ -25,6 +25,18 @@ import {
 import { PropertyData, apiService } from '../services/api';
 import './PropertyDataVisualization.css';
 
+interface TooltipPayloadEntry {
+  name: string;
+  value: number | string;
+  color: string;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+  label?: string | number;
+}
+
 const COLORS = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
 
 type ChartType =
@@ -235,12 +247,12 @@ const PropertyDataVisualization: React.FC = () => {
   };
 
   // New: Custom tooltip component
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="custom-tooltip">
           <p className="tooltip-label">{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: TooltipPayloadEntry, index: number) => (
             <p key={index} className="tooltip-entry" style={{ color: entry.color }}>
               <span className="tooltip-name">{entry.name}:</span>{' '}
               <span className="tooltip-value">
@@ -257,7 +269,7 @@ const PropertyDataVisualization: React.FC = () => {
   };
 
   // New: Handle pie chart click
-  const handlePieClick = (_data: any, index: number) => {
+  const handlePieClick = (_data: unknown, index: number) => {
     setActiveIndex(index);
   };
 

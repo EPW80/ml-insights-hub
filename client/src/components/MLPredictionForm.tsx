@@ -30,7 +30,7 @@ const MLPredictionForm: React.FC = () => {
     walkability_score: '75',
   });
 
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<PredictionResponse | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
