@@ -24,21 +24,20 @@ COPY package*.json ./
 RUN npm ci --only=production && npm cache clean --force
 
 # Stage 2: Python Environment
-FROM python:3.11-alpine AS python-builder
+FROM python:3.11-slim AS python-builder
 
 WORKDIR /app
 
 # Install Python build dependencies
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
-    musl-dev \
-    linux-headers \
     libffi-dev \
-    openssl-dev \
+    libssl-dev \
     gfortran \
-    openblas-dev \
-    lapack-dev
+    libopenblas-dev \
+    liblapack-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements file
 COPY requirements.txt ./
