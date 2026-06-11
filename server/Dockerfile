@@ -80,17 +80,9 @@ RUN mkdir -p uploads logs models datasets && \
 # Switch to non-root user
 USER nodejs
 
-# Expose port
-EXPOSE 5000
-
 # Environment variables
 ENV NODE_ENV=production \
-    PORT=5000 \
     PYTHON_PATH=/app/venv/bin/python
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:5000/api/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
 
 # Start server
 CMD ["node", "server.js"]
