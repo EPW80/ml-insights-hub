@@ -232,9 +232,9 @@ describe('MongoDBConnectionManager', () => {
 
       // Mock mongoose.connect to simulate failure without triggering real SDAM
       // operations that throw unhandled MongoServerSelectionError exceptions.
-      const connectSpy = jest.spyOn(mongoose, 'connect').mockRejectedValue(
-        new Error('Server selection timed out')
-      );
+      const connectSpy = jest
+        .spyOn(mongoose, 'connect')
+        .mockRejectedValue(new Error('Server selection timed out'));
 
       await expect(manager.connect()).rejects.toThrow();
       expect(manager.isConnecting).toBe(false);
@@ -528,9 +528,9 @@ describe('MongoDBConnectionManager', () => {
 
       // Mock mongoose.connect to simulate failure without triggering real SDAM
       // operations that throw unhandled MongoServerSelectionError exceptions.
-      const connectSpy = jest.spyOn(mongoose, 'connect').mockRejectedValue(
-        new Error('Connection refused')
-      );
+      const connectSpy = jest
+        .spyOn(mongoose, 'connect')
+        .mockRejectedValue(new Error('Connection refused'));
 
       await expect(manager.connect()).rejects.toThrow();
 
