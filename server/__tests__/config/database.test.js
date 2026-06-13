@@ -230,11 +230,16 @@ describe('MongoDBConnectionManager', () => {
         maxReconnectAttempts: 0, // Prevent reconnection timers from leaking into subsequent tests
       });
 
-      // Suppress unhandled Mongoose error event that fires after promise rejection
-      mongoose.connection.on('error', () => {});
+      // Mock mongoose.connect to simulate failure without triggering real SDAM
+      // operations that throw unhandled MongoServerSelectionError exceptions.
+      const connectSpy = jest.spyOn(mongoose, 'connect').mockRejectedValue(
+        new Error('Server selection timed out')
+      );
 
       await expect(manager.connect()).rejects.toThrow();
       expect(manager.isConnecting).toBe(false);
+
+      connectSpy.mockRestore();
     });
   });
 
@@ -518,15 +523,20 @@ describe('MongoDBConnectionManager', () => {
         maxReconnectAttempts: 0, // Prevent reconnection timers from leaking into subsequent tests
       });
 
-      // Suppress unhandled Mongoose error event that fires after promise rejection
-      mongoose.connection.on('error', () => {});
-
       const eventSpy = jest.fn();
       manager.on('connectionFailed', eventSpy);
+
+      // Mock mongoose.connect to simulate failure without triggering real SDAM
+      // operations that throw unhandled MongoServerSelectionError exceptions.
+      const connectSpy = jest.spyOn(mongoose, 'connect').mockRejectedValue(
+        new Error('Connection refused')
+      );
 
       await expect(manager.connect()).rejects.toThrow();
 
       expect(eventSpy).toHaveBeenCalled();
+
+      connectSpy.mockRestore();
     });
 
     it('should emit "maxReconnectAttemptsReached" event', async () => {
