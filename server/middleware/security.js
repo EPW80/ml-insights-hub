@@ -52,6 +52,11 @@ initRedisRateLimitStore();
 // Rate limiting configurations — limiters are created lazily on first request so
 // that redisStore has time to resolve from the async init above before being read.
 const createRateLimit = (windowMs, max, message) => {
+  // In test environments, skip rate limiting so tests are not throttled.
+  if (process.env.NODE_ENV === 'test') {
+    return (req, res, next) => next();
+  }
+
   let limiter = null;
   return (req, res, next) => {
     if (!limiter) {
