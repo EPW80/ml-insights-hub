@@ -2,13 +2,10 @@
   "mcpServers": {
     "MongoDB": {
       "command": "npx",
-      "args": [
-        "-y",
-        "mongodb-mcp-server",
-        "--connectionString",
-        "mongodb+srv://erikparrawilliams_db_user:VlFSjlhN8zP6lUJw@hub.mvgdkp0.mongodb.net/",
-        "--readOnly"
-      ]
+      "args": ["-y", "mongodb-mcp-server", "--readOnly"],
+      "env": {
+        "MDB_MCP_CONNECTION_STRING": "${MDB_MCP_CONNECTION_STRING}"
+      }
     }
   }
 }
