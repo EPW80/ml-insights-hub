@@ -19,6 +19,36 @@ const originalConsoleLog = console.log;
 const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;
 
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function cleanupMongooseConnection(timeout = 2000) {
+  if (mongoose.connection.readyState === 0) {
+    return;
+  }
+
+  await new Promise((resolve) => {
+    let settled = false;
+    const complete = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timer);
+      mongoose.connection.off('disconnected', complete);
+      resolve();
+    };
+    const timer = setTimeout(complete, timeout);
+
+    mongoose.connection.once('disconnected', complete);
+
+    if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+      mongoose.connection.close(true).catch(complete);
+    }
+  });
+
+  await wait(50);
+}
+
 beforeAll(() => {
   console.log = jest.fn();
   console.error = jest.fn();
@@ -34,6 +64,7 @@ afterAll(() => {
 describe('MongoDBConnectionManager', () => {
   let manager;
   let processListeners = {};
+  let originalExitCode;
 
   beforeEach(() => {
     // Store original process listeners
@@ -42,6 +73,7 @@ describe('MongoDBConnectionManager', () => {
       SIGTERM: process.listeners('SIGTERM').slice(),
       SIGUSR2: process.listeners('SIGUSR2').slice(),
     };
+    originalExitCode = process.exitCode;
   });
 
   afterEach(async () => {
@@ -60,21 +92,15 @@ describe('MongoDBConnectionManager', () => {
       processListeners.SIGTERM.forEach((listener) => process.on('SIGTERM', listener));
       processListeners.SIGUSR2.forEach((listener) => process.on('SIGUSR2', listener));
 
-      if (mongoose.connection.readyState !== 0) {
-        try {
-          // Use force:true to close even if a connection attempt is still in progress
-          await mongoose.connection.close(true);
-        } catch (error) {
-          // Ignore close errors
-        }
-      }
+      await cleanupMongooseConnection();
     }
 
     // Remove all mongoose connection listeners
     mongoose.connection.removeAllListeners();
+    process.exitCode = originalExitCode;
 
     // Wait for any background operations to complete
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await wait(50);
 
     jest.clearAllTimers();
     jest.clearAllMocks();
@@ -555,9 +581,7 @@ describe('MongoDBConnectionManager', () => {
   describe('Graceful Shutdown', () => {
     beforeEach(async () => {
       // Ensure clean mongoose state
-      if (mongoose.connection.readyState !== 0) {
-        await mongoose.connection.close(true);
-      }
+      await cleanupMongooseConnection();
       mongoose.connection.removeAllListeners();
 
       manager = new MongoDBConnectionManager({
@@ -593,11 +617,15 @@ describe('MongoDBConnectionManager', () => {
 
     it('should handle SIGUSR2 gracefully (nodemon restart)', async () => {
       const eventSpy = jest.fn();
+      const killSpy = jest.spyOn(process, 'kill').mockImplementation(() => true);
       manager.on('shutdown', eventSpy);
 
       await manager._gracefulShutdown('SIGUSR2');
 
       expect(eventSpy).toHaveBeenCalled();
+      expect(killSpy).toHaveBeenCalledWith(process.pid, 'SIGUSR2');
+
+      killSpy.mockRestore();
     });
 
     it('should stop health checks during shutdown', async () => {
@@ -643,35 +671,26 @@ describe('MongoDBConnectionManager', () => {
 
     it('should handle authentication errors', () => {
       const authError = new Error('authentication failed');
-      const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
 
       manager._handleConnectionError(authError);
 
-      expect(exitSpy).toHaveBeenCalledWith(1);
-
-      exitSpy.mockRestore();
+      expect(process.exitCode).toBe(1);
     });
 
     it('should handle authorization errors', () => {
       const authError = new Error('not authorized');
-      const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
 
       manager._handleConnectionError(authError);
 
-      expect(exitSpy).toHaveBeenCalledWith(1);
-
-      exitSpy.mockRestore();
+      expect(process.exitCode).toBe(1);
     });
 
     it('should handle invalid credentials error', () => {
       const credError = new Error('invalid credentials');
-      const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
 
       manager._handleConnectionError(credError);
 
-      expect(exitSpy).toHaveBeenCalledWith(1);
-
-      exitSpy.mockRestore();
+      expect(process.exitCode).toBe(1);
     });
 
     it('should handle DNS resolution errors (ENOTFOUND)', () => {
