@@ -1,21 +1,20 @@
 # Multi-stage Dockerfile for ML Insights Hub Backend
-# Stage 1: Builder
-FROM node:22-alpine AS builder
+#
+# All stages share a Debian/glibc base so the Python venv (built in the
+# python-builder stage) and its compiled ML wheels run unchanged in the
+# production stage. The previous Alpine/musl production stage could not
+# execute the glibc venv -> `spawn /app/venv/bin/python ENOENT`.
+
+# Stage 1: Node Builder (Debian/glibc, matches production)
+FROM node:22-bookworm-slim AS builder
 
 WORKDIR /app
 
-# Install Python and build dependencies
-RUN apk add --no-cache \
+# Build deps in case any dependency compiles a native addon (node-gyp needs python3)
+RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
-    python3-dev \
-    py3-pip \
-    g++ \
-    make \
-    gcc \
-    musl-dev \
-    linux-headers \
-    libffi-dev \
-    openssl-dev
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package*.json ./
@@ -23,7 +22,7 @@ COPY package*.json ./
 # Install Node dependencies
 RUN npm ci --only=production && npm cache clean --force
 
-# Stage 2: Python Environment
+# Stage 2: Python Environment (Debian/glibc)
 FROM python:3.11-slim AS python-builder
 
 WORKDIR /app
@@ -47,22 +46,23 @@ RUN python -m venv /app/venv && \
     /app/venv/bin/pip install --upgrade pip && \
     /app/venv/bin/pip install --no-cache-dir -r requirements.txt
 
-# Stage 3: Production
-FROM node:22-alpine
+# Stage 3: Production (python:3.11-slim so the venv interpreter + wheels are native)
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install runtime dependencies only
-RUN apk add --no-cache \
-    python3 \
-    py3-pip \
-    openblas \
-    lapack \
-    libstdc++
+# Runtime libs for the ML wheels (xgboost needs libgomp; openblas/lapack for scipy stack)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgomp1 \
+    libopenblas0 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+RUN groupadd -g 1001 nodejs && \
+    useradd -u 1001 -g nodejs -m -s /bin/bash nodejs
+
+# Bring in the Node.js runtime (no npm needed at runtime; CMD runs `node`)
+COPY --from=builder /usr/local/bin/node /usr/local/bin/node
 
 # Copy Node modules from builder
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
