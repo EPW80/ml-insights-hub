@@ -6,7 +6,7 @@
 # execute the glibc venv -> `spawn /app/venv/bin/python ENOENT`.
 
 # Stage 1: Node Builder (Debian/glibc, matches production)
-FROM node:22-bookworm-slim AS builder
+FROM node:26-bookworm-slim AS builder
 
 WORKDIR /app
 
