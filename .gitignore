@@ -5,6 +5,9 @@ ENV/
 .venv/
 .env/
 
+# Cached ML models (runtime artifacts; regenerated on first prediction)
+server/cache/
+
 # Python
 __pycache__/
 *.py[cod]
