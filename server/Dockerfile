@@ -23,7 +23,7 @@ COPY package*.json ./
 RUN npm ci --only=production && npm cache clean --force
 
 # Stage 2: Python Environment (Debian/glibc)
-FROM python:3.11-slim AS python-builder
+FROM python:3.14-slim AS python-builder
 
 WORKDIR /app
 
@@ -47,7 +47,7 @@ RUN python -m venv /app/venv && \
     /app/venv/bin/pip install --no-cache-dir -r requirements.txt
 
 # Stage 3: Production (python:3.11-slim so the venv interpreter + wheels are native)
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 WORKDIR /app
 
