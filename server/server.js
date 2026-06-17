@@ -279,6 +279,12 @@ async function startServer() {
       }
 
       logger.info(`🚀 ML Insights Hub Server ready!`);
+
+      // Pre-train and cache base models in the background so the first real
+      // prediction doesn't pay the cold train + sklearn import cost.
+      require('./utils/warmModelCache')
+        .warmModelCache()
+        .catch((err) => logger.warn(`Model cache warmup error: ${err.message}`));
     });
   } catch (error) {
     logger.error(`💥 Server startup failed: ${error.message}`);
