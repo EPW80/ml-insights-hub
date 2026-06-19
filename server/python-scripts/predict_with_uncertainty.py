@@ -40,6 +40,17 @@ except ImportError:
     VALIDATION_AVAILABLE = False
     print(json.dumps({"error": "Input validation module not available"}), file=sys.stderr)
 
+# Import persistent model cache so we train each model only once instead of
+# retraining on every prediction request (the cause of 30s execution timeouts).
+try:
+    from model_cache import get_cached_model, cache_model
+    CACHE_AVAILABLE = True
+except ImportError:
+    CACHE_AVAILABLE = False
+
+# Bump this when the cached bundle shape changes, to invalidate stale pickles.
+CACHE_VERSION = 1
+
 def load_data(dataset_path=None):
     """Load dataset for training/prediction"""
     try:
@@ -197,118 +208,198 @@ def calculate_feature_importance(model, feature_names):
         # Fallback to equal importance
         return {name: 1.0/len(feature_names) for name in feature_names}
 
-def ml_prediction(features, model_type, uncertainty_method, confidence_level):
-    """ML-based prediction with uncertainty quantification"""
-    try:
-        # Load and prepare data
-        df = load_data()
-        
-        # Create DataFrame from input features
-        feature_df = pd.DataFrame([features])
-        
-        # Prepare training data
-        target_column = 'actual_price'
-        if target_column not in df.columns:
-            return simple_prediction(features)
-            
-        y = df[target_column]
-        X, feature_names = prepare_features(df)
-        
-        # Align feature columns
-        for col in feature_names:
-            if col not in feature_df.columns:
-                feature_df[col] = X[col].median() if not X.empty else 0
-        
-        X_pred, _ = prepare_features(feature_df, feature_names)
-        
-        # Split training data
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42
+def train_model_bundle(model_type):
+    """Train a model once and return a serializable bundle of everything needed
+    to make predictions with uncertainty without retraining. Returns None if the
+    data is unusable so callers can fall back to a rule-based prediction."""
+    df = load_data()
+
+    target_column = 'actual_price'
+    if target_column not in df.columns:
+        return None
+
+    y = df[target_column]
+    X, feature_names = prepare_features(df)
+    if X.empty:
+        return None
+
+    # Per-feature medians used to fill any features missing from a request.
+    feature_medians = {col: float(X[col].median()) for col in feature_names}
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
+    model = get_model(model_type)
+    if model is None:
+        return None
+
+    # Scale features for the neural network; the fitted scaler must be reused
+    # at prediction time, so it travels with the bundle.
+    scaler = None
+    if model_type == 'neural_network':
+        scaler = StandardScaler()
+        X_train = pd.DataFrame(
+            scaler.fit_transform(X_train), columns=feature_names, index=X_train.index
         )
-        
-        # Get and train model
-        model = get_model(model_type)
-        if model is None:
+        X_test = pd.DataFrame(
+            scaler.transform(X_test), columns=feature_names, index=X_test.index
+        )
+
+    model.fit(X_train, y_train)
+
+    # Residual std for residual-based uncertainty (no per-request refitting).
+    residuals = y_train - model.predict(X_train)
+    residual_std = float(np.std(residuals))
+
+    y_pred_test = model.predict(X_test)
+    performance_metrics = {
+        'rmse': float(np.sqrt(mean_squared_error(y_test, y_pred_test))),
+        'r2_score': float(r2_score(y_test, y_pred_test)),
+        'mae': float(np.mean(np.abs(y_test - y_pred_test)))
+    }
+
+    return {
+        'cache_version': CACHE_VERSION,
+        'model': model,
+        'scaler': scaler,
+        'feature_names': feature_names,
+        'feature_medians': feature_medians,
+        'residual_std': residual_std,
+        'feature_importance': calculate_feature_importance(model, feature_names),
+        'performance_metrics': performance_metrics,
+        # Bootstrap ensemble is expensive; trained lazily on first bootstrap
+        # request and then cached alongside the base model.
+        'bootstrap_models': None,
+    }
+
+
+def get_or_train_bundle(model_type):
+    """Return a model bundle, loading it from the persistent cache when possible
+    and otherwise training (and caching) it once."""
+    config = {'cache_version': CACHE_VERSION}
+
+    if CACHE_AVAILABLE:
+        try:
+            cached = get_cached_model(model_type, config)
+            if cached and cached.get('cache_version') == CACHE_VERSION:
+                return cached, True
+        except Exception:
+            pass
+
+    bundle = train_model_bundle(model_type)
+    if bundle is not None and CACHE_AVAILABLE:
+        try:
+            cache_model(model_type, config, bundle,
+                        metadata={'source': 'predict_with_uncertainty'})
+        except Exception:
+            pass
+    return bundle, False
+
+
+def build_prediction_row(bundle, features):
+    """Build the single-row feature matrix for a request, filling missing
+    features with training medians and applying the cached scaler if present."""
+    feature_names = bundle['feature_names']
+    medians = bundle['feature_medians']
+    row = {name: features.get(name, medians.get(name, 0)) for name in feature_names}
+    X_pred = pd.DataFrame([row], columns=feature_names)
+    if bundle['scaler'] is not None:
+        X_pred = pd.DataFrame(
+            bundle['scaler'].transform(X_pred), columns=feature_names
+        )
+    return X_pred
+
+
+def ensure_bootstrap_models(bundle, model_type):
+    """Train and cache the bootstrap ensemble on first use so subsequent
+    bootstrap requests reuse the fitted models instead of refitting."""
+    if bundle.get('bootstrap_models'):
+        return bundle['bootstrap_models']
+
+    df = load_data()
+    y = df['actual_price']
+    X, feature_names = prepare_features(df)
+    X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    scaler = bundle['scaler']
+    if scaler is not None:
+        X_train = pd.DataFrame(
+            scaler.transform(X_train), columns=feature_names, index=X_train.index
+        )
+
+    models = []
+    for _ in range(20):  # Reduced count for speed
+        sample_idx = np.random.choice(len(X_train), size=int(0.8 * len(X_train)), replace=True)
+        temp_model = get_model(model_type)
+        temp_model.fit(X_train.iloc[sample_idx], y_train.iloc[sample_idx])
+        models.append(temp_model)
+
+    bundle['bootstrap_models'] = models
+    if CACHE_AVAILABLE:
+        try:
+            cache_model(model_type, {'cache_version': CACHE_VERSION}, bundle,
+                        metadata={'source': 'predict_with_uncertainty'})
+        except Exception:
+            pass
+    return models
+
+
+def ml_prediction(features, model_type, uncertainty_method, confidence_level):
+    """ML-based prediction with uncertainty quantification.
+
+    Models are trained once and persisted in the model cache; each request only
+    loads the cached model and predicts, which keeps execution well under the
+    Python executor timeout."""
+    try:
+        bundle, from_cache = get_or_train_bundle(model_type)
+        if bundle is None:
             return simple_prediction(features)
-            
-        # Scale features if using neural network
-        if model_type == 'neural_network':
-            scaler = StandardScaler()
-            X_train_scaled = scaler.fit_transform(X_train)
-            X_pred_scaled = scaler.transform(X_pred)
-            X_train = pd.DataFrame(X_train_scaled, columns=feature_names, index=X_train.index)
-            X_pred = pd.DataFrame(X_pred_scaled, columns=feature_names, index=X_pred.index)
-        
-        model.fit(X_train, y_train)
-        prediction = model.predict(X_pred)[0]
-        
+
+        feature_names = bundle['feature_names']
+        X_pred = build_prediction_row(bundle, features)
+        prediction = bundle['model'].predict(X_pred)[0]
+
         # Calculate uncertainty based on method
         if uncertainty_method == 'bootstrap':
-            # Simple bootstrap uncertainty
-            predictions = []
-            for i in range(20):  # Reduced for speed
-                sample_idx = np.random.choice(len(X_train), size=int(0.8 * len(X_train)), replace=True)
-                X_sample = X_train.iloc[sample_idx]
-                y_sample = y_train.iloc[sample_idx]
-                
-                temp_model = get_model(model_type)
-                temp_model.fit(X_sample, y_sample)
-                pred = temp_model.predict(X_pred)[0]
-                predictions.append(pred)
-            
-            predictions = np.array(predictions)
+            bootstrap_models = ensure_bootstrap_models(bundle, model_type)
+            predictions = np.array([m.predict(X_pred)[0] for m in bootstrap_models])
             alpha = (1 - confidence_level) / 2
             lower_bound = np.percentile(predictions, alpha * 100)
             upper_bound = np.percentile(predictions, (1 - alpha) * 100)
-            
+
             uncertainty_metrics = {
                 'method': 'bootstrap',
                 'std': float(np.std(predictions)),
                 'n_samples': len(predictions)
             }
-            
+
         else:  # residual-based uncertainty
-            y_pred_train = model.predict(X_train)
-            residuals = y_train - y_pred_train
-            residual_std = np.std(residuals)
-            
-            # Calculate confidence intervals
-            alpha = (1 - confidence_level) / 2
+            residual_std = bundle['residual_std']
             z_score = 1.96 if confidence_level == 0.95 else (2.576 if confidence_level == 0.99 else 1.645)
-            
             margin = z_score * residual_std
             lower_bound = prediction - margin
             upper_bound = prediction + margin
-            
+
             uncertainty_metrics = {
                 'method': 'residual_based',
                 'std': float(residual_std),
                 'z_score': z_score
             }
-        
-        # Calculate feature importance
-        feature_importance = calculate_feature_importance(model, feature_names)
-        
-        # Model performance metrics
-        y_pred_test = model.predict(X_test)
-        performance_metrics = {
-            'rmse': float(np.sqrt(mean_squared_error(y_test, y_pred_test))),
-            'r2_score': float(r2_score(y_test, y_pred_test)),
-            'mae': float(np.mean(np.abs(y_test - y_pred_test)))
-        }
-        
+
         return {
             'prediction': float(prediction),
             'lower_bound': float(lower_bound),
             'upper_bound': float(upper_bound),
             'confidence_level': confidence_level,
             'uncertainty_metrics': uncertainty_metrics,
-            'feature_importance': feature_importance,
-            'model_performance': performance_metrics,
+            'feature_importance': bundle['feature_importance'],
+            'model_performance': bundle['performance_metrics'],
             'model_type': model_type,
-            'features_used': feature_names
+            'features_used': feature_names,
+            'cached_model': from_cache
         }
-        
+
     except Exception as e:
         # Fallback to simple prediction
         result = simple_prediction(features)

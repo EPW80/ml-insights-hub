@@ -59,7 +59,9 @@ async function executeMlPrediction(
       path.resolve(__dirname, '../python-scripts/predict_with_uncertainty.py'),
       inputData,
       {
-        timeout: 30000, // 30 seconds for ML operations
+        // First request per model trains and caches it (cold start + heavy
+        // sklearn imports on a constrained container); cached requests are fast.
+        timeout: 60000, // 60 seconds for ML operations
         maxRetries: 1,
       }
     );
