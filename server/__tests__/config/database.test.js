@@ -592,8 +592,6 @@ describe('MongoDBConnectionManager', () => {
     });
 
     it('should handle SIGINT gracefully', async () => {
-      jest.useRealTimers(); // Use real timers for shutdown
-
       const eventSpy = jest.fn();
       manager.on('shutdown', eventSpy);
 
@@ -601,8 +599,6 @@ describe('MongoDBConnectionManager', () => {
 
       expect(eventSpy).toHaveBeenCalled();
       expect(manager.healthCheckTimer).toBeNull();
-
-      jest.useFakeTimers(); // Restore fake timers
     });
 
     it('should handle SIGTERM gracefully', async () => {
